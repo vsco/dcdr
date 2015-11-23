@@ -1,0 +1,6 @@
+# Runtime dependencies
+github.com/hashicorp/consul
+github.com/rodaine/table
+github.com/fatih/color
+# Testing
+github.com/stretchr/testify

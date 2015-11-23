@@ -1,0 +1,27 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.so
+
+# Folders
+_obj
+_test
+bin
+.idea/
+
+# Architecture specific extensions/prefixes
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
+*.exe
+*.test
+*.prof
+release
+
+.DS_Store
+.idea
