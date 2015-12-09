@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"flag"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/hashicorp/consul/api"
 	"github.com/vsco/decider-cli/client"
+	"github.com/vsco/decider-cli/models"
 	"github.com/vsco/decider-cli/ui"
 )
 
@@ -38,55 +38,67 @@ func (c *CLI) Run() {
 
 		features, err := c.client.List(*prefix)
 
+		if len(features) == 0 {
+			fmt.Printf("No features found in namespace: %s.\n", c.client.Namespace)
+			os.Exit(0)
+		}
+
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			os.Exit(2)
 		}
 
 		ui.New().DrawTable(features)
 
 	case "set":
 		set := flag.NewFlagSet("set", flag.ExitOnError)
-		n := set.String("name", "", "the feature name")
-		ft := set.String("type", "percentile", "the feature type")
+		name := set.String("name", "", "the feature name")
+		ft := set.String("type", "percentile", "the feature type [percentile,boolean,scalar]")
 		val := set.String("value", "0.0", "the feature value")
 		cmt := set.String("comment", "", "additional comment")
 
 		set.Parse(os.Args[2:])
 
-		switch *ft {
-		case "percentile":
+		ftc := models.GetFeatureType(*ft)
+
+		switch ftc {
+		case models.Percentile:
 			f, err := strconv.ParseFloat(*val, 64)
 
 			if err != nil {
-				log.Fatal("invalid -value format. use -value=[0.0-1.0]")
+				fmt.Println("invalid -value format. use -value=[0.0-1.0]")
+				os.Exit(2)
 			}
 
-			c.client.SetPercentile(*n, f, *cmt)
-		case "boolean":
+			c.client.SetPercentile(*name, f, *cmt)
+		case models.Boolean:
 			f, err := strconv.ParseBool(*val)
 
 			if err != nil {
-				log.Fatal("invalid -value format. use -value=[true,false]")
+				fmt.Println("invalid -value format. use -value=[true,false]")
+				os.Exit(2)
 			}
 
-			c.client.SetBoolean(*n, f, *cmt)
-		case "scalar":
+			c.client.SetBoolean(*name, f, *cmt)
+		case models.Scalar:
 			f, err := strconv.ParseFloat(*val, 64)
 
 			if err != nil {
-				log.Fatal("invalid -value format. use -value=[0.0-1.0]")
+				fmt.Println("invalid -value format. use -value=[0.0-1.0]")
+				os.Exit(2)
 			}
 
-			c.client.SetScalar(*n, f, *cmt)
+			c.client.SetScalar(*name, f, *cmt)
 		default:
 			fmt.Printf("%q is not valid type.\n", *ft)
 			os.Exit(2)
 		}
 
-		features, err := c.client.List(*n)
+		features, err := c.client.List(*name)
 
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			os.Exit(2)
 		}
 
 		ui.New().DrawTable(features)
@@ -100,7 +112,8 @@ func (c *CLI) Run() {
 		err := c.client.Delete(*n)
 
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			os.Exit(2)
 		}
 
 		fmt.Printf("Deleted feature '%s'.\n", *n)
@@ -111,7 +124,7 @@ func (c *CLI) Run() {
 }
 
 func main() {
-	c := client.New(api.DefaultConfig(), "decider")
+	c := client.New(api.DefaultConfig(), "decider/features")
 
 	cli := NewCLI(c)
 	cli.Run()

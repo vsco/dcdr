@@ -2,9 +2,10 @@ package client
 
 import (
 	"log"
-	"sort"
 
 	"encoding/json"
+
+	"fmt"
 
 	"github.com/hashicorp/consul/api"
 	"github.com/vsco/decider-cli/models"
@@ -12,10 +13,8 @@ import (
 
 type Client struct {
 	consul    *api.Client
-	namespace string
+	Namespace string
 }
-
-type Features []models.Feature
 
 func New(cfg *api.Config, namespace string) (c *Client) {
 	cl, err := api.NewClient(cfg)
@@ -26,15 +25,15 @@ func New(cfg *api.Config, namespace string) (c *Client) {
 
 	c = &Client{
 		consul:    cl,
-		namespace: namespace,
+		Namespace: namespace,
 	}
 
 	return
 }
 
-func (c *Client) List(prefix string) (Features, error) {
-	kvs, _, err := c.consul.KV().List(c.namespace+"/"+prefix, nil)
-	var fts Features
+func (c *Client) List(prefix string) (models.Features, error) {
+	kvs, _, err := c.consul.KV().List(c.Namespace+"/"+prefix, nil)
+	var fts models.Features
 
 	if err != nil {
 		return fts, err
@@ -52,7 +51,7 @@ func (c *Client) List(prefix string) (Features, error) {
 		fts = append(fts, f)
 	}
 
-	sort.Sort(models.ByName(fts))
+	//sort.Sort(models.ByName(fts))
 
 	return fts, err
 }
@@ -74,14 +73,38 @@ func (c *Client) SetScalar(k string, v float64, cmt string) {
 	c.set(f)
 }
 
-func (c *Client) Delete(k string) error {
-	_, err := c.consul.KV().Delete(c.namespace+"/"+k, nil)
+func (c *Client) Delete(key string) error {
+	err := c.delete(key)
 
 	return err
 }
 
+func (c *Client) Get(key string) (*models.Feature, error) {
+	kv, err := c.get(key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var f *models.Feature
+
+	err = json.Unmarshal(kv.Value, &f)
+
+	if err != nil {
+		return f, err
+	}
+
+	return f, nil
+}
+
+func (c *Client) get(key string) (*api.KVPair, error) {
+	kv, _, err := c.consul.KV().Get(fmt.Sprintf("%s/%s", c.Namespace, key), nil)
+
+	return kv, err
+}
+
 func (c *Client) set(f *models.Feature) {
-	kv, _, err := c.consul.KV().Get(c.namespace+"/"+f.Name, nil)
+	kv, err := c.get(f.Name)
 
 	if err != nil {
 		log.Fatal(err)
@@ -96,7 +119,7 @@ func (c *Client) set(f *models.Feature) {
 		}
 
 		if f.FeatureType != existing.FeatureType {
-			log.Fatal("cannot change feature types.")
+			log.Fatal("cannot change existing feature types.")
 		}
 
 		if f.Comment == "" {
@@ -110,10 +133,22 @@ func (c *Client) set(f *models.Feature) {
 		log.Fatal(err)
 	}
 
-	p := &api.KVPair{Key: c.namespace + "/" + f.Name, Value: bts}
-	_, err = c.consul.KV().Put(p, nil)
+	err = c.put(f.Name, bts)
 
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (c *Client) put(key string, bts []byte) error {
+	p := &api.KVPair{Key: fmt.Sprintf("%s/%s", c.Namespace, key), Value: bts}
+	_, err := c.consul.KV().Put(p, nil)
+
+	return err
+}
+
+func (c *Client) delete(key string) error {
+	_, err := c.consul.KV().Delete(fmt.Sprintf("%s/%s", c.Namespace, key), nil)
+
+	return err
 }

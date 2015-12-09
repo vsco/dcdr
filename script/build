@@ -1,7 +1,4 @@
 #!/bin/bash
 set -e
 
-: ${VSCO:="local"}
-BUILD_FLAGS="-X main.Env=${VSCO} "
-
-go build -ldflags "$BUILD_FLAGS" -o bin/http ./http
+go build -o bin/dcdr

@@ -3,7 +3,7 @@ package ui
 import (
 	"github.com/fatih/color"
 	"github.com/rodaine/table"
-	"github.com/vsco/decider-cli/client"
+	"github.com/vsco/decider-cli/models"
 )
 
 var (
@@ -27,7 +27,7 @@ func New() (u *UI) {
 	return
 }
 
-func (u *UI) DrawTable(features client.Features) {
+func (u *UI) DrawTable(features models.Features) {
 	for _, feature := range features {
 		u.tbl.AddRow(feature.Name, feature.FeatureType, feature.Value, feature.Comment)
 	}
