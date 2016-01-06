@@ -1,0 +1,7 @@
+{{$features := ls "decider/features"}}
+{{$last := len $features | subtract 1}}
+{
+    "decider":{ {{ range $i, $feature := $features }}{{$f := $feature.Value | parseJSON }}
+        "{{$feature.Key}}": {{index $f "value"}}{{if lt $i $last}},{{end}}{{end}}
+    }
+}
