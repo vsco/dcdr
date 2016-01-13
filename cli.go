@@ -1,34 +1,51 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"os"
+	"os/user"
 
 	"flag"
 
 	"strconv"
 
+	"io/ioutil"
+
 	"github.com/hashicorp/consul/api"
+	"github.com/hashicorp/hcl"
 	"github.com/vsco/decider-cli/client"
+	"github.com/vsco/decider-cli/git"
 	"github.com/vsco/decider-cli/models"
 	"github.com/vsco/decider-cli/ui"
 )
 
+const Usage = `
+list	list all keys
+set	set a key
+delete	remove a key
+`
+
 type CLI struct {
 	action string
 	client *client.Client
+	repo   *git.Git
 }
 
-func NewCLI(client *client.Client) (c *CLI) {
+func NewCLI(client *client.Client, g *git.Git) (c *CLI) {
 	c = &CLI{
 		action: os.Args[1],
 		client: client,
+		repo:   g,
 	}
 
 	return
 }
 
 func (c *CLI) Run() {
+	c.repo.Init()
+
 	switch c.action {
 	case "list":
 		list := flag.NewFlagSet("list", flag.ExitOnError)
@@ -53,11 +70,16 @@ func (c *CLI) Run() {
 	case "set":
 		set := flag.NewFlagSet("set", flag.ExitOnError)
 		name := set.String("name", "", "the feature name")
-		ft := set.String("type", "percentile", "the feature type [percentile,boolean,scalar]")
+		ft := set.String("type", "percentile", "the feature type [percentile,boolean]")
 		val := set.String("value", "0.0", "the feature value")
 		cmt := set.String("comment", "", "additional comment")
 
 		set.Parse(os.Args[2:])
+
+		if *name == "" {
+			set.PrintDefaults()
+			os.Exit(0)
+		}
 
 		ftc := models.GetFeatureType(*ft)
 
@@ -101,6 +123,8 @@ func (c *CLI) Run() {
 			os.Exit(2)
 		}
 
+		c.repo.Commit(features)
+
 		ui.New().DrawTable(features)
 
 	case "delete":
@@ -109,6 +133,11 @@ func (c *CLI) Run() {
 
 		set.Parse(os.Args[2:])
 
+		if *n == "" {
+			set.PrintDefaults()
+			os.Exit(0)
+		}
+
 		err := c.client.Delete(*n)
 
 		if err != nil {
@@ -116,16 +145,69 @@ func (c *CLI) Run() {
 			os.Exit(2)
 		}
 
-		fmt.Printf("Deleted feature '%s'.\n", *n)
+		fmt.Printf("Deleted feature '%s'\n", *n)
 	default:
 		fmt.Printf("%q is not valid command.\n", os.Args[1])
 		os.Exit(2)
 	}
 }
 
-func main() {
-	c := client.New(api.DefaultConfig(), "decider/features")
+func configPath() string {
+	usr, err := user.Current()
 
-	cli := NewCLI(c)
-	cli.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return usr.HomeDir + "/.dcdr"
+}
+
+func prompt(q string) string {
+	fmt.Println(q)
+	reader := bufio.NewReader(os.Stdin)
+	resp, _ := reader.ReadString('\n')
+
+	return resp
+}
+
+func readConfig() *models.Config {
+	bts, err := ioutil.ReadFile(configPath())
+
+	if err != nil {
+		fmt.Printf("Could not read %s", configPath())
+		os.Exit(1)
+	}
+
+	var cfg *models.Config
+
+	err = hcl.Decode(&cfg, string(bts[:]))
+
+	if err != nil {
+		fmt.Printf("parse error %+v", err)
+		os.Exit(1)
+	}
+
+	return cfg
+}
+
+func loadConfig() *models.Config {
+	if _, err := os.Stat(configPath()); err == nil {
+		return readConfig()
+	} else {
+		return models.DefaultConfig()
+	}
+}
+
+func main() {
+	cfg := loadConfig()
+
+	if len(os.Args) > 1 {
+		c := client.New(api.DefaultConfig(), cfg.Namespace)
+		g := git.New(cfg)
+
+		cli := NewCLI(c, g)
+		cli.Run()
+	} else {
+		fmt.Println(Usage)
+	}
 }
