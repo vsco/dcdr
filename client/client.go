@@ -82,7 +82,7 @@ func (c *Client) Delete(key string) error {
 func (c *Client) Get(key string) (*models.Feature, error) {
 	kv, err := c.get(key)
 
-	if err != nil {
+	if err != nil || kv == nil {
 		return nil, err
 	}
 

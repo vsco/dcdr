@@ -13,6 +13,8 @@ import (
 
 	"io/ioutil"
 
+	"strings"
+
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/hcl"
 	"github.com/vsco/decider-cli/client"
@@ -44,8 +46,6 @@ func NewCLI(client *client.Client, g *git.Git) (c *CLI) {
 }
 
 func (c *CLI) Run() {
-	c.repo.Init()
-
 	switch c.action {
 	case "list":
 		list := flag.NewFlagSet("list", flag.ExitOnError)
@@ -70,18 +70,28 @@ func (c *CLI) Run() {
 	case "set":
 		set := flag.NewFlagSet("set", flag.ExitOnError)
 		name := set.String("name", "", "the feature name")
-		ft := set.String("type", "percentile", "the feature type [percentile,boolean]")
-		val := set.String("value", "0.0", "the feature value")
+		ft := set.String("type", "", "the feature type [percentile,boolean]")
+		val := set.String("value", "", "the feature value")
 		cmt := set.String("comment", "", "additional comment")
 
 		set.Parse(os.Args[2:])
+
+		msg := fmt.Sprintf("set %s to %s", *name, *val)
 
 		if *name == "" {
 			set.PrintDefaults()
 			os.Exit(0)
 		}
 
-		ftc := models.GetFeatureType(*ft)
+		var ftc models.FeatureType
+
+		existing, _ := c.client.Get(*name)
+
+		if existing != nil {
+			ftc = existing.FeatureType
+		} else {
+			ftc = models.GetFeatureType(*ft)
+		}
 
 		switch ftc {
 		case models.Percentile:
@@ -102,30 +112,22 @@ func (c *CLI) Run() {
 			}
 
 			c.client.SetBoolean(*name, f, *cmt)
-		case models.Scalar:
-			f, err := strconv.ParseFloat(*val, 64)
-
-			if err != nil {
-				fmt.Println("invalid -value format. use -value=[0.0-1.0]")
-				os.Exit(2)
-			}
-
-			c.client.SetScalar(*name, f, *cmt)
 		default:
 			fmt.Printf("%q is not valid type.\n", *ft)
 			os.Exit(2)
 		}
 
-		features, err := c.client.List(*name)
+		features, err := c.client.List("")
 
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(2)
 		}
 
-		c.repo.Commit(features)
+		c.repo.Commit(features, msg)
 
-		ui.New().DrawTable(features)
+		fmt.Printf("set %s to %s.\n", *name, *val)
+		os.Exit(0)
 
 	case "delete":
 		set := flag.NewFlagSet("delete", flag.ExitOnError)
@@ -145,7 +147,25 @@ func (c *CLI) Run() {
 			os.Exit(2)
 		}
 
+		features, err := c.client.List("")
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(2)
+		}
+
+		msg := fmt.Sprintf("deleted %s", *n)
+		c.repo.Commit(features, msg)
+
 		fmt.Printf("Deleted feature '%s'\n", *n)
+	case "init":
+		if c.repo.Config.UseGit() {
+			yn := prompt("create decider audit repository now? y/n")
+
+			if yn == "y" {
+				c.repo.Create()
+			}
+		}
 	default:
 		fmt.Printf("%q is not valid command.\n", os.Args[1])
 		os.Exit(2)
@@ -167,7 +187,7 @@ func prompt(q string) string {
 	reader := bufio.NewReader(os.Stdin)
 	resp, _ := reader.ReadString('\n')
 
-	return resp
+	return strings.TrimSpace(resp)
 }
 
 func readConfig() *models.Config {
