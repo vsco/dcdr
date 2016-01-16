@@ -11,7 +11,6 @@ type FeatureType string
 const (
 	Percentile FeatureType = "percentile"
 	Boolean    FeatureType = "boolean"
-	Scalar     FeatureType = "scalar"
 	Invalid    FeatureType = "invalid"
 )
 
@@ -21,8 +20,6 @@ func GetFeatureType(t string) FeatureType {
 		return Percentile
 	case "boolean":
 		return Boolean
-	case "scalar":
-		return Scalar
 	default:
 		return Invalid
 	}
@@ -51,17 +48,6 @@ func BooleanFeature(name string, value bool, comment string) (f *Feature) {
 		Name:        name,
 		Value:       value,
 		FeatureType: Boolean,
-		Comment:     comment,
-	}
-
-	return
-}
-
-func ScalarFeature(name string, value float64, comment string) (f *Feature) {
-	f = &Feature{
-		Name:        name,
-		Value:       value,
-		FeatureType: Scalar,
 		Comment:     comment,
 	}
 
