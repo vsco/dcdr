@@ -67,12 +67,6 @@ func (c *Client) SetBoolean(k string, v bool, cmt string) {
 	c.set(f)
 }
 
-func (c *Client) SetScalar(k string, v float64, cmt string) {
-	f := models.ScalarFeature(k, v, cmt)
-
-	c.set(f)
-}
-
 func (c *Client) Delete(key string) error {
 	err := c.delete(key)
 
@@ -82,7 +76,7 @@ func (c *Client) Delete(key string) error {
 func (c *Client) Get(key string) (*models.Feature, error) {
 	kv, err := c.get(key)
 
-	if err != nil {
+	if err != nil || kv == nil {
 		return nil, err
 	}
 
