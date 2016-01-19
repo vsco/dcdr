@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/vsco/decider-cli/models"
+	"github.com/vsco/dcdr/models"
 )
 
 const (
@@ -51,20 +51,18 @@ func New(c *models.Config) (g *Git) {
 	return
 }
 
-func (g *Git) Create() {
+func (g *Git) Create() error {
 	err := os.MkdirAll(g.Config.Git.RepoPath, DefaultPerms)
 
 	if err != nil {
-		fmt.Printf("failed to create repo: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to create repo: %v\n", err)
 	}
 
 	fp := fmt.Sprintf("%s/%s", g.Config.Git.RepoPath, DefaultConfigFileName)
 	err = ioutil.WriteFile(fp, []byte{}, DefaultPerms)
 
 	if err != nil {
-		fmt.Printf("failed to create %s: %v\n", DefaultConfigFileName, err)
-		os.Exit(1)
+		return fmt.Errorf("failed to create %s: %v\n", DefaultConfigFileName, err)
 	}
 
 	cmd := exec.Command(GitExec(), "init")
@@ -72,8 +70,7 @@ func (g *Git) Create() {
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Printf("failed to init repo into %s\n", g.Config.Git.RepoPath)
-		os.Exit(1)
+		return fmt.Errorf("failed to init repo into %s\n", g.Config.Git.RepoPath)
 	}
 
 	cmd = exec.Command(GitExec(), "add", ".")
@@ -81,8 +78,7 @@ func (g *Git) Create() {
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Printf("failed to add %s into %s\n", fp, g.Config.Git.RepoPath)
-		os.Exit(1)
+		return fmt.Errorf("failed to add %s into %s\n", fp, g.Config.Git.RepoPath)
 	}
 
 	msg := "Initializing decider repo"
@@ -92,8 +88,7 @@ func (g *Git) Create() {
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Printf("failed to commit into %s\n", g.Config.Git.RepoPath)
-		os.Exit(1)
+		return fmt.Errorf("failed to commit into %s\n", g.Config.Git.RepoPath)
 	}
 
 	cmd = exec.Command(GitExec(), "remote", "add", "origin", g.Config.Git.RepoURL)
@@ -101,8 +96,7 @@ func (g *Git) Create() {
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Printf("failed to add origin %s\n", g.Config.Git.RepoURL)
-		os.Exit(1)
+		return fmt.Errorf("failed to add origin %s\n", g.Config.Git.RepoURL)
 	}
 
 	cmd = exec.Command(GitExec(), "push", "origin", "master")
@@ -110,37 +104,38 @@ func (g *Git) Create() {
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Printf("failed to push to %s\n", g.Config.Git.RepoURL)
-		os.Exit(1)
+		return fmt.Errorf("failed to push to %s\n", g.Config.Git.RepoURL)
 	}
 
 	fmt.Printf("created %s and pushed to %s sucessfully\n", g.Config.Git.RepoPath, g.Config.Git.RepoURL)
+
+	return nil
 }
 
-func (g *Git) Clone() {
+func (g *Git) Clone() error {
 	_, err := exec.Command(GitExec(), "clone", g.Config.Git.RepoURL, g.Config.Git.RepoPath).Output()
 
 	if err != nil {
-		fmt.Printf("could not checkout %s into %s\n", g.Config.Git.RepoURL, g.Config.Git.RepoPath)
-		os.Exit(1)
+		return fmt.Errorf("could not checkout %s into %s\n", g.Config.Git.RepoURL, g.Config.Git.RepoPath)
 	}
 
 	fmt.Printf("cloned %s into %s\n", g.Config.Git.RepoURL, g.Config.Git.RepoPath)
+
+	return nil
 }
 
 func (g *Git) nothingToCommit(msg []byte) bool {
 	return strings.Contains(string(msg[:]), "nothing to commit")
 }
 
-func (g *Git) Commit(features models.Features, msg string) {
+func (g *Git) Commit(features models.Features, msg string) error {
 	bts, _ := json.MarshalIndent(features, "", "  ")
 
 	fp := fmt.Sprintf("%s/%s", g.Config.Git.RepoPath, DefaultConfigFileName)
 	err := ioutil.WriteFile(fp, bts, DefaultPerms)
 
 	if err != nil {
-		fmt.Printf("could not write change to %s\n", fp)
-		os.Exit(1)
+		return fmt.Errorf("could not write change to %s\n", fp)
 	}
 
 	msg = fmt.Sprintf("%s %s", g.Config.Username, msg)
@@ -150,12 +145,11 @@ func (g *Git) Commit(features models.Features, msg string) {
 	out, err := cmd.Output()
 
 	if g.nothingToCommit(out) {
-		return
+		return nil
 	}
 
 	if err != nil {
-		fmt.Printf("could not commit change to %s %+v\n", g.Config.Git.RepoPath, string(out[:]))
-		os.Exit(1)
+		return fmt.Errorf("could not commit change to %s %s\n", g.Config.Git.RepoPath, string(out[:]))
 	}
 
 	cmd = exec.Command(GitExec(), "push", "origin", "master")
@@ -163,9 +157,10 @@ func (g *Git) Commit(features models.Features, msg string) {
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Printf("failed to push to %s\n", g.Config.Git.RepoURL)
-		os.Exit(1)
+		return fmt.Errorf("failed to push to %s\n", g.Config.Git.RepoURL)
 	}
+
+	return nil
 }
 
 func (g *Git) RepoExists() bool {

@@ -3,7 +3,7 @@ package ui
 import (
 	"github.com/fatih/color"
 	"github.com/rodaine/table"
-	"github.com/vsco/decider-cli/models"
+	"github.com/vsco/dcdr/models"
 )
 
 var (

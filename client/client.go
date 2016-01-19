@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/vsco/decider-cli/models"
+	"github.com/vsco/dcdr/models"
 )
 
 type Client struct {
