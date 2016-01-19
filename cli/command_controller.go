@@ -31,13 +31,13 @@ func (cc *CommandController) List(ctx climax.Context) int {
 	pf, _ := ctx.Get("prefix")
 	features, err := cc.Client.List(pf)
 
-	if len(features) == 0 {
-		fmt.Printf("No feature flags found in namespace: %s.\n", cc.Client.Namespace)
+	if err != nil {
+		fmt.Println(err)
 		return 1
 	}
 
-	if err != nil {
-		fmt.Println(err)
+	if len(features) == 0 {
+		fmt.Printf("No feature flags found in namespace: %s.\n", cc.Client.Namespace)
 		return 1
 	}
 

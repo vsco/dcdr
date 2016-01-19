@@ -72,13 +72,22 @@ func readConfig() *Config {
 		os.Exit(1)
 	}
 
-	cfg := DefaultConfig()
+	var cfg *Config
+	defaults := DefaultConfig()
 
 	err = hcl.Decode(&cfg, string(bts[:]))
 
 	if err != nil {
 		fmt.Printf("parse error %+v", err)
 		os.Exit(1)
+	}
+
+	if cfg.Namespace == "" {
+		cfg.Namespace = defaults.Namespace
+	}
+
+	if cfg.Username == "" {
+		cfg.Username = defaults.Username
 	}
 
 	return cfg
