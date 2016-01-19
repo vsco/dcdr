@@ -70,29 +70,44 @@ func (cc *Controller) Set(ctx climax.Context) int {
 
 	if existing != nil {
 		ftc = existing.FeatureType
+
 	} else {
 		ftc = models.GetFeatureType(ft)
 	}
 
 	switch ftc {
 	case models.Percentile:
-		f, err := strconv.ParseFloat(val, 64)
+		var v float64
+		var err error
 
-		if err != nil {
-			fmt.Println("invalid -value format. use -value=[0.0-1.0]")
-			return 1
+		if val == "" && existing != nil {
+			v = existing.Value.(float64)
+		} else {
+			v, err = strconv.ParseFloat(val, 64)
+
+			if err != nil {
+				fmt.Println("invalid -value format. use -value=[0.0-1.0]")
+				return 1
+			}
 		}
 
-		cc.Store.SetPercentile(name, f, cmt)
+		cc.Store.SetPercentile(name, v, cmt)
 	case models.Boolean:
-		f, err := strconv.ParseBool(val)
+		var v bool
+		var err error
 
-		if err != nil {
-			fmt.Println("invalid -value format. use -value=[true,false]")
-			return 1
+		if val == "" && existing != nil {
+			v = existing.Value.(bool)
+		} else {
+			v, err = strconv.ParseBool(val)
+
+			if err != nil {
+				fmt.Println("invalid -value format. use -value=[true,false]")
+				return 1
+			}
 		}
 
-		cc.Store.SetBoolean(name, f, cmt)
+		cc.Store.SetBoolean(name, v, cmt)
 	default:
 		fmt.Printf("%q is not valid type.\n", ft)
 		return 1
@@ -110,7 +125,7 @@ func (cc *Controller) Set(ctx climax.Context) int {
 		return 1
 	}
 
-	fmt.Printf("set %s to %s\n", name, val)
+	fmt.Printf("set %s\n", name)
 
 	return 0
 }
