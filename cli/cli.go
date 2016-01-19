@@ -3,10 +3,10 @@ package cli
 import "github.com/tucnak/climax"
 
 type CLI struct {
-	Ctrl *CommandController
+	Ctrl *Controller
 }
 
-func New(ctlr *CommandController) (c *CLI) {
+func New(ctlr *Controller) (c *CLI) {
 	c = &CLI{
 		Ctrl: ctlr,
 	}

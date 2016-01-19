@@ -5,31 +5,31 @@ import (
 	"strconv"
 
 	"github.com/tucnak/climax"
-	"github.com/vsco/dcdr/client"
-	"github.com/vsco/dcdr/git"
+	"github.com/vsco/dcdr/kv"
 	"github.com/vsco/dcdr/models"
+	"github.com/vsco/dcdr/repo"
 	"github.com/vsco/dcdr/ui"
 )
 
-type CommandController struct {
+type Controller struct {
 	Config *models.Config
-	Client *client.Client
-	Repo   *git.Git
+	Store  *kv.Client
+	Repo   *repo.Git
 }
 
-func NewCommandController(cfg *models.Config, cl *client.Client, repo *git.Git) (cc *CommandController) {
-	cc = &CommandController{
+func NewController(cfg *models.Config, kv *kv.Client, repo *repo.Git) (cc *Controller) {
+	cc = &Controller{
 		Config: cfg,
-		Client: cl,
+		Store:  kv,
 		Repo:   repo,
 	}
 
 	return
 }
 
-func (cc *CommandController) List(ctx climax.Context) int {
+func (cc *Controller) List(ctx climax.Context) int {
 	pf, _ := ctx.Get("prefix")
-	features, err := cc.Client.List(pf)
+	features, err := cc.Store.List(pf)
 
 	if err != nil {
 		fmt.Println(err)
@@ -37,7 +37,7 @@ func (cc *CommandController) List(ctx climax.Context) int {
 	}
 
 	if len(features) == 0 {
-		fmt.Printf("No feature flags found in namespace: %s.\n", cc.Client.Namespace)
+		fmt.Printf("No feature flags found in namespace: %s.\n", cc.Store.Namespace)
 		return 1
 	}
 
@@ -46,7 +46,12 @@ func (cc *CommandController) List(ctx climax.Context) int {
 	return 0
 }
 
-func (cc *CommandController) Set(ctx climax.Context) int {
+func (cc *Controller) Set(ctx climax.Context) int {
+	if err := cc.checkRepo(); err != nil {
+		fmt.Println(err)
+		return 1
+	}
+
 	name, _ := ctx.Get("name")
 	val, _ := ctx.Get("value")
 	ft, _ := ctx.Get("type")
@@ -61,7 +66,7 @@ func (cc *CommandController) Set(ctx climax.Context) int {
 
 	var ftc models.FeatureType
 
-	existing, _ := cc.Client.Get(name)
+	existing, _ := cc.Store.Get(name)
 
 	if existing != nil {
 		ftc = existing.FeatureType
@@ -78,7 +83,7 @@ func (cc *CommandController) Set(ctx climax.Context) int {
 			return 1
 		}
 
-		cc.Client.SetPercentile(name, f, cmt)
+		cc.Store.SetPercentile(name, f, cmt)
 	case models.Boolean:
 		f, err := strconv.ParseBool(val)
 
@@ -87,13 +92,13 @@ func (cc *CommandController) Set(ctx climax.Context) int {
 			return 1
 		}
 
-		cc.Client.SetBoolean(name, f, cmt)
+		cc.Store.SetBoolean(name, f, cmt)
 	default:
 		fmt.Printf("%q is not valid type.\n", ft)
 		return 1
 	}
 
-	features, err := cc.Client.List("")
+	features, err := cc.Store.List("")
 
 	if err != nil {
 		fmt.Println(err)
@@ -110,21 +115,26 @@ func (cc *CommandController) Set(ctx climax.Context) int {
 	return 0
 }
 
-func (cc *CommandController) Delete(ctx climax.Context) int {
+func (cc *Controller) Delete(ctx climax.Context) int {
+	if err := cc.checkRepo(); err != nil {
+		fmt.Println(err)
+		return 1
+	}
+
 	name, _ := ctx.Get("name")
 	if name == "" {
 		fmt.Println("name is required")
 		return 1
 	}
 
-	err := cc.Client.Delete(name)
+	err := cc.Store.Delete(name)
 
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
 
-	features, err := cc.Client.List("")
+	features, err := cc.Store.List("")
 
 	if err != nil {
 		fmt.Println(err)
@@ -142,7 +152,7 @@ func (cc *CommandController) Delete(ctx climax.Context) int {
 	return 0
 }
 
-func (cc *CommandController) Init(ctx climax.Context) int {
+func (cc *Controller) Init(ctx climax.Context) int {
 	_, create := ctx.Get("create")
 
 	if create {
@@ -161,4 +171,12 @@ func (cc *CommandController) Init(ctx climax.Context) int {
 	}
 
 	return 0
+}
+
+func (cc *Controller) checkRepo() error {
+	if cc.Config.UseGit() && !cc.Repo.RepoExists() {
+		return fmt.Errorf("%s does not exist. see `dcdr help init` for usage\n", cc.Config.Git.RepoPath)
+	}
+
+	return nil
 }
