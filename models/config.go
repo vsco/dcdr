@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/user"
 
@@ -13,6 +12,7 @@ import (
 const (
 	DefaultNamespace = "decider/features"
 	DefaultUsername  = "unknown"
+	ConfigPath       = "/etc/dcdr/config.hcl"
 )
 
 type Tunnel struct {
@@ -54,21 +54,11 @@ func DefaultConfig() *Config {
 	}
 }
 
-func configPath() string {
-	usr, err := user.Current()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return usr.HomeDir + "/.dcdr"
-}
-
 func readConfig() *Config {
-	bts, err := ioutil.ReadFile(configPath())
+	bts, err := ioutil.ReadFile(ConfigPath)
 
 	if err != nil {
-		fmt.Printf("Could not read %s", configPath())
+		fmt.Printf("Could not read %s", ConfigPath)
 		os.Exit(1)
 	}
 
@@ -94,7 +84,7 @@ func readConfig() *Config {
 }
 
 func LoadConfig() *Config {
-	if _, err := os.Stat(configPath()); err == nil {
+	if _, err := os.Stat(ConfigPath); err == nil {
 		return readConfig()
 	} else {
 		return DefaultConfig()

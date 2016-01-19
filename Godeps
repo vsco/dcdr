@@ -2,5 +2,6 @@
 github.com/hashicorp/consul
 github.com/rodaine/table
 github.com/fatih/color
+github.com/tucnak/climax
 # Testing
 github.com/stretchr/testify

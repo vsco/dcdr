@@ -128,9 +128,21 @@ func (g *Git) nothingToCommit(msg []byte) bool {
 	return strings.Contains(string(msg[:]), "nothing to commit")
 }
 
+func (g *Git) Pull() error {
+	cmd := exec.Command(GitExec(), "pull", "origin", "master")
+	cmd.Dir = g.Config.Git.RepoPath
+	err := cmd.Run()
+
+	return err
+}
+
 func (g *Git) Commit(features models.Features, msg string) error {
 	if !g.Config.UseGit() {
 		return nil
+	}
+
+	if err := g.Pull(); err != nil {
+		return fmt.Errorf("could not pull from %s", g.Config.Git.RepoURL)
 	}
 
 	bts, _ := json.MarshalIndent(features, "", "  ")
