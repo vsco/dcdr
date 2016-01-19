@@ -131,9 +131,13 @@ func (g *Git) nothingToCommit(msg []byte) bool {
 func (g *Git) Pull() error {
 	cmd := exec.Command(GitExec(), "pull", "origin", "master")
 	cmd.Dir = g.Config.Git.RepoPath
-	err := cmd.Run()
+	bts, err := cmd.Output()
 
-	return err
+	if err != nil {
+		return fmt.Errorf(string(bts[:]))
+	}
+
+	return nil
 }
 
 func (g *Git) Commit(features models.Features, msg string) error {
