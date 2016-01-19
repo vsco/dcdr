@@ -16,7 +16,7 @@ type UI struct {
 }
 
 func New() (u *UI) {
-	tbl := table.New("Name", "Type", "Value", "Comment").
+	tbl := table.New("Name", "Type", "Value", "Comment", "Created By").
 		WithHeaderFormatter(headerFmt).
 		WithFirstColumnFormatter(columnFmt)
 
@@ -29,7 +29,7 @@ func New() (u *UI) {
 
 func (u *UI) DrawTable(features models.Features) {
 	for _, feature := range features {
-		u.tbl.AddRow(feature.Name, feature.FeatureType, feature.Value, feature.Comment)
+		u.tbl.AddRow(feature.Name, feature.FeatureType, feature.Value, feature.Comment, feature.CreatedBy)
 	}
 
 	u.tbl.Print()

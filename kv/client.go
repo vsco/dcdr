@@ -54,13 +54,13 @@ func (c *Client) List(prefix string) (models.Features, error) {
 	return fts, err
 }
 
-func (c *Client) SetPercentile(k string, v float64, cmt string) {
-	f := models.PercentileFeature(k, v, cmt)
+func (c *Client) SetPercentile(k string, v float64, cmt string, user string) {
+	f := models.PercentileFeature(k, v, cmt, user)
 	c.set(f)
 }
 
-func (c *Client) SetBoolean(k string, v bool, cmt string) {
-	f := models.BooleanFeature(k, v, cmt)
+func (c *Client) SetBoolean(k string, v bool, cmt string, user string) {
+	f := models.BooleanFeature(k, v, cmt, user)
 
 	c.set(f)
 }

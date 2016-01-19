@@ -91,7 +91,7 @@ func (cc *Controller) Set(ctx climax.Context) int {
 			}
 		}
 
-		cc.Store.SetPercentile(name, v, cmt)
+		cc.Store.SetPercentile(name, v, cmt, cc.Config.Username)
 	case models.Boolean:
 		var v bool
 		var err error
@@ -107,7 +107,7 @@ func (cc *Controller) Set(ctx climax.Context) int {
 			}
 		}
 
-		cc.Store.SetBoolean(name, v, cmt)
+		cc.Store.SetBoolean(name, v, cmt, cc.Config.Username)
 	default:
 		fmt.Printf("%q is not valid type.\n", ft)
 		return 1
