@@ -24,15 +24,11 @@ func TestMarshaling(t *testing.T) {
 }
 
 func TestTypes(t *testing.T) {
-	pf := PercentileFeature("foo", 0.1, "testing")
+	pf := PercentileFeature("foo", 0.1, "testing", "me")
 	assert.Equal(t, Percentile, pf.FeatureType)
 	assert.Equal(t, 0.1, pf.FloatValue())
 
-	bf := BooleanFeature("foo", false, "testing")
+	bf := BooleanFeature("foo", false, "testing", "me")
 	assert.Equal(t, Boolean, bf.FeatureType)
 	assert.Equal(t, false, bf.BoolValue())
-
-	sf := ScalarFeature("foo", 0.5, "testing")
-	assert.Equal(t, Scalar, sf.FeatureType)
-	assert.Equal(t, 0.5, sf.FloatValue())
 }
