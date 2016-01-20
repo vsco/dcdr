@@ -27,6 +27,14 @@ type Feature struct {
 
 See releases.
 
+### Install from source
+
+```bash
+git clone https://github.com/vsco/dcdr.git
+cd dcdr
+./script/install
+```
+
 # Usage 
 
 ```bash

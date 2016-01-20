@@ -1,0 +1,14 @@
+{
+	"Tasks": [
+		"default",
+		"publish-github"
+	],
+	"PackageVersion": "0.1",
+	"TaskSettings": {
+		"publish-github": {
+			"owner": "vsco",
+			"repository": "dcdr"
+		}
+	},
+	"ConfigVersion": "0.9"
+}
