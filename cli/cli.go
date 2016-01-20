@@ -2,6 +2,8 @@ package cli
 
 import "github.com/tucnak/climax"
 
+const Version = "0.1"
+
 type CLI struct {
 	Ctrl *Controller
 }
@@ -17,7 +19,7 @@ func New(ctlr *Controller) (c *CLI) {
 func (c *CLI) Run() {
 	dcdr := climax.New("dcdr")
 	dcdr.Brief = "Decider: CLI for decider feature flags."
-	dcdr.Version = "stable"
+	dcdr.Version = Version
 
 	cmds := c.Commands()
 
