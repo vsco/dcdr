@@ -30,7 +30,7 @@ type Feature struct {
 	Name        string      `json:"name"`
 	Value       interface{} `json:"value"`
 	Comment     string      `json:"comment"`
-	CreatedBy   string      `json:"created_by"`
+	UpdatedBy   string      `json:"updated_by"`
 }
 
 func PercentileFeature(name string, value float64, comment string, user string) (f *Feature) {
@@ -39,7 +39,7 @@ func PercentileFeature(name string, value float64, comment string, user string) 
 		Value:       value,
 		FeatureType: Percentile,
 		Comment:     comment,
-		CreatedBy:   user,
+		UpdatedBy:   user,
 	}
 
 	return
@@ -51,7 +51,7 @@ func BooleanFeature(name string, value bool, comment string, user string) (f *Fe
 		Value:       value,
 		FeatureType: Boolean,
 		Comment:     comment,
-		CreatedBy:   user,
+		UpdatedBy:   user,
 	}
 
 	return

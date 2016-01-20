@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/models"
 )
 
@@ -40,10 +41,10 @@ func GitExec() string {
 }
 
 type Git struct {
-	Config *models.Config
+	Config *config.Config
 }
 
-func New(c *models.Config) (g *Git) {
+func New(c *config.Config) (g *Git) {
 	g = &Git{
 		Config: c,
 	}

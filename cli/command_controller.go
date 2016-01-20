@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/tucnak/climax"
+	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/kv"
 	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/repo"
@@ -12,12 +13,12 @@ import (
 )
 
 type Controller struct {
-	Config *models.Config
+	Config *config.Config
 	Store  *kv.Client
 	Repo   *repo.Git
 }
 
-func NewController(cfg *models.Config, kv *kv.Client, repo *repo.Git) (cc *Controller) {
+func NewController(cfg *config.Config, kv *kv.Client, repo *repo.Git) (cc *Controller) {
 	cc = &Controller{
 		Config: cfg,
 		Store:  kv,
