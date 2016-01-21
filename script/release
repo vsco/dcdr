@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+goxc  -bc="linux,darwin" -d ./bin
