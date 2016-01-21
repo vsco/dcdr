@@ -162,5 +162,13 @@ func (c *CLI) Commands() []climax.Command {
 
 			Handle: c.Ctrl.Init,
 		},
+		{
+			Name:  "import",
+			Brief: "import json from STDIN",
+			Usage: ``,
+			Help:  `Imports JSON feature flags`,
+
+			Handle: c.Ctrl.Import,
+		},
 	}
 }

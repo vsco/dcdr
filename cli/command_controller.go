@@ -4,6 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"io/ioutil"
+	"os"
+
+	"encoding/json"
+
 	"github.com/tucnak/climax"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/kv"
@@ -187,6 +192,39 @@ func (cc *Controller) Init(ctx climax.Context) int {
 	}
 
 	return 0
+}
+
+func (cc *Controller) Import(ctx climax.Context) int {
+	bts, err := ioutil.ReadAll(os.Stdin)
+
+	if err != nil {
+		fmt.Println(err)
+		return 1
+	}
+
+	var kvs map[string]interface{}
+	err = json.Unmarshal(bts, &kvs)
+
+	if err != nil {
+		fmt.Println(err)
+		return 1
+	}
+
+	for k, v := range kvs {
+		switch v.(type) {
+		case bool:
+			cc.Store.SetBoolean(k, v.(bool), "", "")
+		case float64:
+			cc.Store.SetPercentile(k, v.(float64), "", "")
+		default:
+			fmt.Printf("skipped %s: unsupported type\n", k)
+			continue
+		}
+
+		fmt.Printf("set %s to %+v\n", k, v)
+	}
+
+	return 1
 }
 
 func (cc *Controller) checkRepo() error {
