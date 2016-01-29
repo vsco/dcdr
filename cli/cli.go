@@ -134,8 +134,8 @@ func (c *CLI) Commands() []climax.Command {
 		},
 		{
 			Name:  "init",
-			Brief: "init the audit repo",
-			Usage: `--create creates an empty audit repo and pushes to origin`,
+			Brief: "init the audit repository",
+			Usage: `--create creates an empty audit repository and pushes to origin`,
 			Help: `Clones the RepoUrl into the RepoPath from ~/.dcdr. Creates a new
 			repo if --create is passed.`,
 

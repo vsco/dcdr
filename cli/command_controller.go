@@ -131,7 +131,7 @@ func (cc *Controller) Set(ctx climax.Context) int {
 		return 1
 	}
 
-	fmt.Printf("set %s\n", name)
+	fmt.Printf("set flag '%s'\n", name)
 
 	return 0
 }
