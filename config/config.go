@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	DefaultNamespace = "dcdr/features"
-	DefaultUsername  = "unknown"
-	ConfigPath       = "/etc/dcdr/config.hcl"
+	DefaultNamespace     = "dcdr/features"
+	DefaultInfoNamespace = "dcdr/info"
+	DefaultUsername      = "unknown"
+	ConfigPath           = "/etc/dcdr/config.hcl"
 )
 
 type Tunnel struct {

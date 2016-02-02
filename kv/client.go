@@ -8,8 +8,11 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/consul/api"
+	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/models"
 )
+
+const CurrentShaKey = "current_sha"
 
 type Client struct {
 	consul    *api.Client
@@ -32,7 +35,8 @@ func New(cfg *api.Config, namespace string) (c *Client) {
 }
 
 func (c *Client) List(prefix string) (models.Features, error) {
-	kvs, _, err := c.consul.KV().List(c.Namespace+"/"+prefix, nil)
+	key := fmt.Sprintf("%s/%s", c.Namespace, prefix)
+	kvs, _, err := c.consul.KV().List(key, nil)
 	var fts models.Features
 
 	if err != nil {
@@ -69,6 +73,10 @@ func (c *Client) Delete(key string) error {
 	err := c.delete(key)
 
 	return err
+}
+
+func (c *Client) SetCurrentSha(sha string) error {
+	return c.putWithNamespace(CurrentShaKey, config.DefaultInfoNamespace, []byte(sha))
 }
 
 func (c *Client) Get(key string) (*models.Feature, error) {
@@ -132,11 +140,15 @@ func (c *Client) set(f *models.Feature) {
 	}
 }
 
-func (c *Client) put(key string, bts []byte) error {
-	p := &api.KVPair{Key: fmt.Sprintf("%s/%s", c.Namespace, key), Value: bts}
+func (c *Client) putWithNamespace(key string, ns string, bts []byte) error {
+	p := &api.KVPair{Key: fmt.Sprintf("%s/%s", ns, key), Value: bts}
 	_, err := c.consul.KV().Put(p, nil)
 
 	return err
+}
+
+func (c *Client) put(key string, bts []byte) error {
+	return c.putWithNamespace(key, c.Namespace, bts)
 }
 
 func (c *Client) delete(key string) error {

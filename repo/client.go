@@ -141,6 +141,18 @@ func (g *Git) Pull() error {
 	return nil
 }
 
+func (g *Git) CurrentSha() (string, error) {
+	cmd := exec.Command(GitExec(), "rev-parse", "HEAD")
+	cmd.Dir = g.Config.Git.RepoPath
+	bts, err := cmd.Output()
+
+	if err != nil {
+		return "", fmt.Errorf(string(bts[:]))
+	}
+
+	return strings.TrimSpace(string(bts[:])), nil
+}
+
 func (g *Git) Commit(features models.Features, msg string) error {
 	if !g.Config.UseGit() {
 		return nil

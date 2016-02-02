@@ -126,9 +126,18 @@ func (cc *Controller) Set(ctx climax.Context) int {
 		return 1
 	}
 
-	if err := cc.Repo.Commit(features, msg); err != nil {
-		fmt.Println(err)
-		return 1
+	if cc.Config.UseGit() {
+		if err := cc.Repo.Commit(features, msg); err != nil {
+			fmt.Println(err)
+			return 1
+		}
+
+		err := cc.updateCurrentSha()
+
+		if err != nil {
+			fmt.Println(err)
+			return 1
+		}
 	}
 
 	fmt.Printf("set flag '%s'\n", name)
@@ -225,6 +234,18 @@ func (cc *Controller) Import(ctx climax.Context) int {
 	}
 
 	return 1
+}
+
+func (cc *Controller) updateCurrentSha() error {
+	sha, err := cc.Repo.CurrentSha()
+
+	if err != nil {
+		return err
+	}
+
+	err = cc.Store.SetCurrentSha(sha)
+
+	return err
 }
 
 func (cc *Controller) checkRepo() error {
