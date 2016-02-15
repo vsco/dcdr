@@ -14,6 +14,7 @@ const (
 	DefaultInfoNamespace = "dcdr/info"
 	DefaultUsername      = "unknown"
 	ConfigPath           = "/etc/dcdr/config.hcl"
+	DefaultFilePath      = "/etc/dcdr/decider.json"
 )
 
 type Tunnel struct {
@@ -29,6 +30,7 @@ type Git struct {
 type Config struct {
 	Username  string
 	Namespace string
+	FilePath  string
 	Git       Git
 	Tunnel    Tunnel
 }
@@ -52,6 +54,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Username:  uname,
 		Namespace: DefaultNamespace,
+		FilePath:  DefaultFilePath,
 	}
 }
 
@@ -79,6 +82,10 @@ func readConfig() *Config {
 
 	if cfg.Username == "" {
 		cfg.Username = defaults.Username
+	}
+
+	if cfg.FilePath == "" {
+		cfg.FilePath = defaults.FilePath
 	}
 
 	return cfg
