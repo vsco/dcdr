@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/vsco/dcdr/models"
+	"github.com/vsco/dcdr/repo"
 )
 
 const (
@@ -12,18 +13,24 @@ const (
 )
 
 func ValidationError(n string) error {
-	return errors.New(fmt.Sprintf("%s is required"))
+	return errors.New(fmt.Sprintf("%s is required", n))
+}
+
+func KeyNotFoundError(n string) error {
+	return errors.New(fmt.Sprintf("%s not found", n))
 }
 
 type ClientIFace interface {
 	List(prefix string, scope string) (models.Features, error)
 	Set(sr *SetRequest) error
 	Delete(key string, scope string) error
+	InitRepo(create bool) error
 	Namespace() string
 }
 
 type Client struct {
 	Store     StoreIFace
+	Repo      repo.RepoIFace
 	namespace string
 }
 
@@ -61,9 +68,10 @@ func (sr *SetRequest) ToFeature() (*models.Feature, error) {
 	}, nil
 }
 
-func New(st StoreIFace, namespace string) (c *Client) {
+func New(st StoreIFace, rp repo.RepoIFace, namespace string) (c *Client) {
 	c = &Client{
 		Store:     st,
+		Repo:      rp,
 		namespace: namespace,
 	}
 
@@ -98,35 +106,75 @@ func (c *Client) Set(sr *SetRequest) error {
 		}
 	}
 
-	return c.Store.Set(ft)
+	err = c.Store.Set(ft)
+
+	if err != nil {
+		return err
+	}
+
+	if c.Repo.Enabled() {
+		err := c.CommitFeatures(ft, false)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (c *Client) Delete(key string, scope string) error {
 	key = fmt.Sprintf("%s/%s/%s", c.Namespace(), scope, key)
 
-	err := c.Store.Delete(key)
+	existing, err := c.Store.Get(key)
+
+	if err != nil {
+		return err
+	}
+
+	if existing == nil {
+		return KeyNotFoundError(key)
+	}
+
+	err = c.Store.Delete(key)
+
+	if err != nil {
+		return err
+	}
+
+	if c.Repo.Exists() {
+		err := c.CommitFeatures(existing, true)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	return err
 }
 
-//func (c *Client) SetCurrentSha(sha string) error {
-//	return c.putWithNamespace(CurrentShaKey, config.DefaultInfoNamespace, []byte(sha))
-//}
+func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
+	fts, err := c.List("", "")
 
-//func (c *Client) Get(key string, scope string) (*models.Feature, error) {
-//	kv, err := c.get(key)
-//
-//	if err != nil || kv == nil {
-//		return nil, err
-//	}
-//
-//	var f *models.Feature
-//
-//	err = json.Unmarshal(kv.Value, &f)
-//
-//	if err != nil {
-//		return f, err
-//	}
-//
-//	return f, nil
-//}
+	if err != nil {
+		return err
+	}
+
+	var msg string
+
+	if deleted {
+		msg = fmt.Sprintf("%s deleted %s", ft.UpdatedBy, ft.ScopedKey())
+	} else {
+		msg = fmt.Sprintf("%s set %s to %v", ft.UpdatedBy, ft.ScopedKey(), ft.Value)
+	}
+
+	return c.Repo.Commit(fts, msg)
+}
+
+func (c *Client) InitRepo(create bool) error {
+	if create {
+		return c.Repo.Create()
+	}
+
+	return c.Repo.Clone()
+}

@@ -29,6 +29,44 @@ func (ms *MockStore) Delete(key string) error {
 	return ms.Err
 }
 
+type MockRepo struct {
+	error   error
+	sha     string
+	exists  bool
+	enabled bool
+}
+
+func (mr *MockRepo) Clone() error {
+	return mr.error
+}
+
+func (mr *MockRepo) Commit(features models.Features, msg string) error {
+	return mr.error
+}
+
+func (mr *MockRepo) Create() error {
+	return mr.error
+}
+
+func (mr *MockRepo) Exists() bool {
+	return mr.exists
+}
+
+func (mr *MockRepo) Enabled() bool {
+	return mr.enabled
+}
+
+func (mr *MockRepo) Pull() error {
+	return mr.error
+}
+
+func (mr *MockRepo) CurrentSha() (string, error) {
+	return mr.sha, mr.error
+}
+
+func (mr *MockRepo) Init() {
+}
+
 func TestSetRequestToFeature(t *testing.T) {
 	sr := &SetRequest{
 		Key:     "key",
@@ -58,7 +96,7 @@ func TestClientSet(t *testing.T) {
 		User:      "user",
 	}
 
-	c := New(&MockStore{}, sr.Namespace)
+	c := New(&MockStore{}, &MockRepo{}, sr.Namespace)
 
 	err := c.Set(sr)
 
@@ -84,7 +122,7 @@ func TestClientSetExisting(t *testing.T) {
 
 	c := New(&MockStore{
 		Item: orig,
-	}, sr.Namespace)
+	}, &MockRepo{}, sr.Namespace)
 
 	err := c.Set(sr)
 

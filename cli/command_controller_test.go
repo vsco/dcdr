@@ -47,10 +47,14 @@ func (m *MockClient) List(prefix string, scope string) (models.Features, error) 
 	return m.Features, m.Error
 }
 
+func (m *MockClient) InitRepo(create bool) error {
+	return m.Error
+}
+
 func TestListEmptyFeatures(t *testing.T) {
 	cfg := config.DefaultConfig()
 	c := NewMockClient(nil, nil, nil)
-	ctl := NewController(cfg, c, nil)
+	ctl := NewController(cfg, c)
 
 	ctx := climax.Context{
 		Variable: map[string]string{},
@@ -70,7 +74,7 @@ func TestListFeatures(t *testing.T) {
 		},
 	}
 	c := NewMockClient(nil, fts, nil)
-	ctl := NewController(cfg, c, nil)
+	ctl := NewController(cfg, c)
 
 	ctx := climax.Context{
 		Variable: map[string]string{},

@@ -20,7 +20,6 @@ import (
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/kv"
 	"github.com/vsco/dcdr/models"
-	"github.com/vsco/dcdr/repo"
 	"github.com/vsco/dcdr/ui"
 )
 
@@ -33,14 +32,12 @@ var (
 type Controller struct {
 	Config *config.Config
 	Client kv.ClientIFace
-	Repo   *repo.Git
 }
 
-func NewController(cfg *config.Config, kv kv.ClientIFace, repo *repo.Git) (cc *Controller) {
+func NewController(cfg *config.Config, kv kv.ClientIFace) (cc *Controller) {
 	cc = &Controller{
 		Config: cfg,
 		Client: kv,
-		Repo:   repo,
 	}
 
 	return
@@ -207,7 +204,7 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 		return 1
 	}
 
-	fmt.Printf("deleted flag %s/'%s'\n", scope, name)
+	fmt.Printf("deleted flag %s/%s\n", scope, name)
 
 	return 0
 }
@@ -215,19 +212,17 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 func (cc *Controller) Init(ctx climax.Context) int {
 	_, create := ctx.Get("create")
 
-	if create {
-		if err := cc.Repo.Create(); err != nil {
-			fmt.Println(err)
-			return 1
-		} else {
-			fmt.Printf("initialized new repo in %s and pushed to %s", cc.Config.Git.RepoPath, cc.Config.Git.RepoURL)
-			return 0
-		}
-	}
+	err := cc.Client.InitRepo(create)
 
-	if err := cc.Repo.Clone(); err != nil {
+	if err != nil {
 		fmt.Println(err)
 		return 1
+	}
+
+	if create {
+		fmt.Printf("initialized new repo in %s and pushed to %s", cc.Config.Git.RepoPath, cc.Config.Git.RepoURL)
+	} else {
+		fmt.Printf("cloned %s into %s", cc.Config.Git.RepoURL, cc.Config.Git.RepoPath)
 	}
 
 	return 0
@@ -274,24 +269,4 @@ func (cc *Controller) Import(ctx climax.Context) int {
 	}
 
 	return 1
-}
-
-//func (cc *Controller) updateCurrentSha() error {
-//	sha, err := cc.Repo.CurrentSha()
-//
-//	if err != nil {
-//		return err
-//	}
-//
-//	err = cc.Store.SetCurrentSha(sha)
-//
-//	return err
-//}
-
-func (cc *Controller) checkRepo() error {
-	if cc.Config.UseGit() && !cc.Repo.RepoExists() {
-		return fmt.Errorf("%s does not exist. see `dcdr help init` for usage\n", cc.Config.Git.RepoPath)
-	}
-
-	return nil
 }
