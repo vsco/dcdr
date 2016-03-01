@@ -7,12 +7,22 @@ import (
 	"fmt"
 	"strings"
 
-	"encoding/json"
 	"io/ioutil"
 
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/models"
 )
+
+type RepoIFace interface {
+	Init()
+	Clone() error
+	Commit(features models.Features, msg string) error
+	Create() error
+	Exists() bool
+	Enabled() bool
+	Pull() error
+	CurrentSha() (string, error)
+}
 
 const (
 	DefaultConfigFileName = "decider.json"
@@ -120,8 +130,6 @@ func (g *Git) Clone() error {
 		return fmt.Errorf("could not checkout %s into %s\n", g.Config.Git.RepoURL, g.Config.Git.RepoPath)
 	}
 
-	fmt.Printf("cloned %s into %s\n", g.Config.Git.RepoURL, g.Config.Git.RepoPath)
-
 	return nil
 }
 
@@ -154,7 +162,7 @@ func (g *Git) CurrentSha() (string, error) {
 }
 
 func (g *Git) Commit(features models.Features, msg string) error {
-	if !g.Config.UseGit() {
+	if !g.Config.GitEnabled() {
 		return nil
 	}
 
@@ -162,10 +170,14 @@ func (g *Git) Commit(features models.Features, msg string) error {
 		return fmt.Errorf("could not pull from %s", g.Config.Git.RepoURL)
 	}
 
-	bts, _ := json.MarshalIndent(features, "", "  ")
+	bts, err := features.ToJSON()
+
+	if err != nil {
+		return err
+	}
 
 	fp := fmt.Sprintf("%s/%s", g.Config.Git.RepoPath, DefaultConfigFileName)
-	err := ioutil.WriteFile(fp, bts, DefaultPerms)
+	err = ioutil.WriteFile(fp, bts, DefaultPerms)
 
 	if err != nil {
 		return fmt.Errorf("could not write change to %s\n", fp)
@@ -196,7 +208,7 @@ func (g *Git) Commit(features models.Features, msg string) error {
 	return nil
 }
 
-func (g *Git) RepoExists() bool {
+func (g *Git) Exists() bool {
 	_, err := os.Stat(g.Config.Git.RepoPath + "/.git")
 
 	if err != nil {
@@ -207,7 +219,11 @@ func (g *Git) RepoExists() bool {
 }
 
 func (g *Git) Init() {
-	if g.Config.UseGit() && !g.RepoExists() {
+	if g.Enabled() {
 		g.Clone()
 	}
+}
+
+func (g *Git) Enabled() bool {
+	return g.Config.GitEnabled()
 }

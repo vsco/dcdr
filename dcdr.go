@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"os"
+
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/kv"
@@ -18,9 +20,21 @@ func main() {
 		return
 	}
 
-	kv := kv.New(store, cfg.Namespace)
 	rp := repo.New(cfg)
-	ctrl := cli.NewController(cfg, kv, rp)
+
+	cmd := ""
+
+	if len(os.Args) > 1 {
+		cmd = os.Args[1]
+	}
+
+	if cmd != "init" && cmd != "watch" && rp.Enabled() && !rp.Exists() {
+		fmt.Printf("%s has not been cloned to %s. see `dcdr help init` for usage\n", cfg.Git.RepoURL, cfg.Git.RepoPath)
+		os.Exit(1)
+	}
+
+	kv := kv.New(store, rp, cfg.Namespace)
+	ctrl := cli.NewController(cfg, kv)
 
 	dcdr := cli.New(ctrl)
 	dcdr.Run()

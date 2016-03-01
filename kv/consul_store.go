@@ -3,8 +3,6 @@ package kv
 import (
 	"encoding/json"
 
-	"fmt"
-
 	"github.com/hashicorp/consul/api"
 	"github.com/vsco/dcdr/models"
 )
@@ -94,7 +92,6 @@ func (cs *ConsulStore) Delete(key string) error {
 }
 
 func (cs *ConsulStore) List(prefix string) (models.Features, error) {
-	fmt.Printf("listing:  %s", prefix)
 	kvs, _, err := cs.kv.List(prefix, cs.qo)
 
 	var fts models.Features

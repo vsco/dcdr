@@ -35,7 +35,7 @@ type Config struct {
 	Tunnel    Tunnel
 }
 
-func (c *Config) UseGit() bool {
+func (c *Config) GitEnabled() bool {
 	return c.Git.RepoURL != ""
 }
 
