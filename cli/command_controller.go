@@ -1,13 +1,20 @@
 package cli
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"os"
 	"strconv"
 
-	"io/ioutil"
-	"os"
+	"errors"
 
-	"encoding/json"
+	"os/exec"
+
+	"io/ioutil"
 
 	"github.com/tucnak/climax"
 	"github.com/vsco/dcdr/config"
@@ -17,25 +24,95 @@ import (
 	"github.com/vsco/dcdr/ui"
 )
 
+var (
+	InvalidPercentileFormat = errors.New("invalid -value format. use -value=[0.0-1.0]")
+	InvalidBoolFormat       = errors.New("invalid -value format. use -value=[true,false]")
+	InvalidFeatureType      = errors.New("invalid -type. use -type=[boolean|percentile]")
+)
+
 type Controller struct {
 	Config *config.Config
-	Store  *kv.Client
+	Client kv.ClientIFace
 	Repo   *repo.Git
 }
 
-func NewController(cfg *config.Config, kv *kv.Client, repo *repo.Git) (cc *Controller) {
+func NewController(cfg *config.Config, kv kv.ClientIFace, repo *repo.Git) (cc *Controller) {
 	cc = &Controller{
 		Config: cfg,
-		Store:  kv,
+		Client: kv,
 		Repo:   repo,
 	}
 
 	return
 }
 
+func (cc *Controller) Watch(ctx climax.Context) int {
+	cmd := exec.Command(
+		"consul",
+		"watch",
+		"-type",
+		"keyprefix",
+		"-prefix",
+		cc.Config.Namespace,
+		"cat")
+
+	pr, pw := io.Pipe()
+	cmd.Stdout = pw
+	b := &bytes.Buffer{}
+	cmd.Stderr = b
+
+	scanner := bufio.NewScanner(pr)
+	scanner.Split(bufio.ScanLines)
+
+	go func() {
+		for scanner.Scan() {
+			fts, err := models.ParseFeatures(scanner.Bytes())
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			bts, err := fts.ToJSON()
+
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			err = ioutil.WriteFile(cc.Config.FilePath, bts, 0644)
+
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			log.Printf("wrote changes to %s\n", cc.Config.FilePath)
+		}
+
+		if scanner.Err() != nil {
+			fmt.Println(scanner.Err())
+		}
+	}()
+
+	log.Printf("watching namespace: %s\n", cc.Config.Namespace)
+
+	if err := cmd.Run(); err != nil {
+		log.Println(err, b)
+	}
+
+	return 0
+}
+
 func (cc *Controller) List(ctx climax.Context) int {
 	pf, _ := ctx.Get("prefix")
-	features, err := cc.Store.List(pf)
+	scope, _ := ctx.Get("scope")
+
+	if pf != "" && scope == "" {
+		scope = models.DefaultScope
+	}
+
+	features, err := cc.Client.List(pf, scope)
 
 	if err != nil {
 		fmt.Println(err)
@@ -43,7 +120,7 @@ func (cc *Controller) List(ctx climax.Context) int {
 	}
 
 	if len(features) == 0 {
-		fmt.Printf("No feature flags found in namespace: %s.\n", cc.Store.Namespace)
+		fmt.Printf("No feature flags found in namespace: %s.\n", cc.Client.Namespace())
 		return 1
 	}
 
@@ -52,132 +129,85 @@ func (cc *Controller) List(ctx climax.Context) int {
 	return 0
 }
 
-func (cc *Controller) Set(ctx climax.Context) int {
-	if err := cc.checkRepo(); err != nil {
-		fmt.Println(err)
-		return 1
-	}
-
+func (cc *Controller) ParseContext(ctx climax.Context) (*kv.SetRequest, error) {
 	name, _ := ctx.Get("name")
 	val, _ := ctx.Get("value")
-	ft, _ := ctx.Get("type")
+	typ, _ := ctx.Get("type")
 	cmt, _ := ctx.Get("comment")
+	scp, _ := ctx.Get("scope")
+	ft := models.GetFeatureType(typ)
 
-	msg := fmt.Sprintf("set %s to %s", name, val)
+	var v interface{}
+	var err error
 
-	if name == "" {
-		fmt.Println("name is required")
-		return 1
-	}
-
-	var ftc models.FeatureType
-
-	existing, _ := cc.Store.Get(name)
-
-	if existing != nil {
-		ftc = existing.FeatureType
-
-	} else {
-		ftc = models.GetFeatureType(ft)
-	}
-
-	switch ftc {
+	switch ft {
 	case models.Percentile:
-		var v float64
-		var err error
+		v, err = strconv.ParseFloat(val, 64)
 
-		if val == "" && existing != nil {
-			v = existing.Value.(float64)
-		} else {
-			v, err = strconv.ParseFloat(val, 64)
-
-			if err != nil {
-				fmt.Println("invalid -value format. use -value=[0.0-1.0]")
-				return 1
-			}
+		if err != nil {
+			return nil, InvalidPercentileFormat
 		}
-
-		cc.Store.SetPercentile(name, v, cmt, cc.Config.Username)
 	case models.Boolean:
-		var v bool
-		var err error
+		v, err = strconv.ParseBool(val)
 
-		if val == "" && existing != nil {
-			v = existing.Value.(bool)
-		} else {
-			v, err = strconv.ParseBool(val)
-
-			if err != nil {
-				fmt.Println("invalid -value format. use -value=[true,false]")
-				return 1
-			}
+		if err != nil {
+			return nil, InvalidBoolFormat
 		}
-
-		cc.Store.SetBoolean(name, v, cmt, cc.Config.Username)
-	default:
-		fmt.Printf("%q is not valid type.\n", ft)
-		return 1
+	case models.Invalid:
+		return nil, InvalidFeatureType
 	}
 
-	features, err := cc.Store.List("")
+	return &kv.SetRequest{
+		Key:       name,
+		Value:     v,
+		Scope:     scp,
+		Namespace: cc.Config.Namespace,
+		Comment:   cmt,
+		User:      cc.Config.Username,
+	}, nil
+}
+
+func (cc *Controller) Set(ctx climax.Context) int {
+	sr, err := cc.ParseContext(ctx)
 
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
 
-	if cc.Config.UseGit() {
-		if err := cc.Repo.Commit(features, msg); err != nil {
-			fmt.Println(err)
-			return 1
-		}
+	err = cc.Client.Set(sr)
 
-		err := cc.updateCurrentSha()
-
-		if err != nil {
-			fmt.Println(err)
-			return 1
-		}
+	if err != nil {
+		fmt.Println(err)
+		return 1
 	}
 
-	fmt.Printf("set flag '%s'\n", name)
+	fmt.Printf("set flag '%s'\n", sr.Key)
 
 	return 0
 }
 
 func (cc *Controller) Delete(ctx climax.Context) int {
-	if err := cc.checkRepo(); err != nil {
-		fmt.Println(err)
-		return 1
-	}
-
 	name, _ := ctx.Get("name")
+	scope, _ := ctx.Get("scope")
+
 	if name == "" {
 		fmt.Println("name is required")
 		return 1
 	}
 
-	err := cc.Store.Delete(name)
+	if scope == "" {
+		scope = models.DefaultScope
+	}
+
+	err := cc.Client.Delete(name, scope)
 
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
 
-	features, err := cc.Store.List("")
-
-	if err != nil {
-		fmt.Println(err)
-		return 1
-	}
-
-	msg := fmt.Sprintf("deleted %s", name)
-	if err := cc.Repo.Commit(features, msg); err != nil {
-		fmt.Println(err)
-		return 1
-	}
-
-	fmt.Printf("deleted flag '%s'\n", name)
+	fmt.Printf("deleted flag %s/'%s'\n", scope, name)
 
 	return 0
 }
@@ -219,15 +249,25 @@ func (cc *Controller) Import(ctx climax.Context) int {
 		return 1
 	}
 
+	scope, _ := ctx.Get("scope")
+
+	if scope == "" {
+		scope = models.DefaultScope
+	}
+
 	for k, v := range kvs {
-		switch v.(type) {
-		case bool:
-			cc.Store.SetBoolean(k, v.(bool), "", "")
-		case float64:
-			cc.Store.SetPercentile(k, v.(float64), "", "")
-		default:
-			fmt.Printf("skipped %s: unsupported type\n", k)
-			continue
+		sr := &kv.SetRequest{
+			Key:       k,
+			Value:     v,
+			Namespace: cc.Config.Namespace,
+			Scope:     scope,
+		}
+
+		err = cc.Client.Set(sr)
+
+		if err != nil {
+			fmt.Println(err)
+			return 1
 		}
 
 		fmt.Printf("set %s to %+v\n", k, v)
@@ -236,17 +276,17 @@ func (cc *Controller) Import(ctx climax.Context) int {
 	return 1
 }
 
-func (cc *Controller) updateCurrentSha() error {
-	sha, err := cc.Repo.CurrentSha()
-
-	if err != nil {
-		return err
-	}
-
-	err = cc.Store.SetCurrentSha(sha)
-
-	return err
-}
+//func (cc *Controller) updateCurrentSha() error {
+//	sha, err := cc.Repo.CurrentSha()
+//
+//	if err != nil {
+//		return err
+//	}
+//
+//	err = cc.Store.SetCurrentSha(sha)
+//
+//	return err
+//}
 
 func (cc *Controller) checkRepo() error {
 	if cc.Config.UseGit() && !cc.Repo.RepoExists() {

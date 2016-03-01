@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/hashicorp/consul/api"
+	"fmt"
+
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/kv"
@@ -10,7 +11,14 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-	kv := kv.New(api.DefaultConfig(), cfg.Namespace)
+	store, err := kv.DefaultConsulStore()
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	kv := kv.New(store, cfg.Namespace)
 	rp := repo.New(cfg)
 	ctrl := cli.NewController(cfg, kv, rp)
 

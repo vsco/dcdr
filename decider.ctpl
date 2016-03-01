@@ -1,9 +1,7 @@
-{{$features := ls "dcdr/features"}}
-{{$last := len $features | subtract 1}}
+{{$scopes := ls "dcdr/features/" }}
+
 {
-    "decider":{
-        "current_sha": "{{key "dcdr/info/current_sha"}}"{{if gt (len $features)  0}},{{end}}
-        {{ range $i, $feature := $features }}{{$f := $feature.Value | parseJSON }}
-        "{{$feature.Key}}": {{index $f "value"}}{{if lt $i $last}},{{end}}{{end}}
-    }
+    {{ range $k, $v := $scopes }}
+    {{$k}}
+    {{end}}
 }

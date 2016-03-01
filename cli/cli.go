@@ -46,6 +46,13 @@ func (c *CLI) Commands() []climax.Command {
 					Help:     `List only flags with matching prefix.`,
 					Variable: true,
 				},
+				{
+					Name:     "scope",
+					Short:    "s",
+					Usage:    `--scope="<flag_scope>"`,
+					Help:     `List only flags within a scope.`,
+					Variable: true,
+				},
 			},
 
 			Examples: []climax.Example{
@@ -92,6 +99,13 @@ func (c *CLI) Commands() []climax.Command {
 					Help:     `an optional comment or description`,
 					Variable: true,
 				},
+				{
+					Name:     "scope",
+					Short:    "s",
+					Usage:    `--scope="flag scope"`,
+					Help:     `an optional scope to nest the flag within`,
+					Variable: true,
+				},
 			},
 
 			Examples: []climax.Example{
@@ -119,6 +133,13 @@ func (c *CLI) Commands() []climax.Command {
 					Short:    "n",
 					Usage:    `--name="<flag_name>"`,
 					Help:     `Name of the flag to delete`,
+					Variable: true,
+				},
+				{
+					Name:     "scope",
+					Short:    "s",
+					Usage:    `--scope="flag scope"`,
+					Help:     `an optional scope to delete the flag from.`,
 					Variable: true,
 				},
 			},
@@ -169,6 +190,14 @@ func (c *CLI) Commands() []climax.Command {
 			Help:  `Imports JSON feature flags`,
 
 			Handle: c.Ctrl.Import,
+		},
+		{
+			Name:  "watch",
+			Brief: "watch the dcdr namespace for changes",
+			Usage: ``,
+			Help:  `watch the dcdr namespace for changes and write the JSON file used by clients`,
+
+			Handle: c.Ctrl.Watch,
 		},
 	}
 }
