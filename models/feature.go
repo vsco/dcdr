@@ -9,13 +9,14 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-
+// Features a Feature result set
 type Features []Feature
 
 func (a Features) Len() int           { return len(a) }
 func (a Features) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a Features) Less(i, j int) bool { return a[i].Key < a[j].Key }
 
+// FeatureType accepted feature types
 type FeatureType string
 
 const (
@@ -25,6 +26,7 @@ const (
 	DefaultScope             = "default"
 )
 
+// GetFeatureType string to type helper
 func GetFeatureType(t string) FeatureType {
 	switch t {
 	case "percentile":
@@ -36,6 +38,7 @@ func GetFeatureType(t string) FeatureType {
 	}
 }
 
+// Feature KV model for feature flags
 type Feature struct {
 	FeatureType FeatureType `json:"feature_type"`
 	Key         string      `json:"key"`
@@ -53,10 +56,13 @@ func (f *Feature) GetScope() string {
 
 	return f.Scope
 }
+
+// ScopedKey expanded key with namespace and scope
 func (f *Feature) ScopedKey() string {
 	return fmt.Sprintf("%s/%s/%s", f.Namespace, f.GetScope(), f.Key)
 }
 
+// NewFeature init a Feature
 func NewFeature(name string, value interface{}, comment string, user string, scope string) (f *Feature) {
 	var ft FeatureType
 
@@ -79,33 +85,18 @@ func NewFeature(name string, value interface{}, comment string, user string, sco
 	return
 }
 
+// FloatValue cast Value to float64
 func (f *Feature) FloatValue() float64 {
 	return f.Value.(float64)
 }
 
+// BoolValue cast Value to bool
 func (f *Feature) BoolValue() bool {
 	return f.Value.(bool)
 }
 
-func explode(m map[string]interface{}, k string, v interface{}) {
-	if strings.Contains(k, "/") {
-		pts := strings.Split(k, "/")
-		top := pts[0]
-		key := strings.Join(pts[1:], "/")
-
-		if _, ok := m[top]; !ok {
-			m[top] = make(map[string]interface{})
-		}
-
-		explode(m[top].(map[string]interface{}), key, v)
-	} else {
-		if k != "" {
-			m[k] = v
-		}
-	}
-}
-
-func (fts Features) ToKVMap() map[string]interface{} {
+// ExplodeToMap explode feature namespacees and scopes to nested maps
+func (fts Features) ExplodeToMap() map[string]interface{} {
 	m := make(map[string]interface{})
 
 	for _, f := range fts {
@@ -115,12 +106,15 @@ func (fts Features) ToKVMap() map[string]interface{} {
 	return m
 }
 
+// ToJSON exploded JSON
 func (fts Features) ToJSON() ([]byte, error) {
-	m := fts.ToKVMap()
-	return json.MarshalIndent(m, "", "	")
+	m := fts.ExplodeToMap()
+	return json.MarshalIndent(m, "", "  ")
 }
 
-func ParseFeatures(bts []byte) (Features, error) {
+// KVsToFeatures helper for unmarshalling consul result
+// sets into Features
+func KVsToFeatures(bts []byte) (Features, error) {
 	var kvs api.KVPairs
 
 	err := json.Unmarshal(bts, &kvs)
@@ -148,4 +142,22 @@ func ParseFeatures(bts []byte) (Features, error) {
 	}
 
 	return fts, nil
+}
+
+func explode(m map[string]interface{}, k string, v interface{}) {
+	if strings.Contains(k, "/") {
+		pts := strings.Split(k, "/")
+		top := pts[0]
+		key := strings.Join(pts[1:], "/")
+
+		if _, ok := m[top]; !ok {
+			m[top] = make(map[string]interface{})
+		}
+
+		explode(m[top].(map[string]interface{}), key, v)
+	} else {
+		if k != "" {
+			m[k] = v
+		}
+	}
 }

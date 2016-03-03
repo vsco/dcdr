@@ -5,6 +5,7 @@ import (
 
 	"os"
 
+	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/kv"
@@ -17,7 +18,7 @@ func main() {
 
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 
 	rp := repo.New(cfg)
@@ -33,7 +34,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	kv := kv.New(store, rp, cfg.Namespace)
+	var gs *godspeed.Godspeed
+
+	if cfg.StatsEnabled() {
+		gs, err = godspeed.New(cfg.Stats.Host, cfg.Stats.Port, false)
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+
+	kv := kv.New(store, rp, cfg.Namespace, gs)
 	ctrl := cli.NewController(cfg, kv)
 
 	dcdr := cli.New(ctrl)

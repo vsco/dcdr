@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/repo"
 )
@@ -31,6 +32,7 @@ type ClientIFace interface {
 type Client struct {
 	Store     StoreIFace
 	Repo      repo.RepoIFace
+	Stats     *godspeed.Godspeed
 	namespace string
 }
 
@@ -68,10 +70,11 @@ func (sr *SetRequest) ToFeature() (*models.Feature, error) {
 	}, nil
 }
 
-func New(st StoreIFace, rp repo.RepoIFace, namespace string) (c *Client) {
+func New(st StoreIFace, rp repo.RepoIFace, namespace string, stats *godspeed.Godspeed) (c *Client) {
 	c = &Client{
 		Store:     st,
 		Repo:      rp,
+		Stats:     stats,
 		namespace: namespace,
 	}
 
@@ -120,7 +123,31 @@ func (c *Client) Set(sr *SetRequest) error {
 		}
 	}
 
+	err = c.SendStatEvent(ft, false)
+
 	return nil
+}
+
+func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
+	if c.Stats == nil {
+		return nil
+	}
+
+	var text string
+	title := "Decider Change"
+
+	if delete {
+		text = fmt.Sprintf("deleted %s", f.ScopedKey(), f.Value)
+	} else {
+		text = fmt.Sprintf("set %s: %v", f.ScopedKey(), f.Value)
+	}
+
+	optionals := make(map[string]string)
+	optionals["alert_type"] = "info"
+	optionals["source_type_name"] = "dcdr"
+	tags := []string{"source_type:dcdr"}
+
+	return c.Stats.Event(title, text, optionals, tags)
 }
 
 func (c *Client) Delete(key string, scope string) error {
@@ -149,6 +176,8 @@ func (c *Client) Delete(key string, scope string) error {
 			return err
 		}
 	}
+
+	err = c.SendStatEvent(existing, true)
 
 	return err
 }

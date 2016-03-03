@@ -63,7 +63,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 
 	go func() {
 		for scanner.Scan() {
-			fts, err := models.ParseFeatures(scanner.Bytes())
+			fts, err := models.KVsToFeatures(scanner.Bytes())
 
 			if err != nil {
 				fmt.Println(err)
@@ -84,7 +84,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 				return
 			}
 
-			log.Printf("wrote changes to %s\n", cc.Config.FilePath)
+			log.Printf("%s wrote changes to %s\n", cc.Config.Username, cc.Config.FilePath)
 		}
 
 		if scanner.Err() != nil {

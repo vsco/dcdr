@@ -17,9 +17,10 @@ const (
 	DefaultFilePath      = "/etc/dcdr/decider.json"
 )
 
-type Tunnel struct {
-	Host string
-	Port int
+type Stats struct {
+	Namespace string
+	Host      string
+	Port      int
 }
 
 type Git struct {
@@ -32,15 +33,15 @@ type Config struct {
 	Namespace string
 	FilePath  string
 	Git       Git
-	Tunnel    Tunnel
+	Stats     Stats
 }
 
 func (c *Config) GitEnabled() bool {
 	return c.Git.RepoURL != ""
 }
 
-func (c *Config) UseTunnel() bool {
-	return c.Tunnel.Host != ""
+func (c *Config) StatsEnabled() bool {
+	return c.Stats.Host != ""
 }
 
 func DefaultConfig() *Config {
