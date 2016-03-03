@@ -220,9 +220,9 @@ func (cc *Controller) Init(ctx climax.Context) int {
 	}
 
 	if create {
-		fmt.Printf("initialized new repo in %s and pushed to %s", cc.Config.Git.RepoPath, cc.Config.Git.RepoURL)
+		fmt.Printf("initialized new repo in %s and pushed to %s\n", cc.Config.Git.RepoPath, cc.Config.Git.RepoURL)
 	} else {
-		fmt.Printf("cloned %s into %s", cc.Config.Git.RepoURL, cc.Config.Git.RepoPath)
+		fmt.Printf("cloned %s into %s\n", cc.Config.Git.RepoURL, cc.Config.Git.RepoPath)
 	}
 
 	return 0
