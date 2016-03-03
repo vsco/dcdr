@@ -48,7 +48,7 @@ func TestTypes(t *testing.T) {
 }
 
 func TestParseFeatures(t *testing.T) {
-	fts, err := ParseFeatures(ConsulJSON)
+	fts, err := KVsToFeatures(ConsulJSON)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(fts))
@@ -58,7 +58,7 @@ func TestParseFeatures(t *testing.T) {
 }
 
 func TestFeaturesToKVMapToJSON(t *testing.T) {
-	fts, err := ParseFeatures(ConsulJSON)
+	fts, err := KVsToFeatures(ConsulJSON)
 
 	assert.NoError(t, err)
 

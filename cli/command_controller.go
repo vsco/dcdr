@@ -63,7 +63,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 
 	go func() {
 		for scanner.Scan() {
-			fts, err := models.ParseFeatures(scanner.Bytes())
+			fts, err := models.KVsToFeatures(scanner.Bytes())
 
 			if err != nil {
 				fmt.Println(err)

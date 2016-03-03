@@ -4,10 +4,12 @@ import "github.com/tucnak/climax"
 
 const Version = "0.1"
 
+// CLI main CLI runner
 type CLI struct {
 	Ctrl *Controller
 }
 
+// New init a new CLI
 func New(ctlr *Controller) (c *CLI) {
 	c = &CLI{
 		Ctrl: ctlr,
@@ -16,6 +18,7 @@ func New(ctlr *Controller) (c *CLI) {
 	return
 }
 
+// Run bind command and run
 func (c *CLI) Run() {
 	dcdr := climax.New("dcdr")
 	dcdr.Brief = "Decider: CLI for decider feature flags."
@@ -30,6 +33,7 @@ func (c *CLI) Run() {
 	dcdr.Run()
 }
 
+// Commands slice of all commands
 func (c *CLI) Commands() []climax.Command {
 	return []climax.Command{
 		{
