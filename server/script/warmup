@@ -1,0 +1,13 @@
+#! /usr/bin/env sh
+
+set -e
+
+HOST=localhost:9191
+NUM_REQS=5
+
+for i in `seq 1 $NUM_REQS`;
+do
+    curl -f -s -o /dev/null -w "GET %{url_effective} => %{http_code}\n" -H "Authorization: YUP" $HOST/decider.json
+done
+
+exit

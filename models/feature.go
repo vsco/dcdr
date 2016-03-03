@@ -9,12 +9,6 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-type KV map[string]interface{}
-type Scopes map[string]KV
-type Fts map[string]Scopes
-type FeatureMap struct {
-	Root Fts
-}
 
 type Features []Feature
 
