@@ -1,10 +1,9 @@
 package kv
 
 import (
-	"encoding/json"
+	"fmt"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/vsco/dcdr/models"
 )
 
 type ConsulKVIFace interface {
@@ -34,53 +33,23 @@ func DefaultConsulStore() (StoreIFace, error) {
 	}, nil
 }
 
-func (cs *ConsulStore) Get(key string) (*models.Feature, error) {
+func (cs *ConsulStore) Get(key string) ([]byte, error) {
 	kv, _, err := cs.kv.Get(key, cs.qo)
 
 	if err != nil || kv == nil {
-		return nil, err
+		return []byte{}, err
 	}
 
-	var f *models.Feature
-
-	err = json.Unmarshal(kv.Value, &f)
-
-	if err != nil {
-		return f, err
-	}
-
-	return f, nil
+	return kv.Value, nil
 }
 
-func (cs *ConsulStore) Set(f *models.Feature) error {
-	org, err := cs.Get(f.ScopedKey())
-
-	if err != nil {
-		return err
-	}
-
-	if org != nil {
-		if f.FeatureType != org.FeatureType {
-			return TypeChangeError
-		}
-
-		if f.Comment == "" {
-			f.Comment = org.Comment
-		}
-	}
-
-	bts, err := json.Marshal(f)
-
-	if err != nil {
-		return err
-	}
-
+func (cs *ConsulStore) Set(key string, bts []byte) error {
 	p := &api.KVPair{
-		Key:   f.ScopedKey(),
+		Key:   key,
 		Value: bts,
 	}
 
-	_, err = cs.kv.Put(p, cs.wo)
+	_, err := cs.kv.Put(p, cs.wo)
 
 	return err
 }
@@ -91,26 +60,31 @@ func (cs *ConsulStore) Delete(key string) error {
 	return err
 }
 
-func (cs *ConsulStore) List(prefix string) (models.Features, error) {
+func (cs *ConsulStore) List(prefix string) ([][]byte, error) {
 	kvs, _, err := cs.kv.List(prefix, cs.qo)
 
-	var fts models.Features
-
 	if err != nil {
-		return fts, err
+		return [][]byte{}, err
 	}
 
-	for _, v := range kvs {
-		var f models.Feature
+	res := make([][]byte, len(kvs))
 
-		err := json.Unmarshal(v.Value, &f)
-
-		if err != nil {
-			return fts, err
-		}
-
-		fts = append(fts, f)
+	for i := 0; i < len(kvs); i++ {
+		res[i] = kvs[i].Value
 	}
 
-	return fts, err
+	return res, err
+}
+
+func (cs *ConsulStore) Put(key string, bts []byte) error {
+	fmt.Printf("setting %s\n", key)
+
+	p := &api.KVPair{
+		Key:   key,
+		Value: bts,
+	}
+
+	_, err := cs.kv.Put(p, cs.wo)
+
+	return err
 }

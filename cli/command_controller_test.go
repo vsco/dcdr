@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tucnak/climax"
 	"github.com/vsco/dcdr/config"
-	"github.com/vsco/dcdr/kv"
 	"github.com/vsco/dcdr/models"
 )
 
@@ -31,7 +30,11 @@ func NewMockClient(f *models.Feature, fts models.Features, err error) (m *MockCl
 	return
 }
 
-func (m *MockClient) Set(sr *kv.SetRequest) error {
+func (m *MockClient) Get(key string, v interface{}) error {
+	return m.Error
+}
+
+func (m *MockClient) Set(ft *models.Feature) error {
 	return m.Error
 }
 
@@ -45,6 +48,10 @@ func (m *MockClient) Namespace() string {
 
 func (m *MockClient) List(prefix string, scope string) (models.Features, error) {
 	return m.Features, m.Error
+}
+
+func (m *MockClient) GetInfo() (*models.Info, error) {
+	return nil, m.Error
 }
 
 func (m *MockClient) InitRepo(create bool) error {

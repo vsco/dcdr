@@ -1,18 +1,15 @@
 package kv
 
-import (
-	"errors"
-
-	"github.com/vsco/dcdr/models"
-)
+import "errors"
 
 var (
 	TypeChangeError = errors.New("cannot change existing feature types.")
 )
 
 type StoreIFace interface {
-	List(prefix string) (models.Features, error)
-	Set(f *models.Feature) error
-	Get(key string) (*models.Feature, error)
+	List(prefix string) ([][]byte, error)
+	Set(key string, bts []byte) error
+	Get(key string) ([]byte, error)
 	Delete(key string) error
+	Put(key string, bts []byte) error
 }
