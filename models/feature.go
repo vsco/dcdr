@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-
 type Features []Feature
 
 func (a Features) Len() int           { return len(a) }
@@ -117,7 +116,7 @@ func (fts Features) ToKVMap() map[string]interface{} {
 
 func (fts Features) ToJSON() ([]byte, error) {
 	m := fts.ToKVMap()
-	return json.MarshalIndent(m, "", "	")
+	return json.MarshalIndent(m, "", "  ")
 }
 
 func ParseFeatures(bts []byte) (Features, error) {

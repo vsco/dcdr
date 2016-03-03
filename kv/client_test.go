@@ -96,7 +96,7 @@ func TestClientSet(t *testing.T) {
 		User:      "user",
 	}
 
-	c := New(&MockStore{}, &MockRepo{}, sr.Namespace)
+	c := New(&MockStore{}, &MockRepo{}, sr.Namespace, nil)
 
 	err := c.Set(sr)
 
@@ -122,7 +122,7 @@ func TestClientSetExisting(t *testing.T) {
 
 	c := New(&MockStore{
 		Item: orig,
-	}, &MockRepo{}, sr.Namespace)
+	}, &MockRepo{}, sr.Namespace, nil)
 
 	err := c.Set(sr)
 
