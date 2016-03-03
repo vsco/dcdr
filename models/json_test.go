@@ -35,8 +35,6 @@ func TestJSON(t *testing.T) {
 	fmt.Println(err)
 	fmt.Printf("%+v", d.Dcdr)
 
-	bts, _ := json.MarshalIndent(d, "", "	")
+	bts, _ := json.MarshalIndent(d, "", "  ")
 	fmt.Println(string(bts[:]))
-
-
 }

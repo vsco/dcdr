@@ -137,7 +137,7 @@ func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
 	title := "Decider Change"
 
 	if delete {
-		text = fmt.Sprintf("deleted %s", f.ScopedKey(), f.Value)
+		text = fmt.Sprintf("deleted %s", f.ScopedKey())
 	} else {
 		text = fmt.Sprintf("set %s: %v", f.ScopedKey(), f.Value)
 	}

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"strings"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -64,5 +66,5 @@ func TestFeaturesToKVMapToJSON(t *testing.T) {
 
 	bts, err := fts.ToJSON()
 	assert.NoError(t, err)
-	assert.Equal(t, ExpectedJSON, string(bts[:]))
+	assert.Equal(t, strings.Replace(ExpectedJSON, "\t", "  ", -1), string(bts[:]))
 }
