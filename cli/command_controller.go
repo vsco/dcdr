@@ -67,21 +67,21 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 
 			if err != nil {
 				fmt.Println(err)
-				return
+				os.Exit(1)
 			}
 
 			bts, err := fts.ToJSON()
 
 			if err != nil {
 				log.Println(err)
-				return
+				os.Exit(1)
 			}
 
 			err = ioutil.WriteFile(cc.Config.FilePath, bts, 0644)
 
 			if err != nil {
 				log.Println(err)
-				return
+				os.Exit(1)
 			}
 
 			log.Printf("%s wrote changes to %s\n", cc.Config.Username, cc.Config.FilePath)
@@ -89,6 +89,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 
 		if scanner.Err() != nil {
 			fmt.Println(scanner.Err())
+			os.Exit(1)
 		}
 	}()
 

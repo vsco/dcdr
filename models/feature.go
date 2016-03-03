@@ -6,6 +6,8 @@ import (
 
 	"strings"
 
+	"errors"
+
 	"github.com/hashicorp/consul/api"
 )
 
@@ -15,6 +17,10 @@ type Features []Feature
 func (a Features) Len() int           { return len(a) }
 func (a Features) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a Features) Less(i, j int) bool { return a[i].Key < a[j].Key }
+
+func InvalidJsonResponse(msg string) error {
+	return errors.New(fmt.Sprintf("invalid json: %s", msg))
+}
 
 // FeatureType accepted feature types
 type FeatureType string
@@ -120,14 +126,10 @@ func KVsToFeatures(bts []byte) (Features, error) {
 	err := json.Unmarshal(bts, &kvs)
 
 	if err != nil {
-		return nil, err
+		return nil, InvalidJsonResponse(fmt.Sprintf("%s", bts))
 	}
 
 	var fts Features
-
-	if err != nil {
-		return fts, err
-	}
 
 	for _, v := range kvs {
 		var f Feature
