@@ -61,26 +61,14 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 
 	go func() {
 		for scanner.Scan() {
-			fts, err := models.KVsToFeatures(scanner.Bytes())
+			fts, err := models.KVsToFeatureMap(scanner.Bytes())
 
 			if err != nil {
 				fmt.Printf("parse features error: %v\n", err)
 				os.Exit(1)
 			}
 
-			info, err := cc.Client.GetInfo()
-
-			if err != nil {
-				fmt.Printf("parse info error: %v\n", err)
-				os.Exit(1)
-			}
-
-			m := models.DcdrMap{
-				Info:     info,
-				Features: fts.ExplodeToMap(),
-			}
-
-			bts, err := json.MarshalIndent(m, "", "  ")
+			bts, err := json.MarshalIndent(fts, "", "  ")
 
 			if err != nil {
 				fmt.Println(err)
