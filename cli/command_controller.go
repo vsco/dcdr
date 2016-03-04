@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strconv"
 
 	"errors"
 
@@ -24,9 +23,8 @@ import (
 )
 
 var (
-	InvalidPercentileFormat = errors.New("invalid -value format. use -value=[0.0-1.0]")
-	InvalidBoolFormat       = errors.New("invalid -value format. use -value=[true,false]")
-	InvalidFeatureType      = errors.New("invalid -type. use -type=[boolean|percentile]")
+	InvalidFeatureTypeError = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
+	InvalidRangeError       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
 )
 
 type Controller struct {
@@ -142,38 +140,34 @@ func (cc *Controller) List(ctx climax.Context) int {
 func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) {
 	name, _ := ctx.Get("name")
 	val, _ := ctx.Get("value")
-	typ, _ := ctx.Get("type")
 	cmt, _ := ctx.Get("comment")
 	scp, _ := ctx.Get("scope")
-	ft := models.GetFeatureType(typ)
 
 	var v interface{}
-	var err error
+	var ft models.FeatureType
 
-	switch ft {
-	case models.Percentile:
-		v, err = strconv.ParseFloat(val, 64)
+	if val != "" {
+		v, ft = models.ParseValueAndFeatureType(val)
 
-		if err != nil {
-			return nil, InvalidPercentileFormat
+		if ft == models.Invalid {
+			return nil, InvalidFeatureTypeError
 		}
-	case models.Boolean:
-		v, err = strconv.ParseBool(val)
 
-		if err != nil {
-			return nil, InvalidBoolFormat
+		if ft == models.Percentile {
+			if v.(float64) > 1.0 || v.(float64) < 0 {
+				return nil, InvalidRangeError
+			}
 		}
-	case models.Invalid:
-		return nil, InvalidFeatureType
 	}
 
 	return &models.Feature{
-		Key:       name,
-		Value:     v,
-		Scope:     scp,
-		Namespace: cc.Config.Namespace,
-		Comment:   cmt,
-		UpdatedBy: cc.Config.Username,
+		Key:         name,
+		Value:       v,
+		FeatureType: ft,
+		Scope:       scp,
+		Namespace:   cc.Config.Namespace,
+		Comment:     cmt,
+		UpdatedBy:   cc.Config.Username,
 	}, nil
 }
 
@@ -192,7 +186,7 @@ func (cc *Controller) Set(ctx climax.Context) int {
 		return 1
 	}
 
-	fmt.Printf("set flag '%s'\n", sr.Key)
+	fmt.Printf("set flag '%s'\n", sr.ScopedKey())
 
 	return 0
 }
@@ -217,7 +211,7 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 		return 1
 	}
 
-	fmt.Printf("deleted flag %s/%s\n", scope, name)
+	fmt.Printf("deleted flag %s/%s/%s\n", cc.Config.Namespace, scope, name)
 
 	return 0
 }

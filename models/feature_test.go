@@ -24,6 +24,15 @@ var ExpectedJSON = `{
 	}
 }`
 
+func TestGetFeatureTypeFromValue(t *testing.T) {
+	percentiles := []string{"1", "1.0", "0.0", "0", "0.5"}
+
+	for _, v := range percentiles {
+		_, ft := ParseValueAndFeatureType(v)
+		assert.Equal(t, Percentile, ft, v)
+	}
+}
+
 func TestMarshaling(t *testing.T) {
 	f := &Feature{
 		Key:         "test",

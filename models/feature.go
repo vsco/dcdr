@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"strings"
 
@@ -58,9 +59,34 @@ func GetFeatureTypeFromValue(v interface{}) FeatureType {
 	switch v.(type) {
 	case bool:
 		return Boolean
-	default:
+	case float64, int:
 		return Percentile
+	default:
+		return Invalid
 	}
+}
+
+// GetFeatureTypeFromValue interface to type helper
+func ParseValueAndFeatureType(v string) (interface{}, FeatureType) {
+	b, err := strconv.ParseBool(v)
+
+	if err == nil && v != "0" && v != "1" {
+		return b, Boolean
+	}
+
+	f, err := strconv.ParseFloat(v, 64)
+
+	if err == nil {
+		return f, Percentile
+	}
+
+	i, err := strconv.ParseInt(v, 10, 64)
+
+	if err == nil {
+		return i, Percentile
+	}
+
+	return nil, Invalid
 }
 
 // Feature KV model for feature flags

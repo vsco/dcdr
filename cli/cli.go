@@ -83,13 +83,6 @@ func (c *CLI) Commands() []climax.Command {
 					Variable: true,
 				},
 				{
-					Name:     "type",
-					Short:    "t",
-					Usage:    `--type=[boolean|percentile]`,
-					Help:     `the type of flag to set`,
-					Variable: true,
-				},
-				{
 					Name:     "value",
 					Short:    "v",
 					Usage:    `--value=0.0-1.0 or true|false`,
@@ -114,11 +107,11 @@ func (c *CLI) Commands() []climax.Command {
 
 			Examples: []climax.Example{
 				{
-					Usecase:     `-n "flag_name" -t percentile -v 0.5 -c "the flag desc"`,
+					Usecase:     `-n "flag_name" -v 0.5 -c "the flag desc"`,
 					Description: `sets a percentile flag to 50%`,
 				},
 				{
-					Usecase:     `-n "flag_name" -t boolean -v false -c "the flag desc"`,
+					Usecase:     `-n "flag_name" -v false -c "the flag desc"`,
 					Description: `sets a boolean flag to false`,
 				},
 			},

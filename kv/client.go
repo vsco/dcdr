@@ -133,12 +133,15 @@ func (c *Client) Set(ft *models.Feature) error {
 		if ft.Value == nil {
 			ft.Value = existing.Value
 		}
-		if ft.FeatureType != existing.FeatureType {
+		if ft.FeatureType != existing.FeatureType && ft.FeatureType != "" {
 			return TypeChangeError
+		}
+		if ft.FeatureType == "" {
+			ft.FeatureType = existing.FeatureType
 		}
 	}
 
-	bts, err = json.Marshal(ft)
+	bts, err = ft.ToJson()
 
 	err = c.Store.Put(ft.ScopedKey(), bts)
 
