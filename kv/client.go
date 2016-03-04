@@ -103,7 +103,7 @@ func (c *Client) List(prefix string, scope string) (models.Features, error) {
 
 	for i := 0; i < len(res); i++ {
 		var f models.Feature
-		err := json.Unmarshal(res[i], &f)
+		err := json.Unmarshal(res[i].Bytes, &f)
 
 		if err != nil {
 			return fts, err
@@ -118,13 +118,23 @@ func (c *Client) List(prefix string, scope string) (models.Features, error) {
 func (c *Client) Set(ft *models.Feature) error {
 	var existing *models.Feature
 
-	bts, err := c.Store.Get(ft.ScopedKey())
+	kvb, err := c.Store.Get(ft.ScopedKey())
 
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(bts, &existing)
+	if kvb != nil {
+		err = json.Unmarshal(kvb.Bytes, &existing)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if err != nil {
+		return err
+	}
 
 	if existing != nil {
 		if ft.Comment == "" {
@@ -141,7 +151,11 @@ func (c *Client) Set(ft *models.Feature) error {
 		}
 	}
 
-	bts, err = ft.ToJson()
+	bts, err := ft.ToJson()
+
+	if err != nil {
+		return err
+	}
 
 	err = c.Store.Put(ft.ScopedKey(), bts)
 
@@ -171,7 +185,11 @@ func (c *Client) Get(key string, v interface{}) error {
 		return err
 	}
 
-	return json.Unmarshal(bts, &v)
+	if bts == nil {
+		return KeyNotFoundError(key)
+	}
+
+	return json.Unmarshal(bts.Bytes, &v)
 }
 
 func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
@@ -200,13 +218,13 @@ func (c *Client) Delete(key string, scope string) error {
 	var existing *models.Feature
 
 	key = fmt.Sprintf("%s/%s/%s", c.Namespace(), scope, key)
-	bts, err := c.Store.Get(key)
+	kv, err := c.Store.Get(key)
 
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(bts, &existing)
+	err = json.Unmarshal(kv.Bytes, &existing)
 
 	if err != nil {
 		return err
@@ -236,7 +254,19 @@ func (c *Client) Delete(key string, scope string) error {
 }
 
 func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
-	fts, err := c.List("", "")
+	kvb, err := c.Store.List("dcdr/features")
+
+	if err != nil {
+		return err
+	}
+
+	fm, err := models.KVsToFeatureMap(kvb)
+
+	if err != nil {
+		return err
+	}
+
+	bts, err := json.MarshalIndent(fm, "", "  ")
 
 	if err != nil {
 		return err
@@ -250,7 +280,8 @@ func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
 		msg = fmt.Sprintf("%s set %s to %v", ft.UpdatedBy, ft.ScopedKey(), ft.Value)
 	}
 
-	err = c.Repo.Commit(fts, msg)
+	fmt.Println("[dcdr] commiting changes")
+	err = c.Repo.Commit(bts, msg)
 
 	if err != nil {
 		return err
@@ -268,6 +299,7 @@ func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
 		return err
 	}
 
+	fmt.Println("[dcdr] pushing commit to origin")
 	err = c.Repo.Push()
 
 	if err != nil {
@@ -282,17 +314,17 @@ func (c *Client) GetInfo() (*models.Info, error) {
 
 	var info *models.Info
 
-	bts, err := c.Store.Get(key)
+	kv, err := c.Store.Get(key)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(bts) == 0 {
+	if len(kv.Bytes) == 0 {
 		return &models.Info{}, nil
 	}
 
-	err = json.Unmarshal(bts, &info)
+	err = json.Unmarshal(kv.Bytes, &info)
 
 	if err != nil {
 		return nil, err

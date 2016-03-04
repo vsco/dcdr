@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vsco/dcdr/kv/stores"
 	"github.com/vsco/dcdr/models"
 )
 
@@ -37,8 +38,8 @@ var ExportJson = []byte(`[
 `)
 
 type MockStore struct {
-	Item  []byte
-	Items [][]byte
+	Item  *stores.KVByte
+	Items stores.KVBytes
 	Err   error
 }
 
@@ -46,19 +47,29 @@ func NewMockStore(ft *models.Feature, err error) (ms *MockStore) {
 	bts, _ := ft.ToJson()
 
 	ms = &MockStore{
-		Item:  bts,
-		Items: [][]byte{bts},
-		Err:   err,
+		Err: err,
+	}
+
+	if ft != nil {
+		kvb := stores.KVBytes{
+			&stores.KVByte{
+				Key:   ft.Key,
+				Bytes: bts,
+			},
+		}
+
+		ms.Item = kvb[0]
+		ms.Items = kvb
 	}
 
 	return
 }
 
-func (ms *MockStore) List(prefix string) ([][]byte, error) {
+func (ms *MockStore) List(prefix string) (stores.KVBytes, error) {
 	return ms.Items, ms.Err
 }
 
-func (ms *MockStore) Get(key string) ([]byte, error) {
+func (ms *MockStore) Get(key string) (*stores.KVByte, error) {
 	return ms.Item, ms.Err
 }
 
@@ -85,7 +96,7 @@ func (mr *MockRepo) Clone() error {
 	return mr.error
 }
 
-func (mr *MockRepo) Commit(features models.Features, msg string) error {
+func (mr *MockRepo) Commit(bts []byte, msg string) error {
 	return mr.error
 }
 
@@ -136,7 +147,7 @@ func TestSetRequestToFeature(t *testing.T) {
 }
 
 func TestClientSet(t *testing.T) {
-	sr := &models.Feature{
+	ft := &models.Feature{
 		Key:       "key",
 		Scope:     "scope",
 		Namespace: "namespace",
@@ -145,9 +156,9 @@ func TestClientSet(t *testing.T) {
 		UpdatedBy: "user",
 	}
 
-	c := New(&MockStore{}, &MockRepo{}, sr.Namespace, nil)
+	c := New(NewMockStore(ft, nil), &MockRepo{}, ft.Namespace, nil)
 
-	err := c.Set(sr)
+	err := c.Set(ft)
 
 	assert.NoError(t, err)
 }
@@ -208,7 +219,7 @@ func TestNilGet(t *testing.T) {
 	var f *models.Feature
 	err := c.Get("test", &f)
 
-	assert.Nil(t, err)
+	assert.EqualError(t, err, "/test not found")
 	assert.Nil(t, f)
 }
 

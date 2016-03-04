@@ -16,7 +16,7 @@ type UI struct {
 }
 
 func New() (u *UI) {
-	tbl := table.New("Name", "Scope", "Type", "Value", "Comment", "Updated By").
+	tbl := table.New("Name", "Type", "Value", "Comment", "Scope", "Updated By").
 		WithHeaderFormatter(headerFmt).
 		WithFirstColumnFormatter(columnFmt)
 

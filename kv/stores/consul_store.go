@@ -1,6 +1,10 @@
 package stores
 
-import "github.com/hashicorp/consul/api"
+import (
+	"encoding/json"
+
+	"github.com/hashicorp/consul/api"
+)
 
 type ConsulKVIFace interface {
 	List(prefix string, q *api.QueryOptions) (api.KVPairs, *api.QueryMeta, error)
@@ -37,14 +41,19 @@ func NewConsulStore(cn ConsulKVIFace) StoreIFace {
 	}
 }
 
-func (cs *ConsulStore) Get(key string) ([]byte, error) {
+func (cs *ConsulStore) Get(key string) (*KVByte, error) {
 	kv, _, err := cs.kv.Get(key, cs.qo)
 
+	k := &KVByte{}
+
 	if err != nil || kv == nil {
-		return []byte{}, err
+		return nil, err
 	}
 
-	return kv.Value, nil
+	k.Key = kv.Key
+	k.Bytes = kv.Value
+
+	return k, nil
 }
 
 func (cs *ConsulStore) Set(key string, bts []byte) error {
@@ -64,20 +73,23 @@ func (cs *ConsulStore) Delete(key string) error {
 	return err
 }
 
-func (cs *ConsulStore) List(prefix string) ([][]byte, error) {
+func (cs *ConsulStore) List(prefix string) (KVBytes, error) {
 	kvs, _, err := cs.kv.List(prefix, cs.qo)
 
-	if err != nil {
-		return [][]byte{}, err
-	}
+	kvb := make(KVBytes, len(kvs))
 
-	res := make([][]byte, len(kvs))
+	if err != nil {
+		return kvb, err
+	}
 
 	for i := 0; i < len(kvs); i++ {
-		res[i] = kvs[i].Value
+		kvb[i] = &KVByte{
+			Key:   kvs[i].Key,
+			Bytes: kvs[i].Value,
+		}
 	}
 
-	return res, err
+	return kvb, err
 }
 
 func (cs *ConsulStore) Put(key string, bts []byte) error {
@@ -89,4 +101,31 @@ func (cs *ConsulStore) Put(key string, bts []byte) error {
 	_, err := cs.kv.Put(p, cs.wo)
 
 	return err
+}
+
+func KvPairsToKvBytes(kvp api.KVPairs) (KVBytes, error) {
+	kvb := make(KVBytes, len(kvp))
+
+	for i := 0; i < len(kvp); i++ {
+		kvb[i] = &KVByte{
+			Key:   kvp[i].Key,
+			Bytes: kvp[i].Value,
+		}
+	}
+
+	return kvb, nil
+}
+
+func KvPairsBytesToKvBytes(bts []byte) (KVBytes, error) {
+	var kvp api.KVPairs
+
+	err := json.Unmarshal(bts, &kvp)
+
+	if err != nil {
+		return make(KVBytes, 0), nil
+	}
+
+	kvb, err := KvPairsToKvBytes(kvp)
+
+	return kvb, nil
 }

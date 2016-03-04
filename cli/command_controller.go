@@ -18,6 +18,7 @@ import (
 	"github.com/tucnak/climax"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/kv"
+	"github.com/vsco/dcdr/kv/stores"
 	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/ui"
 )
@@ -61,10 +62,17 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 
 	go func() {
 		for scanner.Scan() {
-			fts, err := models.KVsToFeatureMap(scanner.Bytes())
+			kvb, err := stores.KvPairsBytesToKvBytes(scanner.Bytes())
 
 			if err != nil {
-				fmt.Printf("parse features error: %v\n", err)
+				fmt.Printf("[dcdr] parse kv error: %v\n", err)
+				os.Exit(1)
+			}
+
+			fts, err := models.KVsToFeatureMap(kvb)
+
+			if err != nil {
+				fmt.Printf("[dcdr] parse features error: %v\n", err)
 				os.Exit(1)
 			}
 
@@ -82,7 +90,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 				os.Exit(1)
 			}
 
-			log.Printf("wrote changes to %s\n", cc.Config.FilePath)
+			log.Printf("[dcdr] wrote changes to %s\n", cc.Config.FilePath)
 		}
 
 		if scanner.Err() != nil {
@@ -91,7 +99,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 		}
 	}()
 
-	log.Printf("watching namespace: %s\n", cc.Config.Namespace)
+	log.Printf("[dcdr] watching namespace: %s\n", cc.Config.Namespace)
 
 	if err := cmd.Run(); err != nil {
 		log.Println(err, b)
@@ -116,7 +124,7 @@ func (cc *Controller) List(ctx climax.Context) int {
 	}
 
 	if len(features) == 0 {
-		fmt.Printf("No feature flags found in namespace: %s.\n", cc.Client.Namespace())
+		fmt.Printf("[dcdr] no feature flags found in namespace: %s\n", cc.Client.Namespace())
 		return 1
 	}
 
@@ -170,11 +178,11 @@ func (cc *Controller) Set(ctx climax.Context) int {
 	err = cc.Client.Set(sr)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("[dcdr] set error: %v\n", err)
 		return 1
 	}
 
-	fmt.Printf("set flag '%s'\n", sr.ScopedKey())
+	fmt.Printf("[dcdr] set flag '%s'\n", sr.ScopedKey())
 
 	return 0
 }
@@ -184,7 +192,7 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 	scope, _ := ctx.Get("scope")
 
 	if name == "" {
-		fmt.Println("name is required")
+		fmt.Println("[dcdr] name is required")
 		return 1
 	}
 
@@ -199,7 +207,7 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 		return 1
 	}
 
-	fmt.Printf("deleted flag %s/%s/%s\n", cc.Config.Namespace, scope, name)
+	fmt.Printf("[dcdr] deleted flag %s/%s/%s\n", cc.Config.Namespace, scope, name)
 
 	return 0
 }
@@ -215,9 +223,9 @@ func (cc *Controller) Init(ctx climax.Context) int {
 	}
 
 	if create {
-		fmt.Printf("initialized new repo in %s and pushed to %s\n", cc.Config.Git.RepoPath, cc.Config.Git.RepoURL)
+		fmt.Printf("[dcdr] initialized new repo in %s and pushed to %s\n", cc.Config.Git.RepoPath, cc.Config.Git.RepoURL)
 	} else {
-		fmt.Printf("cloned %s into %s\n", cc.Config.Git.RepoURL, cc.Config.Git.RepoPath)
+		fmt.Printf("[dcdr] cloned %s into %s\n", cc.Config.Git.RepoURL, cc.Config.Git.RepoPath)
 	}
 
 	return 0
@@ -261,7 +269,7 @@ func (cc *Controller) Import(ctx climax.Context) int {
 			return 1
 		}
 
-		fmt.Printf("set %s to %+v\n", k, v)
+		fmt.Printf("[dcdr] set %s to %+v\n", k, v)
 	}
 
 	return 1

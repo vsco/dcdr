@@ -10,13 +10,12 @@ import (
 	"io/ioutil"
 
 	"github.com/vsco/dcdr/config"
-	"github.com/vsco/dcdr/models"
 )
 
 type RepoIFace interface {
 	Init()
 	Clone() error
-	Commit(features models.Features, msg string) error
+	Commit(bts []byte, msg string) error
 	Create() error
 	Exists() bool
 	Enabled() bool
@@ -154,7 +153,7 @@ func (g *Git) CurrentSha() (string, error) {
 	return strings.TrimSpace(string(bts[:])), nil
 }
 
-func (g *Git) Commit(features models.Features, msg string) error {
+func (g *Git) Commit(bts []byte, msg string) error {
 	if !g.Config.GitEnabled() {
 		return nil
 	}
@@ -163,14 +162,8 @@ func (g *Git) Commit(features models.Features, msg string) error {
 		return fmt.Errorf("could not pull from %s", g.Config.Git.RepoURL)
 	}
 
-	bts, err := features.ToJSON()
-
-	if err != nil {
-		return err
-	}
-
 	fp := fmt.Sprintf("%s/%s", g.Config.Git.RepoPath, DefaultConfigFileName)
-	err = ioutil.WriteFile(fp, bts, DefaultPerms)
+	err := ioutil.WriteFile(fp, bts, DefaultPerms)
 
 	if err != nil {
 		return fmt.Errorf("could not write change to %s\n", fp)
