@@ -16,11 +16,6 @@ type Info struct {
 	CurrentSha string `json:"current_sha"`
 }
 
-type DcdrMap struct {
-	Info     *Info                  `json:"info"`
-	Features map[string]interface{} `json:"features"`
-}
-
 // Features a Feature result set
 type Features []Feature
 
@@ -170,7 +165,7 @@ func (fts Features) ToJSON() ([]byte, error) {
 
 // KVsToFeatures helper for unmarshalling consul result
 // sets into Features
-func KVsToFeatures(bts []byte) (Features, error) {
+func KVsToFeatureMap(bts []byte) (map[string]interface{}, error) {
 	var kvs api.KVPairs
 
 	err := json.Unmarshal(bts, &kvs)
@@ -179,21 +174,38 @@ func KVsToFeatures(bts []byte) (Features, error) {
 		return nil, InvalidJsonResponse(fmt.Sprintf("%s", bts))
 	}
 
-	var fts Features
+	fm := make(map[string]interface{})
 
 	for _, v := range kvs {
-		var f Feature
+		var key string
+		var value interface{}
 
-		err := json.Unmarshal(v.Value, &f)
+		if v.Key == "dcdr/info" {
+			var info Info
+			err = json.Unmarshal(v.Value, &info)
 
-		if err != nil {
-			return fts, err
+			if err != nil {
+				return fm, err
+			}
+
+			key = v.Key
+			value = info
+		} else {
+			var ft Feature
+			err = json.Unmarshal(v.Value, &ft)
+
+			if err != nil {
+				return fm, err
+			}
+
+			key = v.Key
+			value = ft.Value
 		}
 
-		fts = append(fts, f)
+		explode(fm, key, value)
 	}
 
-	return fts, nil
+	return fm, nil
 }
 
 func explode(m map[string]interface{}, k string, v interface{}) {
