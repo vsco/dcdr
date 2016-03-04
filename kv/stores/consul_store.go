@@ -1,10 +1,6 @@
 package stores
 
-import (
-	"fmt"
-
-	"github.com/hashicorp/consul/api"
-)
+import "github.com/hashicorp/consul/api"
 
 type ConsulKVIFace interface {
 	List(prefix string, q *api.QueryOptions) (api.KVPairs, *api.QueryMeta, error)
@@ -85,8 +81,6 @@ func (cs *ConsulStore) List(prefix string) ([][]byte, error) {
 }
 
 func (cs *ConsulStore) Put(key string, bts []byte) error {
-	fmt.Printf("setting %s\n", key)
-
 	p := &api.KVPair{
 		Key:   key,
 		Value: bts,
