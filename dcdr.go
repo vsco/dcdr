@@ -9,12 +9,13 @@ import (
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/kv"
+	"github.com/vsco/dcdr/kv/stores"
 	"github.com/vsco/dcdr/repo"
 )
 
 func main() {
 	cfg := config.LoadConfig()
-	store, err := kv.DefaultConsulStore()
+	store, err := stores.DefaultConsulStore()
 
 	if err != nil {
 		fmt.Println(err)

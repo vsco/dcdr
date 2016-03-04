@@ -120,6 +120,11 @@ func (f *Feature) BoolValue() bool {
 	return f.Value.(bool)
 }
 
+// ToJson marshal feature to json
+func (f *Feature) ToJson() ([]byte, error) {
+	return json.Marshal(f)
+}
+
 // ExplodeToMap explode feature namespaces and scopes to nested maps
 func (fts Features) ExplodeToMap() map[string]interface{} {
 	m := make(map[string]interface{})

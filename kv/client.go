@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/PagerDuty/godspeed"
+	"github.com/vsco/dcdr/kv/stores"
 	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/repo"
 )
@@ -15,6 +16,8 @@ const (
 	CurrentShaKey = "current_sha"
 	InfoNameSpace = "info"
 )
+
+var TypeChangeError = errors.New("cannot change existing feature types.")
 
 func ValidationError(n string) error {
 	return errors.New(fmt.Sprintf("%s is required", n))
@@ -35,7 +38,7 @@ type ClientIFace interface {
 }
 
 type Client struct {
-	Store     StoreIFace
+	Store     stores.StoreIFace
 	Repo      repo.RepoIFace
 	Stats     *godspeed.Godspeed
 	namespace string
@@ -75,7 +78,7 @@ func (sr *SetRequest) ToFeature() (*models.Feature, error) {
 	}, nil
 }
 
-func New(st StoreIFace, rp repo.RepoIFace, namespace string, stats *godspeed.Godspeed) (c *Client) {
+func New(st stores.StoreIFace, rp repo.RepoIFace, namespace string, stats *godspeed.Godspeed) (c *Client) {
 	c = &Client{
 		Store:     st,
 		Repo:      rp,
@@ -137,7 +140,7 @@ func (c *Client) Set(ft *models.Feature) error {
 
 	bts, err = json.Marshal(ft)
 
-	err = c.Store.Set(ft.ScopedKey(), bts)
+	err = c.Store.Put(ft.ScopedKey(), bts)
 
 	if err != nil {
 		return err
