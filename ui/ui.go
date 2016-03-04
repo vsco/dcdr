@@ -29,7 +29,7 @@ func New() (u *UI) {
 
 func (u *UI) DrawTable(features models.Features) {
 	for _, feature := range features {
-		u.tbl.AddRow(feature.Key, feature.Scope, feature.FeatureType, feature.Value, feature.Comment, feature.UpdatedBy)
+		u.tbl.AddRow(feature.Key, feature.FeatureType, feature.Value, feature.Comment, feature.Scope, feature.UpdatedBy)
 	}
 
 	u.tbl.Print()

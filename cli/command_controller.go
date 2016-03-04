@@ -49,7 +49,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 		"-type",
 		"keyprefix",
 		"-prefix",
-		"dcdr",
+		cc.Config.Namespace,
 		"cat")
 
 	pr, pw := io.Pipe()
@@ -156,15 +156,10 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 		}
 	}
 
-	return &models.Feature{
-		Key:         name,
-		Value:       v,
-		FeatureType: ft,
-		Scope:       scp,
-		Namespace:   cc.Config.Namespace,
-		Comment:     cmt,
-		UpdatedBy:   cc.Config.Username,
-	}, nil
+	f := models.NewFeature(name, v, cmt, cc.Config.Username, scp, cc.Config.Namespace)
+	f.FeatureType = ft
+
+	return f, nil
 }
 
 func (cc *Controller) Set(ctx climax.Context) int {
@@ -254,15 +249,8 @@ func (cc *Controller) Import(ctx climax.Context) int {
 	}
 
 	for k, v := range kvs {
-		sr := &models.Feature{
-			Key:         k,
-			Value:       v,
-			Namespace:   cc.Config.Namespace,
-			Scope:       scope,
-			FeatureType: models.GetFeatureTypeFromValue(v),
-		}
-
-		err = cc.Client.Set(sr)
+		f := models.NewFeature(k, v, "", "", scope, cc.Config.Namespace)
+		err = cc.Client.Set(f)
 
 		if err != nil {
 			fmt.Println(err)

@@ -44,40 +44,6 @@ type Client struct {
 	namespace string
 }
 
-type SetRequest struct {
-	Key       string
-	Value     interface{}
-	Scope     string
-	Namespace string
-	Comment   string
-	User      string
-}
-
-func (sr *SetRequest) ToFeature() (*models.Feature, error) {
-	var ft models.FeatureType
-
-	if sr.Key == "" {
-		return nil, ValidationError("name")
-	}
-
-	switch sr.Value.(type) {
-	case bool:
-		ft = models.Boolean
-	default:
-		ft = models.Percentile
-	}
-
-	return &models.Feature{
-		Key:         sr.Key,
-		Scope:       sr.Scope,
-		Namespace:   sr.Namespace,
-		Value:       sr.Value,
-		Comment:     sr.Comment,
-		UpdatedBy:   sr.User,
-		FeatureType: ft,
-	}, nil
-}
-
 func New(st stores.StoreIFace, rp repo.RepoIFace, namespace string, stats *godspeed.Godspeed) (c *Client) {
 	c = &Client{
 		Store:     st,
@@ -93,8 +59,9 @@ func (c *Client) Namespace() string {
 }
 
 func (c *Client) List(prefix string, scope string) (models.Features, error) {
-	prefix = fmt.Sprintf("%s/%s/%s", c.Namespace(), scope, prefix)
+	prefix = fmt.Sprintf("%s/features/%s/%s", c.Namespace(), scope, prefix)
 	res, err := c.Store.List(prefix)
+
 	fts := make(models.Features, len(res))
 
 	if err != nil {
@@ -177,7 +144,7 @@ func (c *Client) Set(ft *models.Feature) error {
 }
 
 func (c *Client) Get(key string, v interface{}) error {
-	key = fmt.Sprintf("%s/%s", c.namespace, key)
+	key = fmt.Sprintf("%s/%s", c.Namespace(), key)
 
 	bts, err := c.Store.Get(key)
 
@@ -217,17 +184,19 @@ func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
 func (c *Client) Delete(key string, scope string) error {
 	var existing *models.Feature
 
-	key = fmt.Sprintf("%s/%s/%s", c.Namespace(), scope, key)
+	key = fmt.Sprintf("%s/features/%s/%s", c.Namespace(), scope, key)
 	kv, err := c.Store.Get(key)
 
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(kv.Bytes, &existing)
+	if kv != nil {
+		err = json.Unmarshal(kv.Bytes, &existing)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	if existing == nil {

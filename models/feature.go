@@ -29,6 +29,7 @@ const (
 	Boolean      FeatureType = "boolean"
 	Invalid      FeatureType = "invalid"
 	DefaultScope             = "default"
+	FeatureScope             = "features"
 )
 
 // GetFeatureType string to type helper
@@ -97,13 +98,17 @@ func (f *Feature) GetScope() string {
 	return f.Scope
 }
 
+func (f *Feature) GetNamespace() string {
+	return fmt.Sprintf("%s/%s", f.Namespace, FeatureScope)
+}
+
 // ScopedKey expanded key with namespace and scope
 func (f *Feature) ScopedKey() string {
-	return fmt.Sprintf("%s/%s/%s", f.Namespace, f.GetScope(), f.Key)
+	return fmt.Sprintf("%s/%s/%s", f.GetNamespace(), f.GetScope(), f.Key)
 }
 
 // NewFeature init a Feature
-func NewFeature(name string, value interface{}, comment string, user string, scope string) (f *Feature) {
+func NewFeature(name string, value interface{}, comment string, user string, scope string, ns string) (f *Feature) {
 	var ft FeatureType
 
 	switch value.(type) {
@@ -120,6 +125,7 @@ func NewFeature(name string, value interface{}, comment string, user string, sco
 		Comment:     comment,
 		UpdatedBy:   user,
 		Scope:       scope,
+		Namespace:   ns,
 	}
 
 	return
