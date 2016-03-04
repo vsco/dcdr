@@ -82,7 +82,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 				os.Exit(1)
 			}
 
-			log.Printf("%s wrote changes to %s\n", cc.Config.Username, cc.Config.FilePath)
+			log.Printf("wrote changes to %s\n", cc.Config.FilePath)
 		}
 
 		if scanner.Err() != nil {
