@@ -1,4 +1,4 @@
-package kv
+package stores
 
 import (
 	"fmt"
@@ -31,6 +31,14 @@ func DefaultConsulStore() (StoreIFace, error) {
 		qo: nil,
 		wo: nil,
 	}, nil
+}
+
+func NewConsulStore(cn ConsulKVIFace) StoreIFace {
+	return &ConsulStore{
+		kv: cn,
+		qo: nil,
+		wo: nil,
+	}
 }
 
 func (cs *ConsulStore) Get(key string) ([]byte, error) {

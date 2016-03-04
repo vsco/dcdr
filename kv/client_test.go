@@ -14,6 +14,18 @@ type MockStore struct {
 	Err   error
 }
 
+func NewMockStore(ft *models.Feature, err error) (ms *MockStore) {
+	bts, _ := ft.ToJson()
+
+	ms = &MockStore{
+		Item:  bts,
+		Items: [][]byte{bts},
+		Err:   err,
+	}
+
+	return
+}
+
 func (ms *MockStore) List(prefix string) ([][]byte, error) {
 	return ms.Items, ms.Err
 }
@@ -131,7 +143,7 @@ func TestClientSetExisting(t *testing.T) {
 		FeatureType: models.GetFeatureType("percentile"),
 	}
 
-	c := New(MockConsulStore(orig, nil), &MockRepo{}, sr.Namespace, nil)
+	c := New(NewMockStore(orig, nil), &MockRepo{}, sr.Namespace, nil)
 
 	err := c.Set(sr)
 
@@ -140,7 +152,7 @@ func TestClientSetExisting(t *testing.T) {
 
 func TestList(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	cs := MockConsulStore(ft, nil)
+	cs := NewMockStore(ft, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
 	fts, err := c.List("test", "")
@@ -151,7 +163,7 @@ func TestList(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	cs := MockConsulStore(ft, nil)
+	cs := NewMockStore(ft, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
 	var f *models.Feature
@@ -162,7 +174,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestNilGet(t *testing.T) {
-	cs := MockConsulStore(nil, nil)
+	cs := NewMockStore(nil, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
 	var f *models.Feature
@@ -174,7 +186,7 @@ func TestNilGet(t *testing.T) {
 
 func TestSet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	cs := MockConsulStore(ft, nil)
+	cs := NewMockStore(ft, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
 	err := c.Set(ft)
@@ -186,7 +198,7 @@ func TestTypeChangeErrorSet(t *testing.T) {
 	orig := models.NewFeature("test", 0.5, "c", "u", "s")
 	bad := models.NewFeature("test", false, "c", "u", "s")
 
-	cs := MockConsulStore(orig, nil)
+	cs := NewMockStore(orig, nil)
 	c := New(cs, nil, "", nil)
 
 	err := c.Set(bad)
@@ -196,7 +208,7 @@ func TestTypeChangeErrorSet(t *testing.T) {
 func TestSetWithError(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s")
 	e := errors.New("")
-	cs := MockConsulStore(ft, e)
+	cs := NewMockStore(ft, e)
 	c := New(cs, nil, "", nil)
 
 	err := c.Set(ft)
@@ -206,7 +218,7 @@ func TestSetWithError(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	cs := MockConsulStore(ft, nil)
+	cs := NewMockStore(ft, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
 	err := c.Delete(ft.Key, "")
@@ -217,7 +229,7 @@ func TestDelete(t *testing.T) {
 func TestDeleteWithError(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s")
 	e := errors.New("")
-	cs := MockConsulStore(ft, e)
+	cs := NewMockStore(ft, e)
 	c := New(cs, &MockRepo{}, "", nil)
 
 	err := c.Delete(ft.Key, "")
