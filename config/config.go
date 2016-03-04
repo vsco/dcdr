@@ -73,7 +73,7 @@ func readConfig() *Config {
 	err = hcl.Decode(&cfg, string(bts[:]))
 
 	if err != nil {
-		fmt.Printf("parse error %+v", err)
+		fmt.Printf("[dcdr] config parse error %+v", err)
 		os.Exit(1)
 	}
 

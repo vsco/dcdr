@@ -7,9 +7,7 @@ import (
 
 	"strings"
 
-	"errors"
-
-	"github.com/hashicorp/consul/api"
+	"github.com/vsco/dcdr/kv/stores"
 )
 
 type Info struct {
@@ -22,10 +20,6 @@ type Features []Feature
 func (a Features) Len() int           { return len(a) }
 func (a Features) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a Features) Less(i, j int) bool { return a[i].Key < a[j].Key }
-
-func InvalidJsonResponse(msg string) error {
-	return errors.New(fmt.Sprintf("invalid json: %s", msg))
-}
 
 // FeatureType accepted feature types
 type FeatureType string
@@ -165,26 +159,19 @@ func (fts Features) ToJSON() ([]byte, error) {
 
 // KVsToFeatures helper for unmarshalling consul result
 // sets into Features
-func KVsToFeatureMap(bts []byte) (map[string]interface{}, error) {
-	var kvs api.KVPairs
-
-	err := json.Unmarshal(bts, &kvs)
-
-	if err != nil {
-		return nil, InvalidJsonResponse(fmt.Sprintf("%s", bts))
-	}
-
+func KVsToFeatureMap(kvb stores.KVBytes) (map[string]interface{}, error) {
 	fm := make(map[string]interface{})
 
-	for _, v := range kvs {
+	for _, v := range kvb {
 		var key string
 		var value interface{}
 
 		if v.Key == "dcdr/info" {
 			var info Info
-			err = json.Unmarshal(v.Value, &info)
+			err := json.Unmarshal(v.Bytes, &info)
 
 			if err != nil {
+				fmt.Printf("%s", v.Bytes)
 				return fm, err
 			}
 
@@ -192,9 +179,10 @@ func KVsToFeatureMap(bts []byte) (map[string]interface{}, error) {
 			value = info
 		} else {
 			var ft Feature
-			err = json.Unmarshal(v.Value, &ft)
+			err := json.Unmarshal(v.Bytes, &ft)
 
 			if err != nil {
+				fmt.Printf("%s: %s", v.Key, v.Bytes)
 				return fm, err
 			}
 

@@ -8,26 +8,27 @@ import (
 )
 
 var MockBytes = []byte("asdf")
+var MockKVBytes = KVBytes{
+	&KVByte{
+		Key:   "a",
+		Bytes: MockBytes,
+	},
+}
 
 type MockConsul struct {
-	Item  []byte
-	Items api.KVPairs
+	Item  *KVByte
+	Items KVBytes
 	Err   error
 }
 
-func NewMockConsul(key string, bts []byte, err error) (mc *MockConsul) {
+func NewMockConsul(key string, kvb KVBytes, err error) (mc *MockConsul) {
 	mc = &MockConsul{
-		Item: bts,
-		Err:  err,
+		Err: err,
 	}
 
-	if len(bts) != 0 {
-		mc.Items = api.KVPairs{
-			{
-				Key:   key,
-				Value: bts,
-			},
-		}
+	if len(kvb) != 0 {
+		mc.Item = kvb[0]
+		mc.Items = kvb
 	}
 
 	return
@@ -36,12 +37,17 @@ func NewMockConsul(key string, bts []byte, err error) (mc *MockConsul) {
 func (mc *MockConsul) get(key string) *api.KVPair {
 	return &api.KVPair{
 		Key:   key,
-		Value: mc.Item,
+		Value: mc.Item.Bytes,
 	}
 }
 
 func (mc *MockConsul) List(prefix string, qo *api.QueryOptions) (api.KVPairs, *api.QueryMeta, error) {
-	return mc.Items, nil, mc.Err
+	items := api.KVPairs{&api.KVPair{
+		Key:   mc.Item.Key,
+		Value: mc.Item.Bytes,
+	},
+	}
+	return items, nil, mc.Err
 }
 
 func (mc *MockConsul) Get(key string, qo *api.QueryOptions) (*api.KVPair, *api.QueryMeta, error) {
@@ -57,27 +63,27 @@ func (mc *MockConsul) Delete(key string, w *api.WriteOptions) (*api.WriteMeta, e
 }
 
 func TestConsulGet(t *testing.T) {
-	mc := NewMockConsul("n", MockBytes, nil)
+	mc := NewMockConsul("a", MockKVBytes, nil)
 	cs := NewConsulStore(mc)
 
-	bts, err := cs.Get("n")
+	bts, err := cs.Get("a")
 
 	assert.NoError(t, err)
-	assert.Equal(t, MockBytes, bts)
+	assert.Equal(t, MockKVBytes[0], bts)
 }
 
 func TestConsulList(t *testing.T) {
-	mc := NewMockConsul("n", MockBytes, nil)
+	mc := NewMockConsul("n", MockKVBytes, nil)
 	cs := NewConsulStore(mc)
 
 	bts, err := cs.List("n")
 
 	assert.NoError(t, err)
-	assert.Equal(t, [][]byte{MockBytes}, bts)
+	assert.Equal(t, MockKVBytes, bts)
 }
 
 func TestConsulPut(t *testing.T) {
-	mc := NewMockConsul("n", MockBytes, nil)
+	mc := NewMockConsul("n", MockKVBytes, nil)
 	cs := NewConsulStore(mc)
 
 	err := cs.Put("n", MockBytes)
@@ -86,7 +92,7 @@ func TestConsulPut(t *testing.T) {
 }
 
 func TestConsulDelete(t *testing.T) {
-	mc := NewMockConsul("n", MockBytes, nil)
+	mc := NewMockConsul("n", MockKVBytes, nil)
 	cs := NewConsulStore(mc)
 
 	err := cs.Delete("n")

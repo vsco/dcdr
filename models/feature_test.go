@@ -7,11 +7,8 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vsco/dcdr/kv/stores"
 )
-
-var ConsulJSON = []byte(`[{"Key":"dcdr/features/cn/test","CreateIndex":319,"ModifyIndex":319,"LockIndex":0,
-"Flags":0,"Value":"eyJmZWF0dXJlX3R5cGUiOiJwZXJjZW50aWxlIiwia2V5IjoidGVzdCIsIm5hbWVzcGFjZSI6ImRjZHIvZmVhdHVyZXMiLCJzY29wZSI6ImNuIiwidmFsdWUiOjAuNSwiY29tbWVudCI6IiIsInVwZGF0ZWRfYnkiOiJjaHJpc2IifQ==",
-"Session":""}]`)
 
 var ExpectedJSON = `{
   "dcdr": {
@@ -93,7 +90,10 @@ func TestTypes(t *testing.T) {
 }
 
 func TestFeaturesToKVMapToJSON(t *testing.T) {
-	fts, err := KVsToFeatureMap(ExportJson)
+	kvp, err := stores.KvPairsBytesToKvBytes(ExportJson)
+	assert.NoError(t, err)
+
+	fts, err := KVsToFeatureMap(kvp)
 	assert.NoError(t, err)
 
 	json, err := json.MarshalIndent(fts, "", "  ")
