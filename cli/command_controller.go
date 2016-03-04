@@ -50,7 +50,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 		"-type",
 		"keyprefix",
 		"-prefix",
-		cc.Config.Namespace,
+		"dcdr",
 		"cat")
 
 	pr, pw := io.Pipe()
@@ -66,14 +66,26 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 			fts, err := models.KVsToFeatures(scanner.Bytes())
 
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("parse features error: %v\n", err)
 				os.Exit(1)
 			}
 
-			bts, err := fts.ToJSON()
+			info, err := cc.Client.GetInfo()
 
 			if err != nil {
-				log.Println(err)
+				fmt.Printf("parse info error: %v\n", err)
+				os.Exit(1)
+			}
+
+			m := models.DcdrMap{
+				Info:     info,
+				Features: fts.ExplodeToMap(),
+			}
+
+			bts, err := json.MarshalIndent(m, "", "  ")
+
+			if err != nil {
+				fmt.Println(err)
 				os.Exit(1)
 			}
 
@@ -127,7 +139,7 @@ func (cc *Controller) List(ctx climax.Context) int {
 	return 0
 }
 
-func (cc *Controller) ParseContext(ctx climax.Context) (*kv.SetRequest, error) {
+func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) {
 	name, _ := ctx.Get("name")
 	val, _ := ctx.Get("value")
 	typ, _ := ctx.Get("type")
@@ -155,13 +167,13 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*kv.SetRequest, error) {
 		return nil, InvalidFeatureType
 	}
 
-	return &kv.SetRequest{
+	return &models.Feature{
 		Key:       name,
 		Value:     v,
 		Scope:     scp,
 		Namespace: cc.Config.Namespace,
 		Comment:   cmt,
-		User:      cc.Config.Username,
+		UpdatedBy: cc.Config.Username,
 	}, nil
 }
 
@@ -252,11 +264,12 @@ func (cc *Controller) Import(ctx climax.Context) int {
 	}
 
 	for k, v := range kvs {
-		sr := &kv.SetRequest{
-			Key:       k,
-			Value:     v,
-			Namespace: cc.Config.Namespace,
-			Scope:     scope,
+		sr := &models.Feature{
+			Key:         k,
+			Value:       v,
+			Namespace:   cc.Config.Namespace,
+			Scope:       scope,
+			FeatureType: models.GetFeatureTypeFromValue(v),
 		}
 
 		err = cc.Client.Set(sr)

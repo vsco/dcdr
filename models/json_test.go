@@ -1,13 +1,5 @@
 package models
 
-import (
-	"encoding/json"
-	"fmt"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
 var JSON = []byte(`{
   "dcdr": {
   	"info" : {
@@ -25,16 +17,16 @@ var JSON = []byte(`{
   }
 }`)
 
-func TestJSON(t *testing.T) {
-	var d DcdrMap
-
-	err := json.Unmarshal(JSON, &d)
-
-	assert.NoError(t, err)
-
-	fmt.Println(err)
-	fmt.Printf("%+v", d.Dcdr)
-
-	bts, _ := json.MarshalIndent(d, "", "  ")
-	fmt.Println(string(bts[:]))
-}
+//func TestJSON(t *testing.T) {
+//	var d DcdrMap
+//
+//	err := json.Unmarshal(JSON, &d)
+//
+//	assert.NoError(t, err)
+//
+//	fmt.Println(err)
+//	fmt.Printf("%+v", d.Dcdr)
+//
+//	bts, _ := json.MarshalIndent(d, "", "  ")
+//	fmt.Println(string(bts[:]))
+//}

@@ -1,6 +1,7 @@
 package kv
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,24 +9,28 @@ import (
 )
 
 type MockStore struct {
-	Item  *models.Feature
-	Items models.Features
+	Item  []byte
+	Items [][]byte
 	Err   error
 }
 
-func (ms *MockStore) List(prefix string) (models.Features, error) {
+func (ms *MockStore) List(prefix string) ([][]byte, error) {
 	return ms.Items, ms.Err
 }
 
-func (ms *MockStore) Get(key string) (*models.Feature, error) {
+func (ms *MockStore) Get(key string) ([]byte, error) {
 	return ms.Item, ms.Err
 }
 
-func (ms *MockStore) Set(f *models.Feature) error {
+func (ms *MockStore) Set(key string, bts []byte) error {
 	return ms.Err
 }
 
 func (ms *MockStore) Delete(key string) error {
+	return ms.Err
+}
+
+func (ms *MockStore) Put(key string, bts []byte) error {
 	return ms.Err
 }
 
@@ -54,6 +59,10 @@ func (mr *MockRepo) Exists() bool {
 
 func (mr *MockRepo) Enabled() bool {
 	return mr.enabled
+}
+
+func (mr *MockRepo) Push() error {
+	return mr.error
 }
 
 func (mr *MockRepo) Pull() error {
@@ -87,13 +96,13 @@ func TestSetRequestToFeature(t *testing.T) {
 }
 
 func TestClientSet(t *testing.T) {
-	sr := &SetRequest{
+	sr := &models.Feature{
 		Key:       "key",
 		Scope:     "scope",
 		Namespace: "namespace",
 		Value:     0.5,
 		Comment:   "comment",
-		User:      "user",
+		UpdatedBy: "user",
 	}
 
 	c := New(&MockStore{}, &MockRepo{}, sr.Namespace, nil)
@@ -104,27 +113,114 @@ func TestClientSet(t *testing.T) {
 }
 
 func TestClientSetExisting(t *testing.T) {
-	sr := &SetRequest{
-		Key:       "key",
-		Scope:     "scope",
-		Namespace: "namespace",
-		User:      "user",
+	sr := &models.Feature{
+		Key:         "key",
+		Scope:       "scope",
+		Namespace:   "namespace",
+		UpdatedBy:   "user",
+		FeatureType: models.GetFeatureType("percentile"),
 	}
 
 	orig := &models.Feature{
-		Key:       "key",
-		Scope:     "scope",
-		Namespace: "namespace",
-		Value:     0.5,
-		Comment:   "comment",
-		UpdatedBy: "user",
+		Key:         "key",
+		Scope:       "scope",
+		Namespace:   "namespace",
+		Value:       0.5,
+		Comment:     "comment",
+		UpdatedBy:   "user",
+		FeatureType: models.GetFeatureType("percentile"),
 	}
 
-	c := New(&MockStore{
-		Item: orig,
-	}, &MockRepo{}, sr.Namespace, nil)
+	c := New(MockConsulStore(orig, nil), &MockRepo{}, sr.Namespace, nil)
 
 	err := c.Set(sr)
 
 	assert.NoError(t, err)
+}
+
+func TestList(t *testing.T) {
+	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	cs := MockConsulStore(ft, nil)
+	c := New(cs, &MockRepo{}, "", nil)
+
+	fts, err := c.List("test", "")
+
+	assert.Nil(t, err)
+	assert.Equal(t, models.Features{*ft}, fts)
+}
+
+func TestGet(t *testing.T) {
+	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	cs := MockConsulStore(ft, nil)
+	c := New(cs, &MockRepo{}, "", nil)
+
+	var f *models.Feature
+	err := c.Get("test", &f)
+
+	assert.Nil(t, err)
+	assert.Equal(t, f, ft)
+}
+
+func TestNilGet(t *testing.T) {
+	cs := MockConsulStore(nil, nil)
+	c := New(cs, &MockRepo{}, "", nil)
+
+	var f *models.Feature
+	err := c.Get("test", &f)
+
+	assert.Nil(t, err)
+	assert.Nil(t, f)
+}
+
+func TestSet(t *testing.T) {
+	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	cs := MockConsulStore(ft, nil)
+	c := New(cs, &MockRepo{}, "", nil)
+
+	err := c.Set(ft)
+
+	assert.Nil(t, err)
+}
+
+func TestTypeChangeErrorSet(t *testing.T) {
+	orig := models.NewFeature("test", 0.5, "c", "u", "s")
+	bad := models.NewFeature("test", false, "c", "u", "s")
+
+	cs := MockConsulStore(orig, nil)
+	c := New(cs, nil, "", nil)
+
+	err := c.Set(bad)
+	assert.Equal(t, TypeChangeError, err)
+}
+
+func TestSetWithError(t *testing.T) {
+	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	e := errors.New("")
+	cs := MockConsulStore(ft, e)
+	c := New(cs, nil, "", nil)
+
+	err := c.Set(ft)
+
+	assert.Equal(t, e, err)
+}
+
+func TestDelete(t *testing.T) {
+	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	cs := MockConsulStore(ft, nil)
+	c := New(cs, &MockRepo{}, "", nil)
+
+	err := c.Delete(ft.Key, "")
+
+	assert.Nil(t, err)
+}
+
+func TestDeleteWithError(t *testing.T) {
+	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	e := errors.New("")
+	cs := MockConsulStore(ft, e)
+	c := New(cs, &MockRepo{}, "", nil)
+
+	err := c.Delete(ft.Key, "")
+
+	assert.Equal(t, e, err)
 }

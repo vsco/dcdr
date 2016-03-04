@@ -1,13 +1,9 @@
 package kv
 
 import (
-	"errors"
-	"testing"
-
 	"encoding/json"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/stretchr/testify/assert"
 	"github.com/vsco/dcdr/models"
 )
 
@@ -63,81 +59,4 @@ func (mc *MockConsul) Put(p *api.KVPair, qo *api.WriteOptions) (*api.WriteMeta, 
 
 func (mc *MockConsul) Delete(key string, w *api.WriteOptions) (*api.WriteMeta, error) {
 	return nil, mc.Err
-}
-
-func TestList(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	cs := MockConsulStore(ft, nil)
-
-	fts, err := cs.List("test")
-
-	assert.Nil(t, err)
-	assert.Equal(t, models.Features{*ft}, fts)
-}
-
-func TestGet(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	cs := MockConsulStore(ft, nil)
-
-	f, err := cs.Get("test")
-
-	assert.Nil(t, err)
-	assert.Equal(t, f, ft)
-}
-
-func TestNilGet(t *testing.T) {
-	cs := MockConsulStore(nil, nil)
-
-	f, err := cs.Get("test")
-
-	assert.Nil(t, err)
-	assert.Nil(t, f)
-}
-
-func TestSet(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	cs := MockConsulStore(ft, nil)
-
-	err := cs.Set(ft)
-
-	assert.Nil(t, err)
-}
-
-func TestSetWithError(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	e := errors.New("")
-	cs := MockConsulStore(ft, e)
-
-	err := cs.Set(ft)
-
-	assert.Equal(t, e, err)
-}
-
-func TestTypeChangeErrorSet(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	bt := models.NewFeature("test", false, "c", "u", "s")
-
-	cs := MockConsulStore(ft, nil)
-
-	err := cs.Set(bt)
-	assert.Equal(t, TypeChangeError, err)
-}
-
-func TestDelete(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	cs := MockConsulStore(ft, nil)
-
-	err := cs.Delete(ft.Key)
-
-	assert.Nil(t, err)
-}
-
-func TestDeleteWithError(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
-	e := errors.New("")
-	cs := MockConsulStore(ft, e)
-
-	err := cs.Delete(ft.Key)
-
-	assert.Equal(t, e, err)
 }

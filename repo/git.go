@@ -20,6 +20,7 @@ type RepoIFace interface {
 	Create() error
 	Exists() bool
 	Enabled() bool
+	Push() error
 	Pull() error
 	CurrentSha() (string, error)
 }
@@ -110,17 +111,9 @@ func (g *Git) Create() error {
 		return fmt.Errorf("failed to add origin %s\n", g.Config.Git.RepoURL)
 	}
 
-	cmd = exec.Command(GitExec(), "push", "origin", "master")
-	cmd.Dir = g.Config.Git.RepoPath
-	err = cmd.Run()
+	err = g.Push()
 
-	if err != nil {
-		return fmt.Errorf("failed to push to %s\n", g.Config.Git.RepoURL)
-	}
-
-	fmt.Printf("created %s and pushed to %s sucessfully\n", g.Config.Git.RepoPath, g.Config.Git.RepoURL)
-
-	return nil
+	return err
 }
 
 func (g *Git) Clone() error {
@@ -197,9 +190,13 @@ func (g *Git) Commit(features models.Features, msg string) error {
 		return fmt.Errorf("could not commit change to %s %s\n", g.Config.Git.RepoPath, string(out[:]))
 	}
 
-	cmd = exec.Command(GitExec(), "push", "origin", "master")
+	return nil
+}
+
+func (g *Git) Push() error {
+	cmd := exec.Command(GitExec(), "push", "origin", "master")
 	cmd.Dir = g.Config.Git.RepoPath
-	err = cmd.Run()
+	err := cmd.Run()
 
 	if err != nil {
 		return fmt.Errorf("failed to push to %s\n", g.Config.Git.RepoURL)

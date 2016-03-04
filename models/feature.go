@@ -11,6 +11,15 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
+type Info struct {
+	CurrentSha string `json:"current_sha"`
+}
+
+type DcdrMap struct {
+	Info     *Info                  `json:"info"`
+	Features map[string]interface{} `json:"features"`
+}
+
 // Features a Feature result set
 type Features []Feature
 
@@ -41,6 +50,16 @@ func GetFeatureType(t string) FeatureType {
 		return Boolean
 	default:
 		return Invalid
+	}
+}
+
+// GetFeatureTypeFromValue interface to type helper
+func GetFeatureTypeFromValue(v interface{}) FeatureType {
+	switch v.(type) {
+	case bool:
+		return Boolean
+	default:
+		return Percentile
 	}
 }
 
@@ -101,7 +120,7 @@ func (f *Feature) BoolValue() bool {
 	return f.Value.(bool)
 }
 
-// ExplodeToMap explode feature namespacees and scopes to nested maps
+// ExplodeToMap explode feature namespaces and scopes to nested maps
 func (fts Features) ExplodeToMap() map[string]interface{} {
 	m := make(map[string]interface{})
 

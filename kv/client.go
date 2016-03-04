@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"encoding/json"
+
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/repo"
@@ -11,6 +13,7 @@ import (
 
 const (
 	CurrentShaKey = "current_sha"
+	InfoNameSpace = "info"
 )
 
 func ValidationError(n string) error {
@@ -23,8 +26,10 @@ func KeyNotFoundError(n string) error {
 
 type ClientIFace interface {
 	List(prefix string, scope string) (models.Features, error)
-	Set(sr *SetRequest) error
+	Set(ft *models.Feature) error
+	Get(key string, v interface{}) error
 	Delete(key string, scope string) error
+	GetInfo() (*models.Info, error)
 	InitRepo(create bool) error
 	Namespace() string
 }
@@ -86,19 +91,37 @@ func (c *Client) Namespace() string {
 
 func (c *Client) List(prefix string, scope string) (models.Features, error) {
 	prefix = fmt.Sprintf("%s/%s/%s", c.Namespace(), scope, prefix)
-	fts, err := c.Store.List(prefix)
+	res, err := c.Store.List(prefix)
+	fts := make(models.Features, len(res))
 
-	return fts, err
+	if err != nil {
+		return fts, err
+	}
+
+	for i := 0; i < len(res); i++ {
+		var f models.Feature
+		err := json.Unmarshal(res[i], &f)
+
+		if err != nil {
+			return fts, err
+		}
+
+		fts[i] = f
+	}
+
+	return fts, nil
 }
 
-func (c *Client) Set(sr *SetRequest) error {
-	ft, err := sr.ToFeature()
+func (c *Client) Set(ft *models.Feature) error {
+	var existing *models.Feature
+
+	bts, err := c.Store.Get(ft.ScopedKey())
 
 	if err != nil {
 		return err
 	}
 
-	existing, err := c.Store.Get(ft.ScopedKey())
+	err = json.Unmarshal(bts, &existing)
 
 	if existing != nil {
 		if ft.Comment == "" {
@@ -107,9 +130,14 @@ func (c *Client) Set(sr *SetRequest) error {
 		if ft.Value == nil {
 			ft.Value = existing.Value
 		}
+		if ft.FeatureType != existing.FeatureType {
+			return TypeChangeError
+		}
 	}
 
-	err = c.Store.Set(ft)
+	bts, err = json.Marshal(ft)
+
+	err = c.Store.Set(ft.ScopedKey(), bts)
 
 	if err != nil {
 		return err
@@ -126,6 +154,18 @@ func (c *Client) Set(sr *SetRequest) error {
 	err = c.SendStatEvent(ft, false)
 
 	return nil
+}
+
+func (c *Client) Get(key string, v interface{}) error {
+	key = fmt.Sprintf("%s/%s", c.namespace, key)
+
+	bts, err := c.Store.Get(key)
+
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(bts, &v)
 }
 
 func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
@@ -151,9 +191,16 @@ func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
 }
 
 func (c *Client) Delete(key string, scope string) error {
-	key = fmt.Sprintf("%s/%s/%s", c.Namespace(), scope, key)
+	var existing *models.Feature
 
-	existing, err := c.Store.Get(key)
+	key = fmt.Sprintf("%s/%s/%s", c.Namespace(), scope, key)
+	bts, err := c.Store.Get(key)
+
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(bts, &existing)
 
 	if err != nil {
 		return err
@@ -197,7 +244,71 @@ func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
 		msg = fmt.Sprintf("%s set %s to %v", ft.UpdatedBy, ft.ScopedKey(), ft.Value)
 	}
 
-	return c.Repo.Commit(fts, msg)
+	err = c.Repo.Commit(fts, msg)
+
+	if err != nil {
+		return err
+	}
+
+	sha, err := c.Repo.CurrentSha()
+
+	if err != nil {
+		return err
+	}
+
+	err = c.SetCurrentSha(sha)
+
+	if err != nil {
+		return err
+	}
+
+	err = c.Repo.Push()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) GetInfo() (*models.Info, error) {
+	key := fmt.Sprintf("dcdr/%s", InfoNameSpace)
+
+	var info *models.Info
+
+	bts, err := c.Store.Get(key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(bts) == 0 {
+		return &models.Info{}, nil
+	}
+
+	err = json.Unmarshal(bts, &info)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return info, err
+}
+
+func (c *Client) SetCurrentSha(sha string) error {
+	key := fmt.Sprintf("dcdr/%s", InfoNameSpace)
+
+	info := &models.Info{
+		CurrentSha: sha,
+	}
+
+	bts, err := json.Marshal(info)
+
+	if err != nil {
+		return err
+	}
+
+	return c.Store.Put(key, bts)
 }
 
 func (c *Client) InitRepo(create bool) error {
