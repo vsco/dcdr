@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	DefaultNamespace     = "dcdr/features"
-	DefaultInfoNamespace = "dcdr/info"
+	DefaultNamespace     = "dcdr"
+	DefaultInfoNamespace = DefaultNamespace + "/" + "info"
 	DefaultUsername      = "unknown"
 	ConfigPath           = "/etc/dcdr/config.hcl"
 	DefaultFilePath      = "/etc/dcdr/decider.json"

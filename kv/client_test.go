@@ -127,36 +127,10 @@ func (mr *MockRepo) CurrentSha() (string, error) {
 func (mr *MockRepo) Init() {
 }
 
-func TestSetRequestToFeature(t *testing.T) {
-	sr := &SetRequest{
-		Key:     "key",
-		Scope:   "scope",
-		Value:   0.5,
-		Comment: "comment",
-		User:    "user",
-	}
-
-	ft, err := sr.ToFeature()
-
-	assert.NoError(t, err)
-	assert.Equal(t, sr.Key, ft.Key)
-	assert.Equal(t, sr.Value, ft.Value)
-	assert.Equal(t, sr.Comment, ft.Comment)
-	assert.Equal(t, sr.User, ft.UpdatedBy)
-	assert.Equal(t, models.Percentile, ft.FeatureType)
-}
-
 func TestClientSet(t *testing.T) {
-	ft := &models.Feature{
-		Key:       "key",
-		Scope:     "scope",
-		Namespace: "namespace",
-		Value:     0.5,
-		Comment:   "comment",
-		UpdatedBy: "user",
-	}
+	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 
-	c := New(NewMockStore(ft, nil), &MockRepo{}, ft.Namespace, nil)
+	c := New(NewMockStore(ft, nil), &MockRepo{}, ft.GetNamespace(), nil)
 
 	err := c.Set(ft)
 
@@ -164,33 +138,18 @@ func TestClientSet(t *testing.T) {
 }
 
 func TestClientSetExisting(t *testing.T) {
-	sr := &models.Feature{
-		Key:         "key",
-		Scope:       "scope",
-		Namespace:   "namespace",
-		UpdatedBy:   "user",
-		FeatureType: models.GetFeatureType("percentile"),
-	}
+	update := models.NewFeature("test", nil, "c", "u", "s", "n")
+	orig := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 
-	orig := &models.Feature{
-		Key:         "key",
-		Scope:       "scope",
-		Namespace:   "namespace",
-		Value:       0.5,
-		Comment:     "comment",
-		UpdatedBy:   "user",
-		FeatureType: models.GetFeatureType("percentile"),
-	}
+	c := New(NewMockStore(orig, nil), &MockRepo{}, update.GetNamespace(), nil)
 
-	c := New(NewMockStore(orig, nil), &MockRepo{}, sr.Namespace, nil)
-
-	err := c.Set(sr)
+	err := c.Set(update)
 
 	assert.NoError(t, err)
 }
 
 func TestList(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	cs := NewMockStore(ft, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
@@ -201,7 +160,7 @@ func TestList(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	cs := NewMockStore(ft, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
@@ -224,7 +183,7 @@ func TestNilGet(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	cs := NewMockStore(ft, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
@@ -234,8 +193,8 @@ func TestSet(t *testing.T) {
 }
 
 func TestTypeChangeErrorSet(t *testing.T) {
-	orig := models.NewFeature("test", 0.5, "c", "u", "s")
-	bad := models.NewFeature("test", false, "c", "u", "s")
+	orig := models.NewFeature("test", 0.5, "c", "u", "s", "n")
+	bad := models.NewFeature("test", false, "c", "u", "s", "n")
 
 	cs := NewMockStore(orig, nil)
 	c := New(cs, nil, "", nil)
@@ -245,7 +204,7 @@ func TestTypeChangeErrorSet(t *testing.T) {
 }
 
 func TestSetWithError(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	e := errors.New("")
 	cs := NewMockStore(ft, e)
 	c := New(cs, nil, "", nil)
@@ -256,7 +215,7 @@ func TestSetWithError(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	cs := NewMockStore(ft, nil)
 	c := New(cs, &MockRepo{}, "", nil)
 
@@ -266,7 +225,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestDeleteWithError(t *testing.T) {
-	ft := models.NewFeature("test", 0.5, "c", "u", "s")
+	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	e := errors.New("")
 	cs := NewMockStore(ft, e)
 	c := New(cs, &MockRepo{}, "", nil)

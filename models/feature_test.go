@@ -80,11 +80,11 @@ func TestMarshaling(t *testing.T) {
 }
 
 func TestTypes(t *testing.T) {
-	pf := NewFeature("key", 0.1, "comment", "user", "scope")
+	pf := NewFeature("key", 0.1, "comment", "user", "scope", "n")
 	assert.Equal(t, Percentile, pf.FeatureType)
 	assert.Equal(t, 0.1, pf.FloatValue())
 
-	pf = NewFeature("key", true, "comment", "user", "scope")
+	pf = NewFeature("key", true, "comment", "user", "scope", "n")
 	assert.Equal(t, Boolean, pf.FeatureType)
 	assert.Equal(t, true, pf.BoolValue())
 }
