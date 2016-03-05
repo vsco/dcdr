@@ -7,7 +7,7 @@ import (
 
 	"strings"
 
-	"github.com/vsco/dcdr/kv/stores"
+	"github.com/vsco/dcdr/cli/kv/stores"
 )
 
 type Info struct {

@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 
 	"github.com/PagerDuty/godspeed"
-	"github.com/vsco/dcdr/kv/stores"
-	"github.com/vsco/dcdr/models"
-	"github.com/vsco/dcdr/repo"
+	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/cli/repo"
 )
 
 const (
