@@ -29,11 +29,11 @@ type Git struct {
 }
 
 type Config struct {
-	Username  string
-	Namespace string
-	FilePath  string
-	Git       Git
-	Stats     Stats
+	Username       string
+	Namespace      string
+	FeatureMapPath string
+	Git            Git
+	Stats          Stats
 }
 
 func (c *Config) GitEnabled() bool {
@@ -53,9 +53,9 @@ func DefaultConfig() *Config {
 	}
 
 	return &Config{
-		Username:  uname,
-		Namespace: DefaultNamespace,
-		FilePath:  DefaultFilePath,
+		Username:       uname,
+		Namespace:      DefaultNamespace,
+		FeatureMapPath: DefaultFilePath,
 	}
 }
 
@@ -85,8 +85,8 @@ func readConfig() *Config {
 		cfg.Username = defaults.Username
 	}
 
-	if cfg.FilePath == "" {
-		cfg.FilePath = defaults.FilePath
+	if cfg.FeatureMapPath == "" {
+		cfg.FeatureMapPath = defaults.FeatureMapPath
 	}
 
 	return cfg

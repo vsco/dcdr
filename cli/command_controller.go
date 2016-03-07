@@ -83,14 +83,14 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 				os.Exit(1)
 			}
 
-			err = ioutil.WriteFile(cc.Config.FilePath, bts, 0644)
+			err = ioutil.WriteFile(cc.Config.FeatureMapPath, bts, 0644)
 
 			if err != nil {
 				log.Println(err)
 				os.Exit(1)
 			}
 
-			log.Printf("[dcdr] wrote changes to %s\n", cc.Config.FilePath)
+			log.Printf("[dcdr] wrote changes to %s\n", cc.Config.FeatureMapPath)
 		}
 
 		if scanner.Err() != nil {

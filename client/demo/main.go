@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/vsco/dcdr/client"
+	"github.com/vsco/dcdr/config"
 )
 
 var FixturePath, _ = filepath.Abs("./decider_fixtures.json")
@@ -32,9 +33,8 @@ func renderFeatures(c *client.Client) func(w http.ResponseWriter, r *http.Reques
 }
 
 func main() {
-	cfg := &client.Config{
-		WatchPath: FixturePath,
-	}
+	cfg := config.DefaultConfig()
+	cfg.FeatureMapPath = FixturePath
 
 	c, err := client.New(cfg).Watch()
 
