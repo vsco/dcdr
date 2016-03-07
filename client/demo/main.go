@@ -11,12 +11,12 @@ import (
 	"github.com/vsco/dcdr/client"
 )
 
-var FixturePath, _ = filepath.Abs("../../config/decider_fixtures.json")
+var FixturePath, _ = filepath.Abs("./decider_fixtures.json")
 
 func renderFeatures(c *client.Client) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		scope := fmt.Sprintf("cc/%s", strings.ToLower(r.Header.Get("X-Country")))
-		scoped := c.WithScopes(scope)
+		scoped := c.WithScopes("ab", scope)
 
 		js, err := json.MarshalIndent(scoped.Features(), "", "  ")
 
@@ -26,6 +26,7 @@ func renderFeatures(c *client.Client) func(w http.ResponseWriter, r *http.Reques
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("dcdr-scope", scope)
 		w.Write(js)
 	}
 }

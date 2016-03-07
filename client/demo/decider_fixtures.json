@@ -1,0 +1,25 @@
+{
+  "dcdr": {
+    "info": {
+      "current_sha": "abcde"
+    },
+    "features": {
+      "ab": {
+        "bool": false,
+        "float": 0.5
+      },
+      "cc": {
+        "cn": {
+          "bool": false,
+          "float": 0.1,
+          "float2": 0.1
+        }
+      },
+      "default": {
+        "bool": false,
+        "default_float": 0.5,
+        "float": 0
+      }
+    }
+  }
+}
