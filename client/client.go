@@ -7,6 +7,7 @@ import (
 
 	"github.com/vsco/dcdr/client/models"
 	"github.com/vsco/dcdr/client/watcher"
+	"github.com/vsco/dcdr/config"
 )
 
 type ClientIFace interface {
@@ -22,26 +23,26 @@ type ClientIFace interface {
 
 type Client struct {
 	FeatureMap *models.FeatureMap
-	config     *Config
+	config     *config.Config
 	watcher    watcher.WatcherIFace
 	features   models.Features
 	scopes     []string
 }
 
-func New(cfg *Config) (c *Client) {
+func New(cfg *config.Config) (c *Client) {
 	c = &Client{
 		config: cfg,
 	}
 
-	if c.config.WatchPath != "" {
-		c.watcher = watcher.NewWatcher(c.config.WatchPath)
+	if c.config.FeatureMapPath != "" {
+		c.watcher = watcher.NewWatcher(c.config.FeatureMapPath)
 	}
 
 	return
 }
 
 func NewDefault() (c *Client) {
-	c = New(DefaultConfig())
+	c = New(config.LoadConfig())
 
 	return
 }
@@ -57,7 +58,7 @@ func (c *Client) WithScopes(scopes ...string) *Client {
 	newClient.MergeScopes()
 
 	if c.watcher != nil {
-		newClient.watcher = watcher.NewWatcher(c.config.WatchPath)
+		newClient.watcher = watcher.NewWatcher(c.config.FeatureMapPath)
 		newClient.Watch()
 	}
 

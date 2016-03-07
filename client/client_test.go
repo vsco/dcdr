@@ -6,10 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/vsco/dcdr/client/models"
+	"github.com/vsco/dcdr/config"
 )
 
 func NewTestClient() (c *Client) {
-	c = New(&Config{})
+	c = New(&config.Config{})
 
 	return
 }
