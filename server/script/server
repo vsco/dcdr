@@ -1,5 +1,0 @@
-#!/bin/bash
-set -e
-
-./script/build
-./bin/demo -bind=":9191" $@

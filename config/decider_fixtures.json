@@ -1,1 +1,24 @@
-{"decider":{"bool":false,"float":0.5}}
+{
+  "dcdr": {
+    "info": {
+      "current_sha": "abcde"
+    },
+    "features": {
+      "ab": {
+        "bool": true,
+        "float": 0.5
+      },
+      "cc": {
+        "cn": {
+          "bool": true,
+          "float": 0.5
+        }
+      },
+      "default": {
+        "bool": false,
+        "default_float": 0.5,
+        "float": 0
+      }
+    }
+  }
+}

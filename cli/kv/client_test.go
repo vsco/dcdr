@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/kv/stores"
-	"github.com/vsco/dcdr/models"
+	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/models"
 )
 
 var ExportJson = []byte(`[

@@ -16,11 +16,11 @@ import (
 	"io/ioutil"
 
 	"github.com/tucnak/climax"
+	"github.com/vsco/dcdr/cli/kv"
+	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/cli/ui"
 	"github.com/vsco/dcdr/config"
-	"github.com/vsco/dcdr/kv"
-	"github.com/vsco/dcdr/kv/stores"
-	"github.com/vsco/dcdr/models"
-	"github.com/vsco/dcdr/ui"
 )
 
 var (

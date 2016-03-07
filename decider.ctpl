@@ -1,7 +1,0 @@
-{{$scopes := ls "dcdr/features/" }}
-
-{
-    {{ range $k, $v := $scopes }}
-    {{$k}}
-    {{end}}
-}

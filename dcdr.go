@@ -7,10 +7,10 @@ import (
 
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli"
+	"github.com/vsco/dcdr/cli/kv"
+	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/repo"
 	"github.com/vsco/dcdr/config"
-	"github.com/vsco/dcdr/kv"
-	"github.com/vsco/dcdr/kv/stores"
-	"github.com/vsco/dcdr/repo"
 )
 
 func main() {
