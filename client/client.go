@@ -122,6 +122,7 @@ func (c *Client) UpdateFeatures(bts []byte) {
 
 	if err != nil {
 		log.Printf("[dcdr] parse error: %v", err)
+		return
 	}
 
 	c.SetFeatureMap(fm)
