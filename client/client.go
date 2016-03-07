@@ -12,13 +12,12 @@ import (
 
 type ClientIFace interface {
 	IsAvailable(feature string) bool
-	IsAvailableForID(feature string, id uint64) bool
+	IsAvailableForId(feature string, id uint64) bool
 	ScaleValue(feature string, min float64, max float64) float64
 	UpdateFeatures(bts []byte)
 	FeatureExists(feature string) bool
 	Features() models.Features
 	Scopes() []string
-	Watch() (ClientIFace, error)
 }
 
 type Client struct {
