@@ -9,6 +9,7 @@ import (
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/cli/kv"
 	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
 	"github.com/vsco/dcdr/config"
 )
@@ -31,7 +32,7 @@ func main() {
 	}
 
 	if cmd != "init" && cmd != "watch" && rp.Enabled() && !rp.Exists() {
-		fmt.Printf("%s has not been cloned to %s. see `dcdr help init` for usage\n", cfg.Git.RepoURL, cfg.Git.RepoPath)
+		printer.SayErr("%s has not been cloned to %s. see `dcdr help init` for usage\n", cfg.Git.RepoURL, cfg.Git.RepoPath)
 		os.Exit(1)
 	}
 
@@ -41,7 +42,7 @@ func main() {
 		gs, err = godspeed.New(cfg.Stats.Host, cfg.Stats.Port, false)
 
 		if err != nil {
-			fmt.Println(err)
+			printer.SayErr("%v", err)
 			os.Exit(1)
 		}
 	}

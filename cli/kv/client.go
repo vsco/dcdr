@@ -9,6 +9,7 @@ import (
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli/kv/stores"
 	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
 )
 
@@ -18,10 +19,6 @@ const (
 )
 
 var TypeChangeError = errors.New("cannot change existing feature types.")
-
-func ValidationError(n string) error {
-	return errors.New(fmt.Sprintf("%s is required", n))
-}
 
 func KeyNotFoundError(n string) error {
 	return errors.New(fmt.Sprintf("%s not found", n))
@@ -249,7 +246,7 @@ func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
 		msg = fmt.Sprintf("%s set %s to %v", ft.UpdatedBy, ft.ScopedKey(), ft.Value)
 	}
 
-	fmt.Println("[dcdr] commiting changes")
+	printer.Say("commiting changes")
 	err = c.Repo.Commit(bts, msg)
 
 	if err != nil {
@@ -264,11 +261,13 @@ func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
 
 	err = c.SetCurrentSha(sha)
 
+	printer.Say("set info/current_sha: %s", sha)
+
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("[dcdr] pushing commit to origin")
+	printer.Say("pushing commit to origin")
 	err = c.Repo.Push()
 
 	if err != nil {

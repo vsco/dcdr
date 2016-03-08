@@ -1,10 +1,11 @@
 package watcher
 
 import (
-	"fmt"
 	"os"
 
 	"io/ioutil"
+
+	"log"
 
 	"gopkg.in/fsnotify.v1"
 )
@@ -65,7 +66,7 @@ func (w *Watcher) Watch() {
 					w.Updated()
 				}
 			case err := <-w.watcher.Errors:
-				fmt.Println("error:", err)
+				log.Printf("[dcdr] watch error: %v", err)
 			}
 		}
 	}()

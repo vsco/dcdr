@@ -2,9 +2,9 @@ package client
 
 import (
 	"hash/crc32"
-	"log"
 	"strconv"
 
+	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/client/models"
 	"github.com/vsco/dcdr/client/watcher"
 	"github.com/vsco/dcdr/config"
@@ -17,11 +17,12 @@ type ClientIFace interface {
 	UpdateFeatures(bts []byte)
 	FeatureExists(feature string) bool
 	Features() models.Features
+	FeatureMap() *models.FeatureMap
 	Scopes() []string
 }
 
 type Client struct {
-	FeatureMap *models.FeatureMap
+	featureMap *models.FeatureMap
 	config     *config.Config
 	watcher    watcher.WatcherIFace
 	features   models.Features
@@ -34,6 +35,7 @@ func New(cfg *config.Config) (c *Client) {
 	}
 
 	if c.config.FeatureMapPath != "" {
+		printer.Say("started watching %s", c.config.FeatureMapPath)
 		c.watcher = watcher.NewWatcher(c.config.FeatureMapPath)
 	}
 
@@ -50,7 +52,7 @@ func (c *Client) WithScopes(scopes ...string) *Client {
 	newScopes := append(c.scopes, scopes...)
 
 	newClient := &Client{
-		FeatureMap: c.FeatureMap,
+		featureMap: c.featureMap,
 		scopes:     newScopes,
 	}
 
@@ -65,8 +67,8 @@ func (c *Client) WithScopes(scopes ...string) *Client {
 }
 
 func (c *Client) MergeScopes() {
-	if c.FeatureMap != nil {
-		c.features = c.FeatureMap.Dcdr.MergedScopes(c.scopes...)
+	if c.featureMap != nil {
+		c.features = c.featureMap.Dcdr.MergedScopes(c.scopes...)
 	}
 }
 
@@ -75,11 +77,15 @@ func (c *Client) Scopes() []string {
 }
 
 func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
-	c.FeatureMap = fm
+	c.featureMap = fm
 
 	c.MergeScopes()
 
 	return c
+}
+
+func (c *Client) FeatureMap() *models.FeatureMap {
+	return c.featureMap
 }
 
 func (c *Client) Features() models.Features {
@@ -121,7 +127,7 @@ func (c *Client) UpdateFeatures(bts []byte) {
 	fm, err := models.NewFeatureMap(bts)
 
 	if err != nil {
-		log.Printf("[dcdr] parse error: %v", err)
+		printer.SayErr("parse error: %v", err)
 		return
 	}
 

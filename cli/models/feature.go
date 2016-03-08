@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/printer"
 )
 
 type Info struct {
@@ -177,7 +178,6 @@ func KVsToFeatureMap(kvb stores.KVBytes) (map[string]interface{}, error) {
 			err := json.Unmarshal(v.Bytes, &info)
 
 			if err != nil {
-				fmt.Printf("%s", v.Bytes)
 				return fm, err
 			}
 
@@ -188,7 +188,7 @@ func KVsToFeatureMap(kvb stores.KVBytes) (map[string]interface{}, error) {
 			err := json.Unmarshal(v.Bytes, &ft)
 
 			if err != nil {
-				fmt.Printf("%s: %s", v.Key, v.Bytes)
+				printer.SayErr("%s: %s", v.Key, v.Bytes)
 				return fm, err
 			}
 
