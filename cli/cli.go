@@ -181,6 +181,14 @@ func (c *CLI) Commands() []climax.Command {
 			Handle: c.Ctrl.Init,
 		},
 		{
+			Name:  "info",
+			Brief: "display config info",
+			Usage: ``,
+			Help:  `Displays current settings from config.hcl`,
+
+			Handle: c.Ctrl.Info,
+		},
+		{
 			Name:  "server",
 			Brief: "start dcdr http server",
 			Usage: ``,
