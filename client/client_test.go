@@ -108,6 +108,16 @@ func TestScopedFeaturesCreateNewInstance(t *testing.T) {
 	assert.Equal(t, m.Dcdr.MergedScopes(scopes...), c2.Features())
 }
 
+func TestScopedMap(t *testing.T) {
+	scopes := []string{"ab", "cc/cn"}
+	m := MockFeatureMap()
+	c := NewTestClient().SetFeatureMap(m)
+	c2 := c.WithScopes(scopes...)
+
+	assert.False(t, c2.ScopedMap().Dcdr.Features["bool"].(bool))
+	assert.Equal(t, 0.5, c2.ScopedMap().Dcdr.Features["float"])
+}
+
 func TestFeatureExists(t *testing.T) {
 	m := MockFeatureMap()
 	c := NewTestClient().SetFeatureMap(m)

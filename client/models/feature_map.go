@@ -9,7 +9,7 @@ import (
 const DefaultScope = "default"
 
 type Info struct {
-	CurrentSha string `json:"current_sha"`
+	CurrentSha string `json:"current_sha,omitempty"`
 }
 
 type FeatureMap struct {
@@ -80,12 +80,18 @@ func (d *Root) MergedScopes(scopes ...string) Features {
 
 	rev(scopes)
 	for _, scope := range scopes {
-		fts := d.InScope(scope)
+		if scope != "" {
+			fts := d.InScope(scope)
 
-		for k, v := range fts {
-			mrg[k] = v
+			for k, v := range fts {
+				mrg[k] = v
+			}
 		}
 	}
 
 	return mrg
+}
+
+func (d *Root) CurrentSha() string {
+	return d.Info.CurrentSha
 }

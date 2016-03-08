@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"log"
 	"os"
 
 	"errors"
@@ -126,7 +125,7 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
 	if cc.Config.GitEnabled() {
 		printer.Say("committing changes")
-		err := cc.Client.Commit(ft, false)
+		err := cc.Client.Commit(ft, deleted)
 
 		if err != nil {
 			printer.SayErr("%v", err)
@@ -254,45 +253,45 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 			kvb, err := stores.KvPairsBytesToKvBytes(scanner.Bytes())
 
 			if err != nil {
-				printer.SayErr("parse kv error: %v", err)
+				printer.LogErr("parse kv error: %v", err)
 				os.Exit(1)
 			}
 
 			fts, err := models.KVsToFeatureMap(kvb)
 
 			if err != nil {
-				printer.SayErr("parse features error: %v", err)
+				printer.LogErr("parse features error: %v", err)
 				os.Exit(1)
 			}
 
 			bts, err := json.MarshalIndent(fts, "", "  ")
 
 			if err != nil {
-				printer.SayErr("%v", err)
+				printer.LogErr("%v", err)
 				os.Exit(1)
 			}
 
-			err = ioutil.WriteFile(cc.Config.FeatureMapPath, bts, 0644)
+			err = ioutil.WriteFile(cc.Config.Watcher.OutputPath, bts, 0644)
 
 			if err != nil {
-				printer.SayErr("%v", err)
+				printer.LogErr("%v", err)
 				os.Exit(1)
 			}
 
-			log.Printf("wrote changes to %s",
-				cc.Config.FeatureMapPath)
+			printer.Log("wrote changes to %s",
+				cc.Config.Watcher.OutputPath)
 		}
 
 		if scanner.Err() != nil {
-			printer.SayErr("%v", scanner.Err())
+			printer.LogErr("%v", scanner.Err())
 			os.Exit(1)
 		}
 	}()
 
-	log.Printf("watching namespace: %s", cc.Config.Namespace)
+	printer.Log("watching namespace: %s", cc.Config.Namespace)
 
 	if err := cmd.Run(); err != nil {
-		printer.SayErr("%v", err)
+		printer.LogErr("%v", err)
 	}
 
 	return 0
