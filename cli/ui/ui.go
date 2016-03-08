@@ -14,29 +14,25 @@ var (
 	columnFmt = color.New(color.FgYellow).SprintfFunc()
 )
 
-type UI struct {
-	tbl      table.Table
-}
+type UI struct{}
 
 func New() (u *UI) {
-	color.NoColor = false
-	tbl := table.New("Name", "Type", "Value", "Comment", "Scope", "Updated By").
-		WithHeaderFormatter(headerFmt).
-		WithFirstColumnFormatter(columnFmt)
-
-	u = &UI{
-		tbl: tbl,
-	}
+	u = &UI{}
 
 	return
 }
 
 func (u *UI) DrawFeatures(features models.Features) {
+	color.NoColor = false
+	tbl := table.New("Name", "Type", "Value", "Comment", "Scope", "Updated By").
+		WithHeaderFormatter(headerFmt).
+		WithFirstColumnFormatter(columnFmt)
+
 	for _, feature := range features {
-		u.tbl.AddRow(feature.Key, feature.FeatureType, feature.Value, feature.Comment, feature.Scope, feature.UpdatedBy)
+		tbl.AddRow(feature.Key, feature.FeatureType, feature.Value, feature.Comment, feature.Scope, feature.UpdatedBy)
 	}
 
-	u.tbl.Print()
+	tbl.Print()
 }
 
 func (u *UI) DrawConfig(cfg *config.Config) {
@@ -48,7 +44,7 @@ func (u *UI) DrawConfig(cfg *config.Config) {
 
 	tbl.AddRow("Server", "Endpoint", cfg.Server.Endpoint, "The path at which to serve feature flags. ('/dcdr.json')")
 	tbl.AddRow("Server", "Host", cfg.Server.Host, "The host used by the server. (:8000")
-	tbl.AddRow("Server", "JsonRoot", cfg.Server.JsonRoot, "Root json node server by `Endpoint`. ('dcdr')")
+	tbl.AddRow("Server", "JsonRoot", cfg.Server.JsonRoot, "Root json node served by `Endpoint`. ('dcdr')")
 
 	if cfg.GitEnabled() {
 		tbl.AddRow("Git", "RepoPath", cfg.Git.RepoPath, "Location on disk for the audit repo.")
