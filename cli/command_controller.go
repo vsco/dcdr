@@ -45,73 +45,6 @@ func NewController(cfg *config.Config, kv kv.ClientIFace) (cc *Controller) {
 	return
 }
 
-func (cc *Controller) Watch(ctx climax.Context) int {
-	cmd := exec.Command(
-		"consul",
-		"watch",
-		"-type",
-		"keyprefix",
-		"-prefix",
-		cc.Config.Namespace,
-		"cat")
-
-	pr, pw := io.Pipe()
-	cmd.Stdout = pw
-	b := &bytes.Buffer{}
-	cmd.Stderr = b
-
-	scanner := bufio.NewScanner(pr)
-	scanner.Split(bufio.ScanLines)
-
-	go func() {
-		for scanner.Scan() {
-			kvb, err := stores.KvPairsBytesToKvBytes(scanner.Bytes())
-
-			if err != nil {
-				printer.SayErr("parse kv error: %v", err)
-				os.Exit(1)
-			}
-
-			fts, err := models.KVsToFeatureMap(kvb)
-
-			if err != nil {
-				printer.SayErr("parse features error: %v", err)
-				os.Exit(1)
-			}
-
-			bts, err := json.MarshalIndent(fts, "", "  ")
-
-			if err != nil {
-				printer.SayErr("%v", err)
-				os.Exit(1)
-			}
-
-			err = ioutil.WriteFile(cc.Config.FeatureMapPath, bts, 0644)
-
-			if err != nil {
-				printer.SayErr("%v", err)
-				os.Exit(1)
-			}
-
-			log.Printf("wrote changes to %s",
-				cc.Config.FeatureMapPath)
-		}
-
-		if scanner.Err() != nil {
-			printer.SayErr("%v", scanner.Err())
-			os.Exit(1)
-		}
-	}()
-
-	log.Printf("watching namespace: %s", cc.Config.Namespace)
-
-	if err := cmd.Run(); err != nil {
-		printer.SayErr("%v", err)
-	}
-
-	return 0
-}
-
 func (cc *Controller) List(ctx climax.Context) int {
 	pf, _ := ctx.Get("prefix")
 	scope, _ := ctx.Get("scope")
@@ -138,53 +71,24 @@ func (cc *Controller) List(ctx climax.Context) int {
 	return 0
 }
 
-func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) {
-	name, _ := ctx.Get("name")
-	val, _ := ctx.Get("value")
-	cmt, _ := ctx.Get("comment")
-	scp, _ := ctx.Get("scope")
-
-	var v interface{}
-	var ft models.FeatureType
-
-	if val != "" {
-		v, ft = models.ParseValueAndFeatureType(val)
-
-		if ft == models.Invalid {
-			return nil, InvalidFeatureTypeError
-		}
-
-		if ft == models.Percentile {
-			if v.(float64) > 1.0 || v.(float64) < 0 {
-				return nil, InvalidRangeError
-			}
-		}
-	}
-
-	f := models.NewFeature(name, v, cmt, cc.Config.Username, scp, cc.Config.Namespace)
-	f.FeatureType = ft
-
-	return f, nil
-}
-
 func (cc *Controller) Set(ctx climax.Context) int {
-	sr, err := cc.ParseContext(ctx)
+	ft, err := cc.ParseContext(ctx)
 
 	if err != nil {
 		printer.SayErr("parse error: %v", err)
 		return 1
 	}
 
-	err = cc.Client.Set(sr)
+	err = cc.Client.Set(ft)
 
 	if err != nil {
 		printer.SayErr("set error: %v", err)
 		return 1
 	}
 
-	printer.Say("set flag '%s'", sr.ScopedKey())
+	printer.Say("set flag '%s'", ft.ScopedKey())
 
-	return 0
+	return cc.CommitFeatures(ft, false)
 }
 
 func (cc *Controller) Delete(ctx climax.Context) int {
@@ -209,6 +113,42 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 
 	printer.Say("deleted flag %s/%s/%s",
 		cc.Config.Namespace, scope, name)
+
+	ft := &models.Feature{
+		Key:       name,
+		Scope:     scope,
+		UpdatedBy: cc.Config.Username,
+	}
+
+	return cc.CommitFeatures(ft, true)
+}
+
+func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
+	if cc.Config.GitEnabled() {
+		printer.Say("committing changes")
+		err := cc.Client.Commit(ft, false)
+
+		if err != nil {
+			printer.SayErr("%v", err)
+			return 1
+		}
+
+		sha, err := cc.Client.UpdateCurrentSha()
+		printer.Say("set info/current_sha: %s", sha)
+
+		if err != nil {
+			printer.SayErr("%v", err)
+			return 1
+		}
+
+		printer.Say("pushing commit to origin")
+		err = cc.Client.Push()
+
+		if err != nil {
+			printer.SayErr("%v", err)
+			return 1
+		}
+	}
 
 	return 0
 }
@@ -282,4 +222,100 @@ func (cc *Controller) Serve(ctx climax.Context) int {
 	s.Serve()
 
 	return 0
+}
+
+func (cc *Controller) Watch(ctx climax.Context) int {
+	cmd := exec.Command(
+		"consul",
+		"watch",
+		"-type",
+		"keyprefix",
+		"-prefix",
+		cc.Config.Namespace,
+		"cat")
+
+	pr, pw := io.Pipe()
+	cmd.Stdout = pw
+	b := &bytes.Buffer{}
+	cmd.Stderr = b
+
+	scanner := bufio.NewScanner(pr)
+	scanner.Split(bufio.ScanLines)
+
+	go func() {
+		for scanner.Scan() {
+			kvb, err := stores.KvPairsBytesToKvBytes(scanner.Bytes())
+
+			if err != nil {
+				printer.SayErr("parse kv error: %v", err)
+				os.Exit(1)
+			}
+
+			fts, err := models.KVsToFeatureMap(kvb)
+
+			if err != nil {
+				printer.SayErr("parse features error: %v", err)
+				os.Exit(1)
+			}
+
+			bts, err := json.MarshalIndent(fts, "", "  ")
+
+			if err != nil {
+				printer.SayErr("%v", err)
+				os.Exit(1)
+			}
+
+			err = ioutil.WriteFile(cc.Config.FeatureMapPath, bts, 0644)
+
+			if err != nil {
+				printer.SayErr("%v", err)
+				os.Exit(1)
+			}
+
+			log.Printf("wrote changes to %s",
+				cc.Config.FeatureMapPath)
+		}
+
+		if scanner.Err() != nil {
+			printer.SayErr("%v", scanner.Err())
+			os.Exit(1)
+		}
+	}()
+
+	log.Printf("watching namespace: %s", cc.Config.Namespace)
+
+	if err := cmd.Run(); err != nil {
+		printer.SayErr("%v", err)
+	}
+
+	return 0
+}
+
+func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) {
+	name, _ := ctx.Get("name")
+	val, _ := ctx.Get("value")
+	cmt, _ := ctx.Get("comment")
+	scp, _ := ctx.Get("scope")
+
+	var v interface{}
+	var ft models.FeatureType
+
+	if val != "" {
+		v, ft = models.ParseValueAndFeatureType(val)
+
+		if ft == models.Invalid {
+			return nil, InvalidFeatureTypeError
+		}
+
+		if ft == models.Percentile {
+			if v.(float64) > 1.0 || v.(float64) < 0 {
+				return nil, InvalidRangeError
+			}
+		}
+	}
+
+	f := models.NewFeature(name, v, cmt, cc.Config.Username, scp, cc.Config.Namespace)
+	f.FeatureType = ft
+
+	return f, nil
 }

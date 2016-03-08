@@ -9,14 +9,10 @@ import (
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli/kv/stores"
 	"github.com/vsco/dcdr/cli/models"
-	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
 )
 
-const (
-	CurrentShaKey = "current_sha"
-	InfoNameSpace = "info"
-)
+const InfoNameSpace = "info"
 
 var TypeChangeError = errors.New("cannot change existing feature types.")
 
@@ -31,6 +27,9 @@ type ClientIFace interface {
 	Delete(key string, scope string) error
 	GetInfo() (*models.Info, error)
 	InitRepo(create bool) error
+	Commit(ft *models.Feature, deleted bool) error
+	Push() error
+	UpdateCurrentSha() (string, error)
 	Namespace() string
 }
 
@@ -127,14 +126,6 @@ func (c *Client) Set(ft *models.Feature) error {
 		return err
 	}
 
-	if c.Repo.Enabled() {
-		err := c.CommitFeatures(ft, false)
-
-		if err != nil {
-			return err
-		}
-	}
-
 	err = c.SendStatEvent(ft, false)
 
 	return nil
@@ -154,28 +145,6 @@ func (c *Client) Get(key string, v interface{}) error {
 	}
 
 	return json.Unmarshal(bts.Bytes, &v)
-}
-
-func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
-	if c.Stats == nil {
-		return nil
-	}
-
-	var text string
-	title := "Decider Change"
-
-	if delete {
-		text = fmt.Sprintf("deleted %s", f.ScopedKey())
-	} else {
-		text = fmt.Sprintf("set %s: %v", f.ScopedKey(), f.Value)
-	}
-
-	optionals := make(map[string]string)
-	optionals["alert_type"] = "info"
-	optionals["source_type_name"] = "dcdr"
-	tags := []string{"source_type:dcdr"}
-
-	return c.Stats.Event(title, text, optionals, tags)
 }
 
 func (c *Client) Delete(key string, scope string) error {
@@ -206,21 +175,13 @@ func (c *Client) Delete(key string, scope string) error {
 		return err
 	}
 
-	if c.Repo.Exists() {
-		err := c.CommitFeatures(existing, true)
-
-		if err != nil {
-			return err
-		}
-	}
-
 	err = c.SendStatEvent(existing, true)
 
 	return err
 }
 
-func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
-	kvb, err := c.Store.List("dcdr/features")
+func (c *Client) Commit(ft *models.Feature, deleted bool) error {
+	kvb, err := c.Store.List(fmt.Sprintf("%s/features", c.Namespace()))
 
 	if err != nil {
 		return err
@@ -246,29 +207,7 @@ func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
 		msg = fmt.Sprintf("%s set %s to %v", ft.UpdatedBy, ft.ScopedKey(), ft.Value)
 	}
 
-	printer.Say("commiting changes")
 	err = c.Repo.Commit(bts, msg)
-
-	if err != nil {
-		return err
-	}
-
-	sha, err := c.Repo.CurrentSha()
-
-	if err != nil {
-		return err
-	}
-
-	err = c.SetCurrentSha(sha)
-
-	printer.Say("set info/current_sha: %s", sha)
-
-	if err != nil {
-		return err
-	}
-
-	printer.Say("pushing commit to origin")
-	err = c.Repo.Push()
 
 	if err != nil {
 		return err
@@ -277,8 +216,12 @@ func (c *Client) CommitFeatures(ft *models.Feature, deleted bool) error {
 	return nil
 }
 
+func (c *Client) Push() error {
+	return c.Repo.Push()
+}
+
 func (c *Client) GetInfo() (*models.Info, error) {
-	key := fmt.Sprintf("dcdr/%s", InfoNameSpace)
+	key := fmt.Sprintf("%s/%s", c.Namespace(), InfoNameSpace)
 
 	var info *models.Info
 
@@ -301,8 +244,14 @@ func (c *Client) GetInfo() (*models.Info, error) {
 	return info, err
 }
 
-func (c *Client) SetCurrentSha(sha string) error {
-	key := fmt.Sprintf("dcdr/%s", InfoNameSpace)
+func (c *Client) UpdateCurrentSha() (string, error) {
+	sha, err := c.Repo.CurrentSha()
+
+	if err != nil {
+		return sha, err
+	}
+
+	key := fmt.Sprintf("%s/%s", c.Namespace(), InfoNameSpace)
 
 	info := &models.Info{
 		CurrentSha: sha,
@@ -311,10 +260,10 @@ func (c *Client) SetCurrentSha(sha string) error {
 	bts, err := json.Marshal(info)
 
 	if err != nil {
-		return err
+		return sha, err
 	}
 
-	return c.Store.Put(key, bts)
+	return sha, c.Store.Put(key, bts)
 }
 
 func (c *Client) InitRepo(create bool) error {
@@ -323,4 +272,26 @@ func (c *Client) InitRepo(create bool) error {
 	}
 
 	return c.Repo.Clone()
+}
+
+func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
+	if c.Stats == nil {
+		return nil
+	}
+
+	var text string
+	title := "Decider Change"
+
+	if delete {
+		text = fmt.Sprintf("deleted %s", f.ScopedKey())
+	} else {
+		text = fmt.Sprintf("set %s: %v", f.ScopedKey(), f.Value)
+	}
+
+	optionals := make(map[string]string)
+	optionals["alert_type"] = "info"
+	optionals["source_type_name"] = "dcdr"
+	tags := []string{"source_type:dcdr"}
+
+	return c.Stats.Event(title, text, optionals, tags)
 }

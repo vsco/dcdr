@@ -54,6 +54,18 @@ func (m *MockClient) GetInfo() (*models.Info, error) {
 	return nil, m.Error
 }
 
+func (m *MockClient) Commit(ft *models.Feature, deleted bool) error {
+	return m.Error
+}
+
+func (m *MockClient) Push() error {
+	return m.Error
+}
+
+func (m *MockClient) UpdateCurrentSha() (string, error) {
+	return "", m.Error
+}
+
 func (m *MockClient) InitRepo(create bool) error {
 	return m.Error
 }
