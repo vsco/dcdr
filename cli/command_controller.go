@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -19,8 +18,12 @@ import (
 	"github.com/vsco/dcdr/cli/kv"
 	"github.com/vsco/dcdr/cli/kv/stores"
 	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/ui"
+	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/server"
+	"github.com/zenazn/goji"
 )
 
 var (
@@ -65,44 +68,45 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 			kvb, err := stores.KvPairsBytesToKvBytes(scanner.Bytes())
 
 			if err != nil {
-				fmt.Printf("[dcdr] parse kv error: %v\n", err)
+				printer.SayErr("parse kv error: %v", err)
 				os.Exit(1)
 			}
 
 			fts, err := models.KVsToFeatureMap(kvb)
 
 			if err != nil {
-				fmt.Printf("[dcdr] parse features error: %v\n", err)
+				printer.SayErr("parse features error: %v", err)
 				os.Exit(1)
 			}
 
 			bts, err := json.MarshalIndent(fts, "", "  ")
 
 			if err != nil {
-				fmt.Println(err)
+				printer.SayErr("%v", err)
 				os.Exit(1)
 			}
 
 			err = ioutil.WriteFile(cc.Config.FeatureMapPath, bts, 0644)
 
 			if err != nil {
-				log.Println(err)
+				printer.SayErr("%v", err)
 				os.Exit(1)
 			}
 
-			log.Printf("[dcdr] wrote changes to %s\n", cc.Config.FeatureMapPath)
+			log.Printf("wrote changes to %s",
+				cc.Config.FeatureMapPath)
 		}
 
 		if scanner.Err() != nil {
-			fmt.Println(scanner.Err())
+			printer.SayErr("%v", scanner.Err())
 			os.Exit(1)
 		}
 	}()
 
-	log.Printf("[dcdr] watching namespace: %s\n", cc.Config.Namespace)
+	log.Printf("watching namespace: %s", cc.Config.Namespace)
 
 	if err := cmd.Run(); err != nil {
-		log.Println(err, b)
+		printer.SayErr("%v", err)
 	}
 
 	return 0
@@ -119,12 +123,13 @@ func (cc *Controller) List(ctx climax.Context) int {
 	features, err := cc.Client.List(pf, scope)
 
 	if err != nil {
-		fmt.Println(err)
+		printer.SayErr("%v", err)
 		return 1
 	}
 
 	if len(features) == 0 {
-		fmt.Printf("[dcdr] no feature flags found in namespace: %s\n", cc.Client.Namespace())
+		printer.Say("no feature flags found in namespace: %s",
+			cc.Client.Namespace())
 		return 1
 	}
 
@@ -166,18 +171,18 @@ func (cc *Controller) Set(ctx climax.Context) int {
 	sr, err := cc.ParseContext(ctx)
 
 	if err != nil {
-		fmt.Println(err)
+		printer.SayErr("parse error: %v", err)
 		return 1
 	}
 
 	err = cc.Client.Set(sr)
 
 	if err != nil {
-		fmt.Printf("[dcdr] set error: %v\n", err)
+		printer.SayErr("set error: %v", err)
 		return 1
 	}
 
-	fmt.Printf("[dcdr] set flag '%s'\n", sr.ScopedKey())
+	printer.Say("set flag '%s'", sr.ScopedKey())
 
 	return 0
 }
@@ -187,7 +192,7 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 	scope, _ := ctx.Get("scope")
 
 	if name == "" {
-		fmt.Println("[dcdr] name is required")
+		printer.Say("name is required")
 		return 1
 	}
 
@@ -198,11 +203,12 @@ func (cc *Controller) Delete(ctx climax.Context) int {
 	err := cc.Client.Delete(name, scope)
 
 	if err != nil {
-		fmt.Println(err)
+		printer.SayErr("%v", err)
 		return 1
 	}
 
-	fmt.Printf("[dcdr] deleted flag %s/%s/%s\n", cc.Config.Namespace, scope, name)
+	printer.Say("deleted flag %s/%s/%s",
+		cc.Config.Namespace, scope, name)
 
 	return 0
 }
@@ -213,14 +219,16 @@ func (cc *Controller) Init(ctx climax.Context) int {
 	err := cc.Client.InitRepo(create)
 
 	if err != nil {
-		fmt.Println(err)
+		printer.SayErr("%v", err)
 		return 1
 	}
 
 	if create {
-		fmt.Printf("[dcdr] initialized new repo in %s and pushed to %s\n", cc.Config.Git.RepoPath, cc.Config.Git.RepoURL)
+		printer.Say("initialized new repo in %s and pushed to %s",
+			cc.Config.Git.RepoPath, cc.Config.Git.RepoURL)
 	} else {
-		fmt.Printf("[dcdr] cloned %s into %s\n", cc.Config.Git.RepoURL, cc.Config.Git.RepoPath)
+		printer.Say("cloned %s into %s",
+			cc.Config.Git.RepoURL, cc.Config.Git.RepoPath)
 	}
 
 	return 0
@@ -230,7 +238,7 @@ func (cc *Controller) Import(ctx climax.Context) int {
 	bts, err := ioutil.ReadAll(os.Stdin)
 
 	if err != nil {
-		fmt.Println(err)
+		printer.SayErr("%v", err)
 		return 1
 	}
 
@@ -238,7 +246,7 @@ func (cc *Controller) Import(ctx climax.Context) int {
 	err = json.Unmarshal(bts, &kvs)
 
 	if err != nil {
-		fmt.Println(err)
+		printer.SayErr("%v", err)
 		return 1
 	}
 
@@ -253,12 +261,25 @@ func (cc *Controller) Import(ctx climax.Context) int {
 		err = cc.Client.Set(f)
 
 		if err != nil {
-			fmt.Println(err)
+			printer.SayErr("%v", err)
 			return 1
 		}
 
-		fmt.Printf("[dcdr] set %s to %+v\n", k, v)
+		printer.Say("set %s to %+v", k, v)
 	}
 
 	return 1
+}
+
+func (cc *Controller) Serve(ctx climax.Context) int {
+	c, err := client.New(cc.Config).Watch()
+
+	if err != nil {
+		panic(err)
+	}
+
+	s := server.NewServer(cc.Config, goji.DefaultMux, c)
+	s.Serve()
+
+	return 0
 }

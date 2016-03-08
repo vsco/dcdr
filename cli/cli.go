@@ -181,6 +181,14 @@ func (c *CLI) Commands() []climax.Command {
 			Handle: c.Ctrl.Init,
 		},
 		{
+			Name:  "server",
+			Brief: "start dcdr http server",
+			Usage: ``,
+			Help:  `Starts the dcdr http server`,
+
+			Handle: c.Ctrl.Serve,
+		},
+		{
 			Name:  "import",
 			Brief: "import json from STDIN",
 			Usage: ``,

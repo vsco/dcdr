@@ -16,6 +16,7 @@ type UI struct {
 }
 
 func New() (u *UI) {
+	color.NoColor = false
 	tbl := table.New("Name", "Type", "Value", "Comment", "Scope", "Updated By").
 		WithHeaderFormatter(headerFmt).
 		WithFirstColumnFormatter(columnFmt)

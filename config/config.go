@@ -1,12 +1,12 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
 
 	"github.com/hashicorp/hcl"
+	"github.com/vsco/dcdr/cli/printer"
 )
 
 const (
@@ -15,7 +15,15 @@ const (
 	DefaultUsername      = "unknown"
 	ConfigPath           = "/etc/dcdr/config.hcl"
 	DefaultFilePath      = "/etc/dcdr/decider.json"
+	DefaultEndpoint      = "/decider.json"
+	DefaultHost          = ":8000"
 )
+
+type Server struct {
+	Endpoint string
+	Host     string
+	JsonRoot string
+}
 
 type Stats struct {
 	Namespace string
@@ -32,8 +40,10 @@ type Config struct {
 	Username       string
 	Namespace      string
 	FeatureMapPath string
+	Endpoint       string
 	Git            Git
 	Stats          Stats
+	Server         Server
 }
 
 func (c *Config) GitEnabled() bool {
@@ -56,6 +66,11 @@ func DefaultConfig() *Config {
 		Username:       uname,
 		Namespace:      DefaultNamespace,
 		FeatureMapPath: DefaultFilePath,
+		Server: Server{
+			Endpoint: DefaultEndpoint,
+			Host:     DefaultHost,
+			JsonRoot: DefaultNamespace,
+		},
 	}
 }
 
@@ -63,7 +78,7 @@ func readConfig() *Config {
 	bts, err := ioutil.ReadFile(ConfigPath)
 
 	if err != nil {
-		fmt.Printf("Could not read %s", ConfigPath)
+		printer.SayErr("Could not read %s", ConfigPath)
 		os.Exit(1)
 	}
 
@@ -73,7 +88,7 @@ func readConfig() *Config {
 	err = hcl.Decode(&cfg, string(bts[:]))
 
 	if err != nil {
-		fmt.Printf("[dcdr] config parse error %+v", err)
+		printer.SayErr("[dcdr] config parse error %+v", err)
 		os.Exit(1)
 	}
 
@@ -87,6 +102,18 @@ func readConfig() *Config {
 
 	if cfg.FeatureMapPath == "" {
 		cfg.FeatureMapPath = defaults.FeatureMapPath
+	}
+
+	if cfg.Server.Host == "" {
+		cfg.Server.Host = defaults.Server.Host
+	}
+
+	if cfg.Server.Endpoint == "" {
+		cfg.Server.Endpoint = defaults.Server.Endpoint
+	}
+
+	if cfg.Server.JsonRoot == "" {
+		cfg.Server.JsonRoot = defaults.Server.JsonRoot
 	}
 
 	return cfg

@@ -9,6 +9,7 @@ import (
 
 	"io/ioutil"
 
+	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/config"
 )
 
@@ -41,7 +42,7 @@ func GitExec() string {
 	output, err := exec.Command("which", "git").Output()
 
 	if err != nil {
-		fmt.Println(err)
+		printer.SayErr("%v", err)
 		os.Exit(1)
 	}
 
