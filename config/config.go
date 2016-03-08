@@ -15,7 +15,7 @@ const (
 	DefaultUsername      = "unknown"
 	ConfigPath           = "/etc/dcdr/config.hcl"
 	DefaultFilePath      = "/etc/dcdr/decider.json"
-	DefaultEndpoint      = "/decider.json"
+	DefaultEndpoint      = "/dcdr.json"
 	DefaultHost          = ":8000"
 )
 
