@@ -40,7 +40,6 @@ type Config struct {
 	Username       string
 	Namespace      string
 	FeatureMapPath string
-	Endpoint       string
 	Git            Git
 	Stats          Stats
 	Server         Server

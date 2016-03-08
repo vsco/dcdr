@@ -66,7 +66,7 @@ func (cc *Controller) List(ctx climax.Context) int {
 		return 1
 	}
 
-	ui.New().DrawTable(features)
+	ui.New().DrawFeatures(features)
 
 	return 0
 }
@@ -209,6 +209,13 @@ func (cc *Controller) Import(ctx climax.Context) int {
 	}
 
 	return 1
+}
+
+func (cc *Controller) Info(ctx climax.Context) int {
+
+	ui.New().DrawConfig(cc.Config)
+
+	return 0
 }
 
 func (cc *Controller) Serve(ctx climax.Context) int {
