@@ -27,6 +27,14 @@ It's nice to know when changes are happening. Decider can be configured to emit 
 	* 	`go get -a github.com/vsco/dcdr`
 * Install via release
 	*  [https://github.com/vsco/dcdr/releases](https://github.com/vsco/dcdr/releases)
+* Build from source
+
+```
+git clone git@github.com:vsco/dcdr.git
+cd dcdr
+script/bootstrap
+script/install
+```
 
 Once installed on a machine running a `consul agent`, Decider is ready to connect to a default Consul host and port (localhost:8500) and begin writing to the K/V store. If you have a custom configuration for your agent, Decider will use the same [environment variables](https://github.com/hashicorp/consul/blob/master/api/api.go#L126) used to configure the Consul CLI.
 
