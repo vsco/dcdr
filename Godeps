@@ -4,5 +4,6 @@ github.com/rodaine/table
 github.com/fatih/color
 github.com/PagerDuty/godspeed
 github.com/tucnak/climax
+github.com/zenazn/goji
 # Testing
 github.com/stretchr/testify
