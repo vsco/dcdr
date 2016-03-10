@@ -234,7 +234,7 @@ Here we have set the feature `example-feature` into two separate scopes. In the 
 The watcher is now observing your <Namespace> and writing all changes to the [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29) (`/etc/dcdr/decider.json`).
 
 ### Decider Server
-The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware. Read more on custom servers [here](building-a-custom-server).
+The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware. Read more on custom servers [here](#building-a-custom-server).
 
 ```
 # start the server
