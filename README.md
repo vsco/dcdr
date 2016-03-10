@@ -9,7 +9,7 @@ Feature flags and remote configuration are hard problems to solve in the general
 
 This package does not set out to solve problems like authentication or ACLs for your features but It does aim provide enough of the tooling and libraries so that you can do so yourself.
 
-Decider has four major components.
+Decider has three major components.
 
 * A [`Client`](#using-the-go-client) for use within your Go applications
 * The [`Server`](#decider-server) for accessing features over HTTP
