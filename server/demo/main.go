@@ -11,7 +11,7 @@ const FixturePath = "./decider.json"
 
 func main() {
 	cfg := config.DefaultConfig()
-	//cfg.FeatureMapPath = FixturePath
+	cfg.Watcher.OutputPath = FixturePath
 
 	c, err := client.New(cfg).Watch()
 

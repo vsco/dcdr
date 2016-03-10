@@ -342,6 +342,10 @@ All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `
 
 `dcdr init` will create the default config file for you. Here is the example config.
 
+To view current configuration values use `dcdr info`.
+
+![](./resources/info.png)
+
 ```
 Username = "twosim"
 Namespace = "dcdr"

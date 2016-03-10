@@ -18,7 +18,7 @@ func New(ctlr *Controller) (c *CLI) {
 	return
 }
 
-// Run bind command and run
+// Run bind commands and run
 func (c *CLI) Run() {
 	dcdr := climax.New("dcdr")
 	dcdr.Brief = "Decider: CLI for decider feature flags."
