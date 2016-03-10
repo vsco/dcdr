@@ -201,6 +201,133 @@ Here we see that the default value of false is returned. The `info` key is where
 }
 ```
 
+### Using the Go client
+
+Included in this package is a Go client. By default this client uses the same `config.hcl` for its configuration. You may also provide custom your own custom configuration as well. For this example we will assume the defaults are still in place and that the feature from the above example have been set.
+
+#### Require and intialize the client
+
+```Go
+import "github.com/vsco/dcdr/client"
+
+// Initialize a client with the default configuration
+client := client.NewDefault()
+
+// Begin watching the decider.json file
+err := client.Watch()
+
+if err != nil {
+	panic(err)
+}
+```
+
+#### Checking feature flags
+
+The client has two main methods for interacting with flags `IsAvailable(feature string)` and `IsAvailableForId(feature string, id uint64)`.
+
+**IsAvailable**
+
+This method is for checking `boolean` features or 'kill switches'. If a `percentile` feature is passed to this method it will always return false. So don't do that.
+
+```
+# set the default feature
+dcdr set -n example-feature -v false
+```
+
+```Go
+// Using the fluent API for brevity
+client, err := client.NewDefault().Watch()
+
+if err != nil {
+	panic(err)
+}
+
+// example-feature would be false
+if client.IsAvailable("example-feature") {
+	fmt.Println("example-feature enabled")
+} else {
+	fmt.Println("example-feature disabled")
+}
+```
+
+This example initializes a new `Client` and begins watching the 'default' feature scope. It then checks the `example-feature` and runs the appropriate path given the current return value.
+
+**So what about scopes?**
+
+To initialize a Decider `Client` into a given set of scopes use the `WithScopes(scopes ...string)` method. This method creates a new `Client` with an underlying feature set that has the provided `scope` values merged onto the default set. If a feature does not exist in any of the provided scopes the client will fallback to the 'default' `scope`. This provides a mechanism for overriding features in a priority order.
+
+```
+# set the scoped feature
+dcdr set -n example-feature -v true -s user-groups/beta
+```
+
+```Go
+client, err := client.NewDefault().Watch()
+scopedClient := client.WithScopes("user-groups/beta")
+
+if err != nil {
+	panic(err)
+}
+
+// example-feature would be true
+if scopedClient.IsAvailable("example-feature") {
+	fmt.Println("example-feature enabled")
+} else {
+	fmt.Println("example-feature disabled")
+}
+```
+
+**Fallbacks**
+
+```
+# set a feature that does not exist in user-groups/beta
+dcdr set -n another-feature -v true
+```
+
+```Go
+client, err := client.NewDefault().Watch()
+scopedClient := client.WithScopes("user-groups/beta")
+
+if err != nil {
+	panic(err)
+}
+
+// another-feature would be true
+if scopedClient.IsAvailable("another-feature") {
+	fmt.Println("another-feature enabled")
+} else {
+	fmt.Println("another-feature disabled")
+}
+```
+
+**IsAvailableForId**
+
+This method method works exactly as `IsAvailable` except that it is used for enabling features for only a fraction of requests. Both the `feature` string and `id` are hashed together using `hash/crc32` to create an integer that is used with the `float64` value of a `percentile` feature to determine the enabled state.
+
+**Using percentiles**
+
+```
+# set a feature to 50%
+dcdr set -n new-feature-rollout -v 0.5
+```
+
+```Go
+client, err := client.NewDefault().Watch()
+
+if err != nil {
+	panic(err)
+}
+
+userId := unint64(5)
+
+// new-feature-rollout would be true
+if client.IsAvailableForId("new-feature-rollout", userId) {
+	fmt.Println("new-feature-rollout enabled")
+} else {
+	fmt.Println("new-feature-rollout disabled")
+}
+```
+
 ### Configuration
 
 All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory and your permissions may differ but to get started locally do the following. 
