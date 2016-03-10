@@ -1,11 +1,13 @@
 # dcdr (decider)
-Distributed Feature Flags via Consul
+Distributed Feature Flags for the Consul K/V Store
 
 ## Overview
 
 Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system built using the [Consul Key/Value Store](https://www.consul.io/intro/getting-started/kv.html). It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Included in this package is a CLI for modifying flags, a Golang client, and a HTTP server for accessing flags remotely.
 
+Feature flags and remote configuration are hard problems to solve in the general sense. Most organizations will have many corner cases unique to their own infrastructure and policies that are cumbersome to solve in an abstract way. Decider is an extracted set of flexible libraries that we at VSCO have developed over the past year that have worked well for us in solving these problems. 
 
+This package does not set out to solve problems like authentication or ACLs for your features but It does aim provide enough of the tooling and libraries so that you can do so yourself.
 
 ### Consul Integration
 Decider uses the built in commands from the [Consul](http://consul.io) CLI to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Similar to the concepts introduced by [`consul-template`](https://github.com/hashicorp/consul-template). Decider observes a key prefix in the store and then writes the resulting key/value tree to a flat JSON file on any node running the `dcdr watch` command. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
