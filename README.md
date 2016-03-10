@@ -3,11 +3,7 @@ Distributed Feature Flags for the Consul K/V Store
 
 ## Overview
 
-Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system built using the [Consul Key/Value Store](https://www.consul.io/intro/getting-started/kv.html). It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Included in this package is a CLI for modifying flags, a Golang client, and a HTTP server for accessing flags remotely.
-
-Feature flags and remote configuration are hard problems to solve in the general sense. Most organizations will have many corner cases unique to their own infrastructure and policies that are cumbersome to solve in an abstract way. Decider is an extracted set of flexible libraries that we at VSCO have developed over the past year that have worked well for us in solving these problems. 
-
-This package does not set out to solve problems like authentication or ACLs for your features but It does aim provide enough of the tooling and libraries so that you can do so yourself.
+Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system built using the [Consul Key/Value Store](https://www.consul.io/intro/getting-started/kv.html). It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. 
 
 Decider has three major components.
 
@@ -15,9 +11,69 @@ Decider has three major components.
 * The [`Server`](#decider-server) for accessing features over HTTP
 * A [`CLI`](#cli) for managing features, watches, and starting the server
 
-Each of these components are comprised of lower level libraries that you can use to customize to your specific needs.
+Each of these components are comprised of lower level libraries that you can use to to suit your systems specific needs.
 
-### Consul Integration
+### About Feature Flags
+
+The two supported types of flags are `boolean` and `percentile`. These seem to be enough to cover most use cases for a system of this type. 
+
+An example use case for a `boolean` flag would be an API kill switch that could alliviate load for a backing database.
+
+```
+disable-load-heavy-api-endpoint => true
+```
+
+In your code this would look something like this.
+
+```Go
+if dcdr.IsAvailable("disable-load-heavy-api-endpoint") {
+	// All good, go about your day
+} else {
+	// DB is having a bad day, please check back later
+}
+```
+
+Percentiles work much the same way but allow you to stress features or new infrastructure with a percentage of the request volume.
+
+A common use case for `percentile` features would be stressing a new backend store with dual write percentage.
+
+```
+rollout-new-fancy-db-dual-write => 0.1
+```
+
+```Go
+// Handle the write to the existing store 
+
+if dcdr.IsAvailableForId("rollout-new-fancy-db-dual-write", user.Id) {
+	// If the `user.Id` falls into 10% of requests do the dual write
+}
+```
+
+These type of features have an added bonus as you may use thier `float64` values as scalars in cetertain cases.
+
+Here we use the float value to scale the wait time for DB inserts between 0-1000ms.
+
+```
+ daemon-db-insert-wait-ms => 0.1
+```
+
+```Go
+// waitMS would be 1000*0.1 => 100
+waitMS := dcdr.ScaleValue("daemon-db-insert-wait-ms", 0, 1000)
+time.Sleep(waitMS * time.Millisecond)
+```
+
+[Read more](#using-the-go-client) on how to use the client.
+
+### Caveat
+
+Feature flags and remote configuration are hard problems to solve in the general sense. Most organizations will have many corner cases unique to their own infrastructure and policies that are cumbersome to solve in an abstract way. Decider is an extracted set of flexible libraries that we at [VSCO](http://vsco.co) have developed over the past year that have worked well for us in solving these issues. 
+
+This package does not set out to solve problems like authentication or ACLs for your features but It does aim to provide enough of the tooling and libraries so that you can do so yourself.
+
+## Integrations
+
+### Consul
 Decider uses the built in commands from the [Consul](http://consul.io) CLI to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Similar to the concepts introduced by [`consul-template`](https://github.com/hashicorp/consul-template). Decider observes a key prefix in the store and then writes the resulting key/value tree to a flat JSON file on any node running the `dcdr watch` command. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
 
 ### Scopes
@@ -234,7 +290,7 @@ if err != nil {
 
 ### Checking feature flags
 
-The client has two main methods for interacting with flags `IsAvailable(feature string)` and `IsAvailableForId(feature string, id uint64)`.
+The client has three main methods for interacting with flags `IsAvailable(feature string)`. `IsAvailableForId(feature string, id uint64)`, and `ScaleValue(feature string, min float64, max float64)`.
 
 #### IsAvailable
 
@@ -336,6 +392,23 @@ if client.IsAvailableForId("new-feature-rollout", userId) {
 	fmt.Println("new-feature-rollout enabled")
 } else {
 	fmt.Println("new-feature-rollout disabled")
+}
+```
+
+### ScaleValue
+
+`ScaleValue` uses the same `float64` values as `IsAvailableForId` but in this case these values are used to obtain a new value scaled between a `min` and a `max`.
+
+For instance:
+
+Given the feature `db-insert-wait-ms => 0.5`. When provided to the `ScaleValue` method would result in the following.
+
+```Go
+for {
+	insertWaitMs := dcdr.ScaleValue("db-insert-wait-ms", 0, 1000)
+	time.Sleep(insertWaitMs * time.Millisecond) // waits for 500ms
+
+	db.Insert("some-value")
 }
 ```
 
