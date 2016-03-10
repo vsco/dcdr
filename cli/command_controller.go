@@ -153,6 +153,28 @@ func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
 }
 
 func (cc *Controller) Init(ctx climax.Context) int {
+	if _, err := os.Stat(config.ConfigPath); os.IsNotExist(err) {
+		printer.Say("%s not found. creating example config", config.ConfigPath)
+
+		err := os.MkdirAll("/etc/dcdr", 0644)
+
+		if err != nil {
+			printer.SayErr("%v", err)
+			return 1
+		}
+
+		err = ioutil.WriteFile(config.ConfigPath, config.ExampleConfig, 0644)
+
+		if err != nil {
+			printer.SayErr("%v", err)
+			return 1
+		}
+	}
+
+	if !cc.Config.GitEnabled() {
+		return 0
+	}
+
 	_, create := ctx.Get("create")
 
 	err := cc.Client.InitRepo(create)

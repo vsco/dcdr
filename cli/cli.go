@@ -208,12 +208,18 @@ func (c *CLI) Commands() []climax.Command {
 		{
 			Name:  "init",
 			Brief: "init the audit repository",
-			Usage: `--create creates an empty audit repository and pushes to origin`,
+			Usage: `--create creates default config.hcl and empty audit repository and pushes to origin`,
 			Help: `
 
+	If no config.hcl file is found in /etc/dcdr init will attempt to create one. This file contains an
+	example config with all setting commented out. If no /etc/dcdr directory exists you will need to
+	create this yourself. Depending on your permissions, try the following.
 
-	Clones the <Git:RepoUrl> into the <Git:RepoPath> from config.hcl. Creates and
-	initializes a new repo with an empty decider.json if --create is passed.`,
+	sudo mkdir /etc/dcdr
+	sudo chown $(whoami) /etc/dcdr
+
+	If a repository has been configured init clones the <Git:RepoUrl> into the <Git:RepoPath> from config.hcl.
+	Creates and initializes a new repo with an empty decider.json if --create is passed.`,
 
 			Flags: []climax.Flag{
 				{

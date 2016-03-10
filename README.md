@@ -194,5 +194,43 @@ Here we see that the default value of false is returned. The `info` key is where
 }
 ```
 
+### Configuration
+
+All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory and your permissions may differ but to get started locally do the following. 
+
+```
+ sudo mkdir /etc/dcdr
+ sudo chown `whoami` /etc/dcdr
+ dcdr init
+```
+
+`dcdr init` will create the default config file for you. Here is the example config.
+
+```
+Username = "twosim"
+Namespace = "dcdr"
+
+Watcher {
+  OutputPath = "/etc/dcdr/decider.json"
+}
+
+Server {
+  JsonRoot = "dcdr"
+  Endpoint = "/dcdr.json"
+}
+
+Git {
+  RepoURL = "git@github.com:vsco/decider-test-config.git"
+  RepoPath = "/etc/dcdr/audit"
+}
+
+Stats {
+  Namespace = "decider"
+  Host = "127.0.0.1"
+  Port = 8126
+}
+```
+
+
 
 
