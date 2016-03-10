@@ -128,7 +128,7 @@ func (c *CLI) Commands() []climax.Command {
 					Name:     "name",
 					Short:    "n",
 					Usage:    `--name="flag_name"`,
-					Help:     `the name of the falg to set`,
+					Help:     `the name of the flag to set`,
 					Variable: true,
 				},
 				{

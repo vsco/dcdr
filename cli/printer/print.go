@@ -2,6 +2,7 @@ package printer
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/fatih/color"
 )
@@ -11,12 +12,28 @@ var (
 	red   = color.New(color.FgRed).PrintfFunc()
 )
 
-func Say(format string, v ...interface{}) {
+func Info(format string, v ...interface{}) string {
 	green("[dcdr] ")
-	fmt.Printf(format+"\n", v...)
+	return fmt.Sprintf(fmt.Sprintf("%s\n", format), v...)
+}
+
+func Err(format string, v ...interface{}) string {
+	red("[dcdr error] ")
+	return fmt.Sprintf(fmt.Sprintf("%s\n", format), v...)
+}
+
+func Say(format string, v ...interface{}) {
+	fmt.Printf(Info(format, v...))
 }
 
 func SayErr(format string, v ...interface{}) {
-	red("[dcdr error] ")
-	fmt.Printf(format+"\n", v...)
+	fmt.Printf(Err(format, v...))
+}
+
+func Log(format string, v ...interface{}) {
+	log.Printf(Info(format, v...))
+}
+
+func LogErr(format string, v ...interface{}) {
+	log.Printf(Err(format, v...))
 }

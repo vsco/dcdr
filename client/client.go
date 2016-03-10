@@ -18,7 +18,10 @@ type ClientIFace interface {
 	FeatureExists(feature string) bool
 	Features() models.Features
 	FeatureMap() *models.FeatureMap
+	ScopedMap() *models.FeatureMap
 	Scopes() []string
+	CurrentSha() string
+	WithScopes(scopes ...string) *Client
 }
 
 type Client struct {
@@ -34,9 +37,9 @@ func New(cfg *config.Config) (c *Client) {
 		config: cfg,
 	}
 
-	if c.config.FeatureMapPath != "" {
-		printer.Say("started watching %s", c.config.FeatureMapPath)
-		c.watcher = watcher.NewWatcher(c.config.FeatureMapPath)
+	if c.config.Watcher.OutputPath != "" {
+		printer.Say("started watching %s", c.config.Watcher.OutputPath)
+		c.watcher = watcher.NewWatcher(c.config.Watcher.OutputPath)
 	}
 
 	return
@@ -49,6 +52,14 @@ func NewDefault() (c *Client) {
 }
 
 func (c *Client) WithScopes(scopes ...string) *Client {
+	if len(scopes) == 0 {
+		return c
+	}
+
+	if len(scopes) == 1 && scopes[0] == "" {
+		return c
+	}
+
 	newScopes := append(c.scopes, scopes...)
 
 	newClient := &Client{
@@ -59,7 +70,7 @@ func (c *Client) WithScopes(scopes ...string) *Client {
 	newClient.MergeScopes()
 
 	if c.watcher != nil {
-		newClient.watcher = watcher.NewWatcher(c.config.FeatureMapPath)
+		newClient.watcher = watcher.NewWatcher(c.config.Watcher.OutputPath)
 		newClient.Watch()
 	}
 
@@ -88,8 +99,22 @@ func (c *Client) FeatureMap() *models.FeatureMap {
 	return c.featureMap
 }
 
+func (c *Client) ScopedMap() *models.FeatureMap {
+	fm := &models.FeatureMap{
+		Dcdr: models.Root{
+			Features: c.Features(),
+		},
+	}
+
+	return fm
+}
+
 func (c *Client) Features() models.Features {
 	return c.features
+}
+
+func (c *Client) CurrentSha() string {
+	return c.FeatureMap().Dcdr.Info.CurrentSha
 }
 
 // FeatureExists checks the existence of a key

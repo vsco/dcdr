@@ -170,8 +170,6 @@ func (g *Git) Commit(bts []byte, msg string) error {
 		return fmt.Errorf("could not write change to %s\n", fp)
 	}
 
-	msg = fmt.Sprintf("%s %s", g.Config.Username, msg)
-
 	cmd := exec.Command(GitExec(), "commit", "-am", msg)
 	cmd.Dir = g.Config.Git.RepoPath
 	out, err := cmd.Output()

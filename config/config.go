@@ -14,7 +14,7 @@ const (
 	DefaultInfoNamespace = DefaultNamespace + "/" + "info"
 	DefaultUsername      = "unknown"
 	ConfigPath           = "/etc/dcdr/config.hcl"
-	DefaultFilePath      = "/etc/dcdr/decider.json"
+	DefaultOutputPath    = "/etc/dcdr/decider.json"
 	DefaultEndpoint      = "/dcdr.json"
 	DefaultHost          = ":8000"
 )
@@ -23,6 +23,10 @@ type Server struct {
 	Endpoint string
 	Host     string
 	JsonRoot string
+}
+
+type Watcher struct {
+	OutputPath string
 }
 
 type Stats struct {
@@ -37,12 +41,12 @@ type Git struct {
 }
 
 type Config struct {
-	Username       string
-	Namespace      string
-	FeatureMapPath string
-	Git            Git
-	Stats          Stats
-	Server         Server
+	Username  string
+	Namespace string
+	Watcher   Watcher
+	Git       Git
+	Stats     Stats
+	Server    Server
 }
 
 func (c *Config) GitEnabled() bool {
@@ -62,9 +66,11 @@ func DefaultConfig() *Config {
 	}
 
 	return &Config{
-		Username:       uname,
-		Namespace:      DefaultNamespace,
-		FeatureMapPath: DefaultFilePath,
+		Username:  uname,
+		Namespace: DefaultNamespace,
+		Watcher: Watcher{
+			OutputPath: DefaultOutputPath,
+		},
 		Server: Server{
 			Endpoint: DefaultEndpoint,
 			Host:     DefaultHost,
@@ -99,8 +105,8 @@ func readConfig() *Config {
 		cfg.Username = defaults.Username
 	}
 
-	if cfg.FeatureMapPath == "" {
-		cfg.FeatureMapPath = defaults.FeatureMapPath
+	if cfg.Watcher.OutputPath == "" {
+		cfg.Watcher.OutputPath = defaults.Watcher.OutputPath
 	}
 
 	if cfg.Server.Host == "" {

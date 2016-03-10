@@ -40,7 +40,8 @@ func (u *UI) DrawConfig(cfg *config.Config) {
 
 	tbl.AddRow("Defaults", "Username", cfg.Username, "The username for audit commits. `whoami` unless set in `config.hcl`.")
 	tbl.AddRow("Defaults", "Namespace", cfg.Namespace, "Consul KV namespace to use for feature flags")
-	tbl.AddRow("Defaults", "FeaturMapPath", cfg.FeatureMapPath, "Path to the file written by watch and read by `Client`.")
+
+	tbl.AddRow("Watcher", "OutputPath", cfg.Watcher.OutputPath, "Path to the file written by watch and read by `Client`.")
 
 	tbl.AddRow("Server", "Endpoint", cfg.Server.Endpoint, "The path at which to serve feature flags. ('/dcdr.json')")
 	tbl.AddRow("Server", "Host", cfg.Server.Host, "The host used by the server. (:8000")

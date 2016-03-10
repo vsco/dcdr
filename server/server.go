@@ -4,6 +4,7 @@ import (
 	"log"
 	"syscall"
 
+	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/server/handlers"
@@ -45,10 +46,10 @@ func (s *server) Serve() {
 
 	graceful.AddSignal(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	graceful.PreHook(func() {
-		log.Print("[dcdr] received kill signal, gracefully stopping...")
+		printer.Log("received kill signal, gracefully stopping...")
 	})
 
-	log.Printf("[dcdr] serving %s on %s", s.config.Server.Endpoint, s.config.Server.Host)
+	printer.Log("serving %s on %s", s.config.Server.Endpoint, s.config.Server.Host)
 	err := graceful.ListenAndServe(s.config.Server.Host, s.mux)
 
 	if err != nil {
