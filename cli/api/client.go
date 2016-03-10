@@ -1,4 +1,4 @@
-package kv
+package api
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/PagerDuty/godspeed"
-	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/models"
 	"github.com/vsco/dcdr/cli/repo"
 )

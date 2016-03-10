@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/api/stores"
 )
 
 var ExpectedJSON = `{

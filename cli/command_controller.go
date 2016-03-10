@@ -14,8 +14,8 @@ import (
 	"io/ioutil"
 
 	"github.com/tucnak/climax"
-	"github.com/vsco/dcdr/cli/kv"
-	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/api"
+	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/models"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/ui"
@@ -32,10 +32,10 @@ var (
 
 type Controller struct {
 	Config *config.Config
-	Client kv.ClientIFace
+	Client api.ClientIFace
 }
 
-func NewController(cfg *config.Config, kv kv.ClientIFace) (cc *Controller) {
+func NewController(cfg *config.Config, kv api.ClientIFace) (cc *Controller) {
 	cc = &Controller{
 		Config: cfg,
 		Client: kv,

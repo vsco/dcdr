@@ -1,41 +1,13 @@
-package kv
+package api
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/models"
 )
-
-var ExportJson = []byte(`[
-  {
-    "CreateIndex": 4398,
-    "ModifyIndex": 4398,
-    "LockIndex": 0,
-    "Key": "dcdr/features/cc/b",
-    "Flags": 0,
-    "Value": "eyJmZWF0dXJlX3R5cGUiOiJwZXJjZW50aWxlIiwia2V5IjoiYiIsIm5hbWVzcGFjZSI6ImRjZHIvZmVhdHVyZXMiLCJzY29wZSI6ImNjIiwidmFsdWUiOjEsImNvbW1lbnQiOiIiLCJ1cGRhdGVkX2J5IjoiY2hyaXNiIn0="
-  },
-  {
-    "CreateIndex": 4400,
-    "ModifyIndex": 4400,
-    "LockIndex": 0,
-    "Key": "dcdr/features/default/a",
-    "Flags": 0,
-    "Value": "eyJmZWF0dXJlX3R5cGUiOiJwZXJjZW50aWxlIiwia2V5IjoiYSIsIm5hbWVzcGFjZSI6ImRjZHIvZmVhdHVyZXMiLCJzY29wZSI6ImRlZmF1bHQiLCJ2YWx1ZSI6MSwiY29tbWVudCI6IiIsInVwZGF0ZWRfYnkiOiJjaHJpc2IifQ=="
-  },
-  {
-    "CreateIndex": 4399,
-    "ModifyIndex": 4401,
-    "LockIndex": 0,
-    "Key": "dcdr/info",
-    "Flags": 0,
-    "Value": "eyJjdXJyZW50X3NoYSI6IjQzZDRiOWU3ZGU4ZWQ0OGE5NTRmMzU5NGU2YmQzM2U2ZDY5YjU1MTYifQ=="
-  }
-]
-`)
 
 type MockStore struct {
 	Item  *stores.KVByte

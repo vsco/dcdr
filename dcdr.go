@@ -7,8 +7,8 @@ import (
 
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli"
-	"github.com/vsco/dcdr/cli/kv"
-	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/api"
+	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
 	"github.com/vsco/dcdr/config"
@@ -47,7 +47,7 @@ func main() {
 		}
 	}
 
-	kv := kv.New(store, rp, cfg.Namespace, gs)
+	kv := api.New(store, rp, cfg.Namespace, gs)
 	ctrl := cli.NewController(cfg, kv)
 
 	dcdr := cli.New(ctrl)

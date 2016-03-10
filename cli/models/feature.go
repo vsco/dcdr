@@ -7,7 +7,7 @@ import (
 
 	"strings"
 
-	"github.com/vsco/dcdr/cli/kv/stores"
+	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/printer"
 )
 
