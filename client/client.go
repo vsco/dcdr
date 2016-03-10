@@ -10,6 +10,7 @@ import (
 	"github.com/vsco/dcdr/config"
 )
 
+// ClientIFace interface for Decider Clients
 type ClientIFace interface {
 	IsAvailable(feature string) bool
 	IsAvailableForId(feature string, id uint64) bool
@@ -24,6 +25,7 @@ type ClientIFace interface {
 	WithScopes(scopes ...string) *Client
 }
 
+// Client handles access to the FeatureMap
 type Client struct {
 	featureMap *models.FeatureMap
 	config     *config.Config
@@ -32,6 +34,7 @@ type Client struct {
 	scopes     []string
 }
 
+// New creates a new Client with a custom Config
 func New(cfg *config.Config) (c *Client) {
 	c = &Client{
 		config: cfg,
@@ -45,12 +48,21 @@ func New(cfg *config.Config) (c *Client) {
 	return
 }
 
+// NewDefault creates a new default Client
 func NewDefault() (c *Client) {
 	c = New(config.LoadConfig())
 
 	return
 }
 
+// WithScopes creates a new Client from an existing one that is "scoped"
+// to the provided scopes param. `scopes` are provided in priority order.
+// For example, when given WithScopes("a", "b", "c"). Keys found in "a"
+// will override the same keys found in "b" and so on for "c".
+//
+// The provided `scopes` are appended to the existing Client's `scopes`,
+// merged, and then a new `Watcher` is assigned to the new `Client` so
+// that future changes to the `FeatureMap` will be observed.
 func (c *Client) WithScopes(scopes ...string) *Client {
 	if len(scopes) == 0 {
 		return c
@@ -77,16 +89,19 @@ func (c *Client) WithScopes(scopes ...string) *Client {
 	return newClient
 }
 
+// MergeScopes delegates merging to the underlying `FeatureMap`
 func (c *Client) MergeScopes() {
 	if c.featureMap != nil {
 		c.features = c.featureMap.Dcdr.MergedScopes(c.scopes...)
 	}
 }
 
+// Scopes `scopes` accessor
 func (c *Client) Scopes() []string {
 	return c.scopes
 }
 
+// SetFeatureMap assigns a `FeatureMap` and merges the current scopes
 func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
 	c.featureMap = fm
 
@@ -95,10 +110,13 @@ func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
 	return c
 }
 
+// FeatureMap `featureMap` accessor
 func (c *Client) FeatureMap() *models.FeatureMap {
 	return c.featureMap
 }
 
+// ScopedMap a `FeatureMap` containing only merged features.
+// Mostly used for JSON output.
 func (c *Client) ScopedMap() *models.FeatureMap {
 	fm := &models.FeatureMap{
 		Dcdr: models.Root{
@@ -109,10 +127,13 @@ func (c *Client) ScopedMap() *models.FeatureMap {
 	return fm
 }
 
+// Features `features` accessor
 func (c *Client) Features() models.Features {
 	return c.features
 }
 
+// CurrentSha accessor for the underlying `CurrentSha` from
+// the `FeatureMap`
 func (c *Client) CurrentSha() string {
 	return c.FeatureMap().Dcdr.Info.CurrentSha
 }
@@ -148,6 +169,8 @@ func (c *Client) IsAvailableForId(feature string, id uint64) bool {
 	}
 }
 
+// UpdateFeatures creates and assigns a new `FeatureMap` from a
+// Marshalled JSON byte array
 func (c *Client) UpdateFeatures(bts []byte) {
 	fm, err := models.NewFeatureMap(bts)
 
@@ -161,6 +184,9 @@ func (c *Client) UpdateFeatures(bts []byte) {
 
 // ScaleValue returns a value scaled between min and max
 // given the current value of the feature.
+//
+// Given the K/V dcdr/features/scalar => 0.5
+// ScaleValue("scalar", 0, 10) => 5
 func (c *Client) ScaleValue(feature string, min float64, max float64) float64 {
 	val, exists := c.Features()[feature]
 
@@ -176,6 +202,9 @@ func (c *Client) ScaleValue(feature string, min float64, max float64) float64 {
 	}
 }
 
+// Watch initializes the `Watcher`, registers the `UpdateFeatures`
+// method with it and spawns the watch in a go routine returning the
+// `Client` for a fluent interface.
 func (c *Client) Watch() (*Client, error) {
 	if c.watcher != nil {
 		err := c.watcher.Init()
