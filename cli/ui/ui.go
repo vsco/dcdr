@@ -24,12 +24,12 @@ func New() (u *UI) {
 
 func (u *UI) DrawFeatures(features models.Features) {
 	color.NoColor = false
-	tbl := table.New("Name", "Type", "Value", "Comment", "Scope", "Updated By").
+	tbl := table.New("Name", "Type", "Value", "Scope", "Updated By", "Comment").
 		WithHeaderFormatter(headerFmt).
 		WithFirstColumnFormatter(columnFmt)
 
 	for _, feature := range features {
-		tbl.AddRow(feature.Key, feature.FeatureType, feature.Value, feature.Comment, feature.Scope, feature.UpdatedBy)
+		tbl.AddRow(feature.Key, feature.FeatureType, feature.Value, feature.Scope, feature.UpdatedBy, feature.Comment)
 	}
 
 	tbl.Print()
