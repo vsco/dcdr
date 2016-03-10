@@ -39,7 +39,6 @@ func (u *UI) DrawConfig(cfg *config.Config) {
 	tbl := table.New("Component", "Name", "Value", "Description").WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
 	tbl.AddRow("Defaults", "Username", cfg.Username, "The username for commits. default: `whoami`")
-
 	tbl.AddRow("Defaults", "Namespace", cfg.Namespace, "K/V namespace")
 
 	tbl.AddRow("Watcher", "OutputPath", cfg.Watcher.OutputPath, "File path to watch and read from")

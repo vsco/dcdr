@@ -1,24 +1,47 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/server"
 	"github.com/zenazn/goji"
+	"github.com/zenazn/goji/web"
 )
 
-const FixturePath = "./decider.json"
+const AuthorizationHeader = "Authorization"
+
+// MockAuth example authentication middleware.
+// Checks for any value in the http Authorization header.
+// If no value is found a 401 status is sent.
+func MockAuth(c *web.C, h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get(AuthorizationHeader) != "" {
+			h.ServeHTTP(w, r)
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
 
 func main() {
-	cfg := config.DefaultConfig()
-	cfg.Watcher.OutputPath = FixturePath
-
-	c, err := client.New(cfg).Watch()
+	// Create a new default client and start the Watcher
+	client, err := client.NewDefault().Watch()
 
 	if err != nil {
 		panic(err)
 	}
 
-	s := server.NewServer(cfg, goji.DefaultMux, c)
-	s.Serve()
+	// Create a new Server using the Goji default mux
+	srv := server.New(config.DefaultConfig(), goji.DefaultMux, client)
+
+	// Add the MockAuth to the middleware chain
+	srv.Use(MockAuth)
+
+	// Begin serving on :8000
+	// curl -sH "Authorization: authorized" :8000/dcdr.json
+	srv.Serve()
 }

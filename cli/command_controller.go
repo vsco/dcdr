@@ -246,7 +246,7 @@ func (cc *Controller) Serve(ctx climax.Context) int {
 		panic(err)
 	}
 
-	s := server.NewServer(cc.Config, goji.DefaultMux, c)
+	s := server.New(cc.Config, goji.DefaultMux, c)
 	s.Serve()
 
 	return 0

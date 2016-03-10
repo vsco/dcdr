@@ -169,7 +169,7 @@ Here we have set the feature `example-feature` into two separate scopes. In the 
 ```
 The watcher is now observing your keyspace and writing all changes to the [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29) (`/etc/dcdr/decider.json`).
 
-The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. [EXAMPLE COMING, see server/demo/main.go for now].
+The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware. An example of how to customize a server can be found in [server/demo/main.go](https://github.com/vsco/dcdr/blob/master/server/demo/main.go).
 
 ```
 # start the server

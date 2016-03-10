@@ -19,7 +19,7 @@ type server struct {
 	mux        *web.Mux
 }
 
-func NewServer(cfg *config.Config, mux *web.Mux, cl client.ClientIFace) (s *server) {
+func New(cfg *config.Config, mux *web.Mux, cl client.ClientIFace) (s *server) {
 	s = &server{
 		Client: cl,
 		mux:    mux,
