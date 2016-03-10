@@ -9,6 +9,14 @@ Feature flags and remote configuration are hard problems to solve in the general
 
 This package does not set out to solve problems like authentication or ACLs for your features but It does aim provide enough of the tooling and libraries so that you can do so yourself.
 
+Decider has four major components.
+
+* A [`Client`](#using-the-go-client) for use within your Go applications
+* The [`Server`](#decider-server) for accessing features over HTTP
+* A [`CLI`](#cli) for managing features, watches, and starting the server
+
+Each of these components are comprised of lower level libraries that you can use to customize to your specific needs.
+
 ### Consul Integration
 Decider uses the built in commands from the [Consul](http://consul.io) CLI to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Similar to the concepts introduced by [`consul-template`](https://github.com/hashicorp/consul-template). Decider observes a key prefix in the store and then writes the resulting key/value tree to a flat JSON file on any node running the `dcdr watch` command. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
 
@@ -20,7 +28,7 @@ Due to the sensitive nature of configuration management, knowing the who, what, 
 
 ![](./resources/repo.png)
 
-### Statsd Integration
+### Observabilty 
 It's nice to know when changes are happening. Decider can be configured to emit [Statsd](https://github.com/etsy/statsd) events when changes occur. Custom event tags can be sent as well if your collector supports them. Included in this package is a [DataDog](https://www.datadoghq.com/) adapter with Event and Tag support.
 
 ## Installation
@@ -125,10 +133,10 @@ If this path does not exist you will need to create it.
 
 ![](./resources/watch.png)
 
-#### Tying it together
+## Tying the room together
 If you need instructions for getting Consul installed, check their [Getting Started](https://www.consul.io/intro/getting-started/install.html) page.
 
-Let's start a `consul agent` with an empty feature set and see how this all works together. For simplicity we can use the default Decider configuration without a git repository for auditing.
+Let's start a `consul agent` with an empty feature set and see how this all works together. For simplicity we can use the default Decider configuration without a git repository or stats.
 
 ```
 consul agent -bind "127.0.0.1" -dev
@@ -167,8 +175,9 @@ Here we have set the feature `example-feature` into two separate scopes. In the 
 [dcdr] 2016/03/09 17:56:17.250948 watching namespace: dcdr
 [dcdr] 2016/03/09 17:56:17.365362 wrote changes to /etc/dcdr/decider.json
 ```
-The watcher is now observing your keyspace and writing all changes to the [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29) (`/etc/dcdr/decider.json`).
+The watcher is now observing your <Namespace> and writing all changes to the [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29) (`/etc/dcdr/decider.json`).
 
+### Decider Server
 The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware.
 
 ```
@@ -203,11 +212,11 @@ Here we see that the default value of false is returned. The `info` key is where
 }
 ```
 
-### Using the Go client
+## Using the Go client
 
 Included in this package is a Go client. By default this client uses the same `config.hcl` for its configuration. You may also provide custom your own custom configuration as well. For this example we will assume the defaults are still in place and that the feature from the above example have been set.
 
-#### Require and initialize the client
+### Require and initialize the client
 
 ```Go
 import "github.com/vsco/dcdr/client"
@@ -223,11 +232,11 @@ if err != nil {
 }
 ```
 
-#### Checking feature flags
+### Checking feature flags
 
 The client has two main methods for interacting with flags `IsAvailable(feature string)` and `IsAvailableForId(feature string, id uint64)`.
 
-**IsAvailable**
+#### IsAvailable
 
 This method is for checking `boolean` features or 'kill switches'. If a `percentile` feature is passed to this method it will always return false. So don't do that.
 
@@ -254,7 +263,7 @@ if client.IsAvailable("example-feature") {
 
 This example initializes a new `Client` and begins watching the 'default' feature scope. It then checks the `example-feature` and runs the appropriate path given the current return value.
 
-**So what about scopes?**
+#### So what about scopes?
 
 To initialize a Decider `Client` into a given set of scopes use the `WithScopes(scopes ...string)` method. This method creates a new `Client` with an underlying feature set that has the provided `scope` values merged onto the default set. If a feature does not exist in any of the provided scopes the client will fallback to the 'default' `scope`. This provides a mechanism for overriding features in a priority order.
 
@@ -279,7 +288,7 @@ if scopedClient.IsAvailable("example-feature") {
 }
 ```
 
-**Fallbacks**
+#### Fallbacks
 
 ```
 # set a feature that does not exist in user-groups/beta
@@ -302,11 +311,11 @@ if scopedClient.IsAvailable("another-feature") {
 }
 ```
 
-**IsAvailableForId**
+### IsAvailableForId
 
 This method method works exactly as `IsAvailable` except that it is used for enabling features for only a fraction of requests. Both the `feature` string and `id` are hashed together using `hash/crc32` to create an integer that is used with the `float64` value of a `percentile` feature to determine the enabled state.
 
-**Using percentiles**
+#### Using percentiles
 
 ```
 # set a feature to 50%
@@ -330,11 +339,11 @@ if client.IsAvailableForId("new-feature-rollout", userId) {
 }
 ```
 
-### Building a custom Server
+## Building a custom Server
 
 Exposing your feature flags to the open interner would be a terrible idea in most cases. The default server will work fine as long as access is restricted to internal clients only but what if we want to allow access to mobile clients? Since there are entirely too many auth strategies to cover and we are lazy, Decider `Server` allows you to add middleware to customize its behavior.
 
-#### Extending with middleware
+### Extending with middleware
 
 Below is an example of how to do authentication very poorly. However, if you look close enough you can imagine exactly where you might add a DB lookup for an OAuth token or something similar. The `Use` method takes variadic `MiddlewareType` as a param to allow chainable customizations.
 
@@ -395,9 +404,9 @@ func ScopedCountryCode(c *web.C, h http.Handler) http.Handler {
 
 A full working example can be found in [server/demo/main.go](https://github.com/vsco/dcdr/blob/master/server/demo/main.go).
 
-### Configuration
+## Configuration
 
-All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory and your permissions may differ but to get started locally do the following. 
+All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory. Your permissions depending on the machine may differ but to get started locally do the following. 
 
 ```
  sudo mkdir /etc/dcdr
@@ -405,13 +414,11 @@ All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `
  dcdr init
 ```
 
-`dcdr init` will create the default config file for you if one does not already exist.
-
-To view current configuration values use `dcdr info`.
+Running `dcdr init` will create the default config file for you if one does not already exist. Once you have edited this file with your, statsd, and git repo configurations you can view this info by running the `dcdr info` command.
 
 ![](./resources/info.png)
 
-#### Example config.hcl
+### Example config.hcl
 
 ```
 Username = "twoism"
