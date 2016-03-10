@@ -234,7 +234,7 @@ Here we have set the feature `example-feature` into two separate scopes. In the 
 The watcher is now observing your <Namespace> and writing all changes to the [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29) (`/etc/dcdr/decider.json`).
 
 ### Decider Server
-The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware. Read more on custom server [here](building-a-custom-server).
+The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware. Read more on custom servers [here](building-a-custom-server).
 
 ```
 # start the server
@@ -270,7 +270,7 @@ Here we see that the default value of false is returned. The `info` key is where
 
 ## Using the Go client
 
-Included in this package is a Go client. By default this client uses the same `config.hcl` for its configuration. You may also provide custom your own custom configuration as well. For this example we will assume the defaults are still in place and that the feature from the above example have been set.
+Included in this package is a Go client. By default this client uses the same `config.hcl` for its configuration. You may also provide custom your own custom configuration as well using `config.Config` and the `client.New` method. For this example we will assume the defaults are still in place and that the features from the above example have been set.
 
 ### Require and initialize the client
 
@@ -317,11 +317,11 @@ if client.IsAvailable("example-feature") {
 }
 ```
 
-This example initializes a new `Client` and begins watching the 'default' feature scope. It then checks the `example-feature` and runs the appropriate path given the current return value.
+This example initializes a new `Client` and begins watching the 'default' feature scope. It then checks the `example-feature` and runs the appropriate code path given the current value of the feature.
 
 #### So what about scopes?
 
-To initialize a Decider `Client` into a given set of scopes use the `WithScopes(scopes ...string)` method. This method creates a new `Client` with an underlying feature set that has the provided `scope` values merged onto the default set. If a feature does not exist in any of the provided scopes the client will fallback to the 'default' `scope`. This provides a mechanism for overriding features in a priority order.
+To initialize a Decider `Client` into a given set of scopes use the `WithScopes(scopes ...string)` method. This method creates a new `Client` with an underlying feature set that has the provided `scope` values merged onto the default set. If a feature does not exist in any of the provided scopes the client will fallback to the 'default' `scope` to find the value. If the feature does not exist in any scope the client simply returns `false`. 
 
 ```
 # set the scoped feature
@@ -369,7 +369,7 @@ if scopedClient.IsAvailable("another-feature") {
 
 ### IsAvailableForId
 
-This method method works exactly as `IsAvailable` except that it is used for enabling features for only a fraction of requests. Both the `feature` string and `id` are hashed together using `hash/crc32` to create an integer that is used with the `float64` value of a `percentile` feature to determine the enabled state.
+This method works exactly as `IsAvailable` except that it is used for enabling features for only a fraction of requests. Both the `feature` string and `id` are hashed together using `hash/crc32` to create an integer that is used with the `float64` value of a `percentile` feature to determine the enabled state. The code for this functionality can be found [here](https://github.com/vsco/dcdr/blob/master/client/client.go#L223).
 
 #### Using percentiles
 
@@ -414,7 +414,7 @@ for {
 
 ## Building a custom Server
 
-Exposing your feature flags to the open interner would be a terrible idea in most cases. The default server will work fine as long as access is restricted to internal clients only but what if we want to allow access to mobile clients? Since there are entirely too many auth strategies to cover and we are lazy, Decider `Server` allows you to add middleware to customize its behavior.
+Exposing your feature flags to the open internet would be a terrible idea in most cases. The default server will work fine as long as access is restricted to internal network clients but what if we want to allow access to mobile devices? Since there are entirely too many auth strategies to cover and we are kind of lazy, Decider `Server` allows you to add middleware to customize its behavior to suit your authentication needs.
 
 ### Extending with middleware
 
@@ -451,7 +451,7 @@ func main() {
 }
 ```
 
-Here is a bit more useful example. This middleware takes the `X-Country` header and appends it to `x-dcdr-scopes`. We could then use the `country-code/<cc>` scope to set per country feature flags.
+Here is a bit more useful example. This `ScopedCountryCode` middleware takes the `X-Country` header and appends it to `x-dcdr-scopes`. We then use the `country-code/<cc>` scope to look up per country feature flags from the K/V store.
 
 ```Go
 const CountryCodeHeader = "X-Country"
