@@ -4,10 +4,13 @@ import (
 	"log"
 	"syscall"
 
+	"os"
+
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/server/handlers"
+	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/graceful"
 	"github.com/zenazn/goji/web"
 )
@@ -19,8 +22,8 @@ type server struct {
 	mux        *web.Mux
 }
 
-func New(cfg *config.Config, mux *web.Mux, cl client.ClientIFace) (s *server) {
-	s = &server{
+func New(cfg *config.Config, mux *web.Mux, cl client.ClientIFace) (srv *server) {
+	srv = &server{
 		Client: cl,
 		mux:    mux,
 		config: cfg,
@@ -29,28 +32,41 @@ func New(cfg *config.Config, mux *web.Mux, cl client.ClientIFace) (s *server) {
 	return
 }
 
-func (s *server) Use(mdl ...web.MiddlewareType) *server {
-	for _, m := range mdl {
-		s.middleware = append(s.middleware, m)
+func NewDefault() (srv *server) {
+	cfg := config.DefaultConfig()
+	client, err := client.New(cfg).Watch()
+
+	if err != nil {
+		printer.LogErr("could not create client: %v", err)
 	}
 
-	return s
+	srv = New(cfg, goji.DefaultMux, client)
+
+	return
 }
 
-func (s *server) Serve() {
-	for _, md := range s.middleware {
-		s.mux.Use(md)
+func (srv *server) Use(mdl ...web.MiddlewareType) *server {
+	for _, m := range mdl {
+		srv.middleware = append(srv.middleware, m)
 	}
 
-	s.mux.Get(s.config.Server.Endpoint, handlers.FeaturesHandler(s.config, s.Client))
+	return srv
+}
 
-	graceful.AddSignal(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+func (srv *server) Serve() {
+	for _, md := range srv.middleware {
+		srv.mux.Use(md)
+	}
+
+	srv.mux.Get(srv.config.Server.Endpoint, handlers.FeaturesHandler(srv.Client))
+
+	graceful.AddSignal(syscall.SIGINT, syscall.SIGTERM)
 	graceful.PreHook(func() {
 		printer.Log("received kill signal, gracefully stopping...")
 	})
 
-	printer.Log("serving %s on %s", s.config.Server.Endpoint, s.config.Server.Host)
-	err := graceful.ListenAndServe(s.config.Server.Host, s.mux)
+	printer.Log("pid: %d serving %s on %s", os.Getpid(), srv.config.Server.Endpoint, srv.config.Server.Host)
+	err := graceful.ListenAndServe(srv.config.Server.Host, srv.mux)
 
 	if err != nil {
 		log.Println(err)

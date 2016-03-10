@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/vsco/dcdr/client"
-	"github.com/vsco/dcdr/config"
 )
 
 const DcdrScopesHeader = "x-dcdr-scopes"
@@ -21,7 +20,7 @@ func SetResponseHeaders(w http.ResponseWriter) {
 	w.Header().Set(ContentTypeHeader, ContentType)
 }
 
-func FeaturesHandler(cfg *config.Config, c client.ClientIFace) func(
+func FeaturesHandler(c client.ClientIFace) func(
 	w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {

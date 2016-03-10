@@ -3,10 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/vsco/dcdr/client"
-	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/server"
-	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
 )
 
@@ -28,15 +25,8 @@ func MockAuth(c *web.C, h http.Handler) http.Handler {
 }
 
 func main() {
-	// Create a new default client and start the Watcher
-	client, err := client.NewDefault().Watch()
-
-	if err != nil {
-		panic(err)
-	}
-
-	// Create a new Server using the Goji default mux
-	srv := server.New(config.DefaultConfig(), goji.DefaultMux, client)
+	// Create a new Server and Client
+	srv := server.NewDefault()
 
 	// Add the MockAuth to the middleware chain
 	srv.Use(MockAuth)
