@@ -13,7 +13,7 @@ Decider uses the built in commands from the [Consul](http://consul.io) CLI to di
 ### Scopes
 In order to allow for expanding use cases and to avoid naming collisions, Decider provides arbitrary scoping of feature flags. An example use case would be providing separate features sets according to country code or mobile platform. Additionally, multiple Decider instances can be run within a cluster with separate namespaces and key sets by configuring `/etc/dcdr/config.hcl`.
 
-### Auditability
+### Audit Trail
 Due to the sensitive nature of configuration management, knowing the who, what, and when of changes can be very important. Decider uses `git` to handle this responsibility. By easily specifying a `git` repository and its origin in `/etc/dcdr/config.hcl`, Decider will export your keyspace as a `JSON` file and then commit and push the changeset to the specified origin. Of course, this is all optional if you enjoy living dangerously.
 
 ![](./resources/repo.png)
@@ -74,7 +74,7 @@ The above command sets the key `dcdr/features/user-groups/beta/new-feature` equa
 
 ### Listing Features
 
-Listing features can be filtered by a given `scope` and `prefix`. Any futher fanciness can be handled by piping the output to `grep`.
+Listing features can be filtered by a given `scope` and `prefix`. Any further fanciness can be handled by piping the output to `grep` or `less`.
 
 ```bash
 	-p, --prefix="<flag-prefix>"
@@ -93,7 +93,7 @@ dcdr list -p new -s user-groups/beta
 
 ### Deleting Features
 
-Features are removed using the `dcdr delete` command and take a `name` and `scope` parameters. If no `scope` is provided the `default` scope is assummed. Once deleted and if you have a repository configured, Decider will commit the changeset and push it to origin.
+Features are removed using the `dcdr delete` command and take a `name` and `scope` parameters. If no `scope` is provided the `default` scope is assumed. Once deleted and if you have a repository configured, Decider will commit the changeset and push it to origin.
 
 ```
 	-p, --prefix="<flag-prefix>"
@@ -112,7 +112,7 @@ dcdr delete -n another-feature -s user-groups/beta
 
 ### Starting the Watcher
 
-The `watch` command is central to how Decider features are distributed to nodes in a cluster. This command is a wrapper around `consul watch`. It observeres the configured keyspace and writes a `JSON` file containing the exported structure to the configured [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29).
+The `watch` command is central to how Decider features are distributed to nodes in a cluster. This command is a wrapper around `consul watch`. It observes the configured keyspace and writes a `JSON` file containing the exported structure to the configured [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29).
 
 If this path does not exist you will need to create it.
 
@@ -205,7 +205,7 @@ Here we see that the default value of false is returned. The `info` key is where
 
 Included in this package is a Go client. By default this client uses the same `config.hcl` for its configuration. You may also provide custom your own custom configuration as well. For this example we will assume the defaults are still in place and that the feature from the above example have been set.
 
-#### Require and intialize the client
+#### Require and initialize the client
 
 ```Go
 import "github.com/vsco/dcdr/client"
