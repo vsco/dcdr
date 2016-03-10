@@ -10,7 +10,6 @@ import (
 )
 
 const DcdrScopesHeader = "x-dcdr-scopes"
-const CurrentSha = "current_sha"
 const ContentTypeHeader = "Content-Type"
 const ContentType = "application/json"
 

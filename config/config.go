@@ -19,6 +19,30 @@ const (
 	DefaultHost          = ":8000"
 )
 
+var ExampleConfig = []byte(`
+// Username = "twosim"
+// Namespace = "dcdr"
+
+// Watcher {
+//   OutputPath = "/etc/dcdr/decider.json"
+// }
+
+// Server {
+//   JsonRoot = "dcdr"
+//   Endpoint = "/dcdr.json"
+// }
+
+// Git {
+//   RepoURL = "git@github.com:vsco/decider-test-config.git"
+//   RepoPath = "/etc/dcdr/audit"
+// }
+
+// Stats {
+//   Namespace = "decider"
+//   Host = "127.0.0.1"
+//   Port = 8126
+// }`)
+
 type Server struct {
 	Endpoint string
 	Host     string
