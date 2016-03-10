@@ -20,7 +20,7 @@ const (
 )
 
 var ExampleConfig = []byte(`
-// Username = "twosim"
+// Username = "dcdr admin"
 // Namespace = "dcdr"
 
 // Watcher {

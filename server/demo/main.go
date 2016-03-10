@@ -3,11 +3,16 @@ package main
 import (
 	"net/http"
 
+	"fmt"
+	"strings"
+
 	"github.com/vsco/dcdr/server"
 	"github.com/zenazn/goji/web"
 )
 
 const AuthorizationHeader = "Authorization"
+const CountryCodeHeader = "X-Country"
+const DcdrScopesHeader = "x-dcdr-scopes"
 
 // MockAuth example authentication middleware.
 // Checks for any value in the http Authorization header.
@@ -24,12 +29,29 @@ func MockAuth(c *web.C, h http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+func ScopedCountryCode(c *web.C, h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		cc := strings.ToLower(r.Header.Get(CountryCodeHeader))
+
+		if cc != "" {
+			// Check for existing scopes and append 'country-code/xx'
+			scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+			scopes = append(scopes, fmt.Sprintf("country-codes/%s", cc))
+			r.Header.Set(DcdrScopesHeader, strings.Join(scopes, ","))
+		}
+
+		h.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
 func main() {
 	// Create a new Server and Client
 	srv := server.NewDefault()
 
-	// Add the MockAuth to the middleware chain
-	srv.Use(MockAuth)
+	// Add the MockAuth and ScopedCountryCode to the middleware chain
+	srv.Use(MockAuth, ScopedCountryCode)
 
 	// Begin serving on :8000
 	// curl -sH "Authorization: authorized" :8000/dcdr.json

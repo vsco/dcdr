@@ -169,7 +169,7 @@ Here we have set the feature `example-feature` into two separate scopes. In the 
 ```
 The watcher is now observing your keyspace and writing all changes to the [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29) (`/etc/dcdr/decider.json`).
 
-The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware. An example of how to customize a server can be found in [server/demo/main.go](https://github.com/vsco/dcdr/blob/master/server/demo/main.go).
+The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware.
 
 ```
 # start the server
@@ -330,6 +330,71 @@ if client.IsAvailableForId("new-feature-rollout", userId) {
 }
 ```
 
+### Building a custom Server
+
+Exposing your feature flags to the open interner would be a terrible idea in most cases. The default server will work fine as long as access is restricted to internal clients only but what if we want to allow access to mobile clients? Since there are entirely too many auth strategies to cover and we are lazy, Decider `Server` allows you to add middleware to customize its behavior.
+
+#### Extending with middleware
+
+Below is an example of how to do authentication very poorly. However, if you look close enough you can imagine exactly where you might add a DB lookup for an OAuth token or something similar. The `Use` method takes variadic `MiddlewareType` as a param to allow chainable customizations.
+
+```Go
+const AuthorizationHeader = "Authorization"
+
+// MockAuth example authentication middleware.
+// Checks for any value in the http Authorization header.
+// If no value is found a 401 status is sent.
+func MockAuth(c *web.C, h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get(AuthorizationHeader) != "" {
+			h.ServeHTTP(w, r)
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func main() {
+	// Create a new Server and Client
+	srv := server.NewDefault()
+
+	// Add the MockAuth to the middleware chain
+	srv.Use(MockAuth)
+
+	// Begin serving on :8000
+	// curl -sH "Authorization: authorized" :8000/dcdr.json
+	srv.Serve()
+}
+```
+
+Here is a bit more useful example. This middleware takes the `X-Country` header and appends it to `x-dcdr-scopes`. We could then use the `country-code/<cc>` scope to set per country feature flags.
+
+```Go
+const CountryCodeHeader = "X-Country"
+const DcdrScopesHeader = "x-dcdr-scopes"
+
+func ScopedCountryCode(c *web.C, h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		cc := strings.ToLower(r.Header.Get(CountryCodeHeader))
+
+		if cc != "" {
+			// Check for existing scopes and append 'country-code/xx'
+			scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+			scopes = append(scopes, fmt.Sprintf("country-codes/%s", cc))
+			r.Header.Set(DcdrScopesHeader, strings.Join(scopes, ","))
+		}
+
+		h.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
+}
+```
+
+A full working example can be found in [server/demo/main.go](https://github.com/vsco/dcdr/blob/master/server/demo/main.go).
+
 ### Configuration
 
 All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory and your permissions may differ but to get started locally do the following. 
@@ -340,14 +405,16 @@ All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `
  dcdr init
 ```
 
-`dcdr init` will create the default config file for you. Here is the example config.
+`dcdr init` will create the default config file for you if one does not already exist.
 
 To view current configuration values use `dcdr info`.
 
 ![](./resources/info.png)
 
+#### Example config.hcl
+
 ```
-Username = "twosim"
+Username = "twoism"
 Namespace = "dcdr"
 
 Watcher {

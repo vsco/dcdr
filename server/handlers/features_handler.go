@@ -16,8 +16,9 @@ func GetScopes(r *http.Request) []string {
 	return strings.Split(r.Header.Get(DcdrScopesHeader), ",")
 }
 
-func SetResponseHeaders(w http.ResponseWriter) {
+func SetResponseHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(ContentTypeHeader, ContentType)
+	w.Header().Set(DcdrScopesHeader, r.Header.Get(DcdrScopesHeader))
 }
 
 func FeaturesHandler(c client.ClientIFace) func(
@@ -31,7 +32,7 @@ func FeaturesHandler(c client.ClientIFace) func(
 			return
 		}
 
-		SetResponseHeaders(w)
+		SetResponseHeaders(w, r)
 		w.Write(json)
 	}
 }
