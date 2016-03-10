@@ -114,6 +114,13 @@ dcdr delete -n another-feature -s user-groups/beta
 
 The `watch` command is central to how Decider features are distributed to nodes in a cluster. This command is a wrapper around `consul watch`. It observeres the configured keyspace and writes a `JSON` file containing the exported structure to the configured [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29).
 
+If this path does not exist you will need to create it.
+
+```
+ sudo mkdir /etc/dcdr
+ sudo chown `whoami` /etc/dcdr
+```
+
 ![](./resources/watch.png)
 
 #### Tying it together
