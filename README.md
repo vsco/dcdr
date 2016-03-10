@@ -17,7 +17,7 @@ Each of these components are comprised of lower level libraries that you can use
 
 The two supported types of flags are `boolean` and `percentile`. These seem to be enough to cover most use cases for a system of this type. 
 
-An example use case for a `boolean` flag would be an API kill switch that could alliviate load for a backing database.
+An example use case for a `boolean` flag would be an API kill switch that could alleviate load for a backing database.
 
 ```
 disable-load-heavy-api-endpoint => true
