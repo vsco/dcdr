@@ -175,7 +175,7 @@ func (cc *Controller) Init(ctx climax.Context) int {
 		return 0
 	}
 
-	_, create := ctx.Get("create")
+	create := ctx.Is("create")
 
 	err := cc.Client.InitRepo(create)
 
