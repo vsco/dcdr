@@ -33,7 +33,6 @@ func main() {
 
 	if cmd != "" && cmd != "init" && cmd != "help" && cmd != "watch" && rp.Enabled() && !rp.Exists() {
 		printer.SayErr("%s has not been cloned to %s. see `dcdr help init` for usage\n", cfg.Git.RepoURL, cfg.Git.RepoPath)
-		os.Exit(1)
 	}
 
 	var gs *godspeed.Godspeed
