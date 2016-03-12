@@ -25,16 +25,6 @@ func main() {
 
 	rp := repo.New(cfg)
 
-	cmd := ""
-
-	if len(os.Args) > 1 {
-		cmd = os.Args[1]
-	}
-
-	if cmd != "" && cmd != "init" && cmd != "help" && cmd != "watch" && rp.Enabled() && !rp.Exists() {
-		printer.SayErr("%s has not been cloned to %s. see `dcdr help init` for usage\n", cfg.Git.RepoURL, cfg.Git.RepoPath)
-	}
-
 	var gs *godspeed.Godspeed
 
 	if cfg.StatsEnabled() {

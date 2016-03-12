@@ -172,6 +172,7 @@ func (cc *Controller) Init(ctx climax.Context) int {
 	}
 
 	if !cc.Config.GitEnabled() {
+		printer.Say("no repository configured. skipping")
 		return 0
 	}
 

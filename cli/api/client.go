@@ -15,6 +15,7 @@ import (
 const InfoNameSpace = "info"
 
 var TypeChangeError = errors.New("cannot change existing feature types.")
+var RepoExistsError = errors.New("repository already exists")
 
 func KeyNotFoundError(n string) error {
 	return errors.New(fmt.Sprintf("%s not found", n))
@@ -181,6 +182,14 @@ func (c *Client) Delete(key string, scope string) error {
 }
 
 func (c *Client) Commit(ft *models.Feature, deleted bool) error {
+	if !c.Repo.Exists() {
+		err := c.Repo.Clone()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	kvb, err := c.Store.List(fmt.Sprintf("%s/features", c.Namespace()))
 
 	if err != nil {
@@ -267,6 +276,10 @@ func (c *Client) UpdateCurrentSha() (string, error) {
 }
 
 func (c *Client) InitRepo(create bool) error {
+	if c.Repo.Exists() {
+		return RepoExistsError
+	}
+
 	if create {
 		return c.Repo.Create()
 	}
