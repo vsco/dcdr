@@ -27,6 +27,8 @@ import (
 	"github.com/zenazn/goji"
 )
 
+const FilePerms = 0755
+
 var (
 	InvalidFeatureTypeError = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
 	InvalidRangeError       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
@@ -156,19 +158,20 @@ func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
 
 func (cc *Controller) Init(ctx climax.Context) int {
 	if _, err := os.Stat(config.ConfigPath()); os.IsNotExist(err) {
-		printer.Say("%s not found. creating example config", config.ConfigPath())
+		err = os.MkdirAll(path.Dir(config.ConfigPath()), FilePerms)
 
-		err := os.MkdirAll(path.Dir(config.ConfigPath()), 0644)
+		printer.Say("creating %s", path.Dir(config.ConfigPath()))
 
 		if err != nil {
-			printer.SayErr("%v", err)
+			printer.SayErr("could not create config directory: %v", err)
 			return 1
 		}
 
-		err = ioutil.WriteFile(config.ConfigPath(), config.ExampleConfig, 0644)
+		err = ioutil.WriteFile(config.ConfigPath(), config.ExampleConfig, FilePerms)
+		printer.Say("%s not found. creating example config", config.ConfigPath())
 
 		if err != nil {
-			printer.SayErr("%v", err)
+			printer.SayErr("could not write config.hcl %v", err)
 			return 1
 		}
 	}
