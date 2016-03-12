@@ -35,7 +35,11 @@ func SetResponseHeaders(w http.ResponseWriter, r *http.Request, sha string) {
 }
 
 func NotModified(sha string, r *http.Request) bool {
-	return sha == r.Header.Get(IfNoneMatchHeader)
+	if v := r.Header.Get(IfNoneMatchHeader); v != "" && sha != "" {
+		return sha == r.Header.Get(IfNoneMatchHeader)
+	}
+
+	return false
 }
 
 func FeaturesHandler(c client.ClientIFace) func(
