@@ -55,7 +55,7 @@ func (u *UI) DrawConfig(cfg *config.Config) {
 	if cfg.StatsEnabled() {
 		tbl.AddRow("Stats", "Namespace", cfg.Stats.Namespace, "Prefix for `dcdr` change events.")
 		tbl.AddRow("Stats", "Host", cfg.Stats.Host, "Statsd host ('localhost')")
-		tbl.AddRow("Stats", "Port", fmt.Sprintf("%s", cfg.Stats.Port), "Statsd port (8125)")
+		tbl.AddRow("Stats", "Port", fmt.Sprintf("%d", cfg.Stats.Port), "Statsd port (8125)")
 	}
 
 	tbl.Print()

@@ -479,7 +479,7 @@ A full working example can be found in [server/demo/main.go](https://github.com/
 
 ## Configuration
 
-All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory. Your permissions depending on the machine may differ but to get started locally do the following. 
+All configuration lives in `config.hcl`. By default Decider looks for this file in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory. Your permissions depending on the machine may differ but to get started locally do the following. 
 
 ```
  sudo mkdir /etc/dcdr
@@ -487,7 +487,11 @@ All configuration lives in `/etc/dcdr/config.hcl`. You will need to create the `
  dcdr init
 ```
 
-Running `dcdr init` will create the default config file for you if one does not already exist. Once you have edited this file with your, statsd, and git repo configurations you can view this info by running the `dcdr info` command.
+The default config path can also be overriden by setting the `DCDR_CONFIG_PATH` environment variable to a location of your choosing.
+
+Running `dcdr init` will create a default config file for you if one does not already exist. Once you have edited this file with your, statsd, and git repo configurations you can view this info by running the `dcdr info` command.
+
+To create a new repository from scratch. Configure the `config.hcl` file with your `RepoPath` and `RepoURL` and then run `dcdr init --create`. This will create the repo add an empty `JSON` file and attempt to push it to the specified origin.
 
 ![](./resources/info.png)
 

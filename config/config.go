@@ -10,13 +10,14 @@ import (
 )
 
 const (
-	DefaultNamespace     = "dcdr"
-	DefaultInfoNamespace = DefaultNamespace + "/" + "info"
-	DefaultUsername      = "unknown"
-	ConfigPath           = "/etc/dcdr/config.hcl"
-	DefaultOutputPath    = "/etc/dcdr/decider.json"
-	DefaultEndpoint      = "/dcdr.json"
-	DefaultHost          = ":8000"
+	DefaultNamespace      = "dcdr"
+	DefaultInfoNamespace  = DefaultNamespace + "/" + "info"
+	DefaultUsername       = "unknown"
+	ConfigPath            = "/etc/dcdr/config.hcl"
+	EnvConfigPathOverride = "DCDR_CONFIG_PATH"
+	DefaultOutputPath     = "/etc/dcdr/decider.json"
+	DefaultEndpoint       = "/dcdr.json"
+	DefaultHost           = ":8000"
 )
 
 var ExampleConfig = []byte(`
@@ -104,10 +105,18 @@ func DefaultConfig() *Config {
 }
 
 func readConfig() *Config {
-	bts, err := ioutil.ReadFile(ConfigPath)
+	var path string
+
+	if v := os.Getenv(EnvConfigPathOverride); v != "" {
+		path = v
+	} else {
+		path = ConfigPath
+	}
+
+	bts, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		printer.SayErr("Could not read %s", ConfigPath)
+		printer.SayErr("Could not read %s", path)
 		os.Exit(1)
 	}
 
