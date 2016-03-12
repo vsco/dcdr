@@ -87,6 +87,10 @@ type Config struct {
 }
 
 func (c *Config) GitEnabled() bool {
+	return c.Git.RepoPath != ""
+}
+
+func (c *Config) PushEnabled() bool {
 	return c.Git.RepoURL != ""
 }
 

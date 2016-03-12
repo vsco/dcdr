@@ -22,6 +22,10 @@ func TestDefaultConfig(t *testing.T) {
 	assert.Equal(t, ConfigPath(), "/etc/dcdr/config.hcl")
 	assert.Equal(t, OutputPath(), "/etc/dcdr/decider.json")
 
+	assert.False(t, cfg.GitEnabled())
+	assert.False(t, cfg.PushEnabled())
+	assert.False(t, cfg.StatsEnabled())
+
 	assert.Equal(t, cfg.Username, user.Username)
 	assert.Equal(t, cfg.Watcher.OutputPath, OutputPath())
 	assert.Equal(t, cfg.Server.Endpoint, DefaultEndpoint)

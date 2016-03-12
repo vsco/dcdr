@@ -144,13 +144,16 @@ func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
 			return 1
 		}
 
-		printer.Say("pushing commit to origin")
-		err = cc.Client.Push()
+		if cc.Config.PushEnabled() {
+			printer.Say("pushing commit to origin")
+			err = cc.Client.Push()
 
-		if err != nil {
-			printer.SayErr("%v", err)
-			return 1
+			if err != nil {
+				printer.SayErr("%v", err)
+				return 1
+			}
 		}
+
 	}
 
 	return 0
