@@ -5,8 +5,7 @@ import (
 
 	"io/ioutil"
 
-	"log"
-
+	"github.com/vsco/dcdr/cli/printer"
 	"gopkg.in/fsnotify.v1"
 )
 
@@ -28,7 +27,8 @@ func NewWatcher(path string) (w *Watcher) {
 	_, err := os.Stat(path)
 
 	if err != nil {
-		panic(err)
+		printer.LogErr("could not start watcher: %v", err)
+		os.Exit(1)
 	}
 
 	w = &Watcher{
@@ -66,7 +66,7 @@ func (w *Watcher) Watch() {
 					w.Updated()
 				}
 			case err := <-w.watcher.Errors:
-				log.Printf("[dcdr] watch error: %v", err)
+				printer.LogErr("[dcdr] watch error: %v", err)
 			}
 		}
 	}()

@@ -41,8 +41,8 @@ func New(cfg *config.Config) (c *Client) {
 	}
 
 	if c.config.Watcher.OutputPath != "" {
-		printer.Say("started watching %s", c.config.Watcher.OutputPath)
 		c.watcher = watcher.NewWatcher(c.config.Watcher.OutputPath)
+		printer.Say("started watching %s", c.config.Watcher.OutputPath)
 	}
 
 	return
