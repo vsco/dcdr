@@ -82,6 +82,13 @@ func (c *Config) StatsEnabled() bool {
 	return c.Stats.Host != ""
 }
 
+func TestConfig() *Config {
+	cfg := DefaultConfig()
+	cfg.Watcher.OutputPath = ""
+
+	return cfg
+}
+
 func DefaultConfig() *Config {
 	uname := DefaultUsername
 	u, _ := user.Current()
