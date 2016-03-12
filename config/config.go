@@ -5,20 +5,32 @@ import (
 	"os"
 	"os/user"
 
+	"fmt"
+
 	"github.com/hashicorp/hcl"
 	"github.com/vsco/dcdr/cli/printer"
 )
 
 const (
-	DefaultNamespace      = "dcdr"
-	DefaultInfoNamespace  = DefaultNamespace + "/" + "info"
-	DefaultUsername       = "unknown"
-	ConfigPath            = "/etc/dcdr/config.hcl"
-	EnvConfigPathOverride = "DCDR_CONFIG_PATH"
-	DefaultOutputPath     = "/etc/dcdr/decider.json"
-	DefaultEndpoint       = "/dcdr.json"
-	DefaultHost           = ":8000"
+	ConfigFileName       = "config.hcl"
+	OutputFileName       = "decider.json"
+	DefaultNamespace     = "dcdr"
+	DefaultInfoNamespace = DefaultNamespace + "/" + "info"
+	DefaultUsername      = "unknown"
+	EnvConfigDirOverride = "DCDR_CONFIG_DIR"
+	DefaultEndpoint      = "/dcdr.json"
+	DefaultHost          = ":8000"
 )
+
+var ConfigDir = "/etc/dcdr"
+
+func ConfigPath() string {
+	return fmt.Sprintf("%s/%s", ConfigDir, ConfigFileName)
+}
+
+func OutputPath() string {
+	return fmt.Sprintf("%s/%s", ConfigDir, OutputFileName)
+}
 
 var ExampleConfig = []byte(`
 // Username = "dcdr admin"
@@ -91,7 +103,11 @@ func TestConfig() *Config {
 
 func DefaultConfig() *Config {
 	uname := DefaultUsername
-	u, _ := user.Current()
+	u, err := user.Current()
+
+	if err != nil {
+		uname = DefaultUsername
+	}
 
 	if u != nil {
 		uname = u.Username
@@ -101,7 +117,7 @@ func DefaultConfig() *Config {
 		Username:  uname,
 		Namespace: DefaultNamespace,
 		Watcher: Watcher{
-			OutputPath: DefaultOutputPath,
+			OutputPath: OutputPath(),
 		},
 		Server: Server{
 			Endpoint: DefaultEndpoint,
@@ -112,18 +128,10 @@ func DefaultConfig() *Config {
 }
 
 func readConfig() *Config {
-	var path string
-
-	if v := os.Getenv(EnvConfigPathOverride); v != "" {
-		path = v
-	} else {
-		path = ConfigPath
-	}
-
-	bts, err := ioutil.ReadFile(path)
+	bts, err := ioutil.ReadFile(ConfigPath())
 
 	if err != nil {
-		printer.SayErr("Could not read %s", path)
+		printer.SayErr("Could not read %s", ConfigPath())
 		os.Exit(1)
 	}
 
@@ -165,7 +173,11 @@ func readConfig() *Config {
 }
 
 func LoadConfig() *Config {
-	if _, err := os.Stat(ConfigPath); err == nil {
+	if v := os.Getenv(EnvConfigDirOverride); v != "" {
+		ConfigDir = v
+	}
+
+	if _, err := os.Stat(ConfigDir); err == nil {
 		return readConfig()
 	} else {
 		return DefaultConfig()

@@ -77,10 +77,10 @@ This package does not set out to solve problems like authentication or ACLs for 
 Decider uses the built in commands from the [Consul](http://consul.io) CLI to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Similar to the concepts introduced by [`consul-template`](https://github.com/hashicorp/consul-template). Decider observes a key prefix in the store and then writes the resulting key/value tree to a flat JSON file on any node running the `dcdr watch` command. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
 
 ### Scopes
-In order to allow for expanding use cases and to avoid naming collisions, Decider provides arbitrary scoping of feature flags. An example use case would be providing separate features sets according to country code or mobile platform. Additionally, multiple Decider instances can be run within a cluster with separate namespaces and key sets by configuring `/etc/dcdr/config.hcl`.
+In order to allow for expanding use cases and to avoid naming collisions, Decider provides arbitrary scoping of feature flags. An example use case would be providing separate features sets according to country code or mobile platform. Additionally, multiple Decider instances can be run within a cluster with separate namespaces and key sets by configuring [`config.hcl`](#configuration).
 
 ### Audit Trail
-Due to the sensitive nature of configuration management, knowing the who, what, and when of changes can be very important. Decider uses `git` to handle this responsibility. By easily specifying a `git` repository and its origin in `/etc/dcdr/config.hcl`, Decider will export your keyspace as a `JSON` file and then commit and push the changeset to the specified origin. Of course, this is all optional if you enjoy living dangerously.
+Due to the sensitive nature of configuration management, knowing the who, what, and when of changes can be very important. Decider uses `git` to handle this responsibility. By easily specifying a `git` repository and its origin in [`config.hcl`](#configuration), Decider will export your keyspace as a `JSON` file and then commit and push the changeset to the specified origin. Of course, this is all optional if you enjoy living dangerously.
 
 ![](./resources/repo.png)
 
@@ -178,14 +178,16 @@ dcdr delete -n another-feature -s user-groups/beta
 
 ### Starting the Watcher
 
-The `watch` command is central to how Decider features are distributed to nodes in a cluster. This command is a wrapper around `consul watch`. It observes the configured keyspace and writes a `JSON` file containing the exported structure to the configured [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29).
+The `watch` command is central to how Decider features are distributed to nodes in a cluster. This command is a wrapper around `consul watch`. It observes the configured keyspace and writes a `JSON` file containing the exported structure to the configured [`Server:OutputPath`](#configuration).
 
-If this path does not exist you will need to create it.
+By default the Decider configuration and watch path are located in `/etc/dcdr`. If this path does not exist you will need to create it.
 
 ```
  sudo mkdir /etc/dcdr
  sudo chown `whoami` /etc/dcdr
 ```
+
+You can override this location by setting the `DCDR_CONFIG_DIR` environment variable. More on configuration can be found [here](#configuration).
 
 ![](./resources/watch.png)
 
@@ -231,7 +233,7 @@ Here we have set the feature `example-feature` into two separate scopes. In the 
 [dcdr] 2016/03/09 17:56:17.250948 watching namespace: dcdr
 [dcdr] 2016/03/09 17:56:17.365362 wrote changes to /etc/dcdr/decider.json
 ```
-The watcher is now observing your <Namespace> and writing all changes to the [`Server:OutputPath`](https://github.com/vsco/dcdr/blob/readme-updates/config/config.go#L29) (`/etc/dcdr/decider.json`).
+The watcher is now observing your <Namespace> and writing all changes to the [`Server:OutputPath`](#configuration) ( default `/etc/dcdr/decider.json`).
 
 ### Decider Server
 The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware. Read more on custom servers [here](#building-a-custom-server).
@@ -270,7 +272,7 @@ Here we see that the default value of false is returned. The `info` key is where
 
 ## Using the Go client
 
-Included in this package is a Go client. By default this client uses the same `config.hcl` for its configuration. You may also provide custom your own custom configuration as well using `config.Config` and the `client.New` method. For this example we will assume the defaults are still in place and that the features from the above example have been set.
+Included in this package is a Go client. By default this client uses the same [`config.hcl`](#configuration) for its configuration. You may also provide custom your own custom configuration as well using `config.Config` and the `client.New` method. For this example we will assume the defaults are still in place and that the features from the above example have been set.
 
 ### Require and initialize the client
 
