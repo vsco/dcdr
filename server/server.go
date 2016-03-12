@@ -53,12 +53,18 @@ func (srv *server) Use(mdl ...web.MiddlewareType) *server {
 	return srv
 }
 
-func (srv *server) Serve() {
+func (srv *server) BindMux() *server {
 	for _, md := range srv.middleware {
 		srv.mux.Use(md)
 	}
 
 	srv.mux.Get(srv.config.Server.Endpoint, handlers.FeaturesHandler(srv.Client))
+
+	return srv
+}
+
+func (srv *server) Serve() {
+	srv.BindMux()
 
 	graceful.AddSignal(syscall.SIGINT, syscall.SIGTERM)
 	graceful.PreHook(func() {

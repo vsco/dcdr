@@ -120,6 +120,7 @@ func (c *Client) FeatureMap() *models.FeatureMap {
 func (c *Client) ScopedMap() *models.FeatureMap {
 	fm := &models.FeatureMap{
 		Dcdr: models.Root{
+			Info:     c.featureMap.Dcdr.Info,
 			Features: c.Features(),
 		},
 	}
