@@ -38,6 +38,7 @@ func (u *UI) DrawFeatures(features models.Features) {
 func (u *UI) DrawConfig(cfg *config.Config) {
 	tbl := table.New("Component", "Name", "Value", "Description").WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
+	tbl.AddRow("Config", "ConfigPath", config.ConfigPath(), "Path to config.hcl")
 	tbl.AddRow("Defaults", "Username", cfg.Username, "The username for commits. default: `whoami`")
 	tbl.AddRow("Defaults", "Namespace", cfg.Namespace, "K/V namespace")
 

@@ -13,6 +13,8 @@ import (
 
 	"io/ioutil"
 
+	"path"
+
 	"github.com/tucnak/climax"
 	"github.com/vsco/dcdr/cli/api"
 	"github.com/vsco/dcdr/cli/api/stores"
@@ -153,17 +155,17 @@ func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
 }
 
 func (cc *Controller) Init(ctx climax.Context) int {
-	if _, err := os.Stat(config.ConfigPath); os.IsNotExist(err) {
-		printer.Say("%s not found. creating example config", config.ConfigPath)
+	if _, err := os.Stat(config.ConfigPath()); os.IsNotExist(err) {
+		printer.Say("%s not found. creating example config", config.ConfigPath())
 
-		err := os.MkdirAll("/etc/dcdr", 0644)
+		err := os.MkdirAll(path.Dir(config.ConfigPath()), 0644)
 
 		if err != nil {
 			printer.SayErr("%v", err)
 			return 1
 		}
 
-		err = ioutil.WriteFile(config.ConfigPath, config.ExampleConfig, 0644)
+		err = ioutil.WriteFile(config.ConfigPath(), config.ExampleConfig, 0644)
 
 		if err != nil {
 			printer.SayErr("%v", err)
