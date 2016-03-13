@@ -5,5 +5,6 @@ github.com/fatih/color
 github.com/PagerDuty/godspeed
 github.com/tucnak/climax
 github.com/zenazn/goji
+github.com/vsco/goji-test
 # Testing
 github.com/stretchr/testify
