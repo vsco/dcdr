@@ -181,7 +181,7 @@ func LoadConfig() *Config {
 		ConfigDir = v
 	}
 
-	if _, err := os.Stat(ConfigDir); err == nil {
+	if _, err := os.Stat(ConfigPath()); err == nil {
 		return readConfig()
 	} else {
 		return DefaultConfig()
