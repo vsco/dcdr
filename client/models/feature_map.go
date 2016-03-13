@@ -24,6 +24,19 @@ type Root struct {
 	Features Features `json:"features"`
 }
 
+func EmptyFeatureMap() (fm *FeatureMap) {
+	fm = &FeatureMap{
+		Dcdr: Root{
+			Info: Info{
+				CurrentSha: "",
+			},
+			Features: Features{},
+		},
+	}
+
+	return
+}
+
 func NewFeatureMap(bts []byte) (*FeatureMap, error) {
 	var fm *FeatureMap
 	err := json.Unmarshal(bts, &fm)

@@ -18,3 +18,7 @@ func NewGodspeedStatter(gs *godspeed.Godspeed, tags []string) (g *Godspeed) {
 func (g *Godspeed) Incr(key string) {
 	g.gs.Incr(key, g.tags)
 }
+
+func (g *Godspeed) Tags() []string {
+	return g.tags
+}

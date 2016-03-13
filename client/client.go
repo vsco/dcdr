@@ -75,7 +75,7 @@ func (c *Client) WithScopes(scopes ...string) *Client {
 	newScopes := append(c.scopes, scopes...)
 
 	newClient := &Client{
-		featureMap: c.featureMap,
+		featureMap: c.FeatureMap(),
 		scopes:     newScopes,
 	}
 
@@ -112,18 +112,19 @@ func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
 
 // FeatureMap `featureMap` accessor
 func (c *Client) FeatureMap() *models.FeatureMap {
-	return c.featureMap
+	if c.featureMap != nil {
+		return c.featureMap
+	} else {
+		return models.EmptyFeatureMap()
+	}
 }
 
 // ScopedMap a `FeatureMap` containing only merged features.
 // Mostly used for JSON output.
 func (c *Client) ScopedMap() *models.FeatureMap {
-	fm := &models.FeatureMap{
-		Dcdr: models.Root{
-			Info:     c.featureMap.Dcdr.Info,
-			Features: c.Features(),
-		},
-	}
+	fm := models.EmptyFeatureMap()
+	fm.Dcdr.Features = c.Features()
+	fm.Dcdr.Info = c.FeatureMap().Dcdr.Info
 
 	return fm
 }

@@ -98,6 +98,14 @@ func TestSetFeatureMap(t *testing.T) {
 	assert.Equal(t, m.Dcdr.Defaults(), c.Features())
 }
 
+func TestEmptyFeatureMap(t *testing.T) {
+	c, err := NewTestClient().Watch()
+	assert.NoError(t, err)
+
+	// ensure nil pointer guards
+	c.WithScopes("scope").ScopedMap().ToJson()
+}
+
 func TestScopedFeaturesCreateNewInstance(t *testing.T) {
 	scopes := []string{"ab", "cc/cn"}
 	m := MockFeatureMap()
