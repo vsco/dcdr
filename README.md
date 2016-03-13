@@ -15,8 +15,9 @@ Each of these components are comprised of lower level libraries that you can use
 
 ### About Feature Flags
 
-The two supported types of flags are `boolean` and `percentile`. These seem to be enough to cover most use cases for a system of this type. 
+Feature flags have many use cases and a wide spectrum of implementations. With Decider the two supported types of flags are `boolean` and `percentile`. For out purposes at [VSCO](http://vsco.co) these have been enough to handle most all of our needs.
 
+#### Boolean Flags
 An example use case for a `boolean` flag would be an API kill switch that could alleviate load for a backing database.
 
 ```
@@ -33,9 +34,10 @@ if dcdr.IsAvailable("disable-load-heavy-api-endpoint") {
 }
 ```
 
+#### Percentile Flags
 Percentiles work much the same way but allow you to stress features or new infrastructure with a percentage of the request volume.
 
-A common use case for `percentile` features would be stressing a new backend store with dual write percentage.
+A common use case for `percentile` features would be testing out a new backend store with dual write percentage.
 
 ```
 rollout-new-fancy-db-dual-write => 0.1
@@ -49,9 +51,10 @@ if dcdr.IsAvailableForId("rollout-new-fancy-db-dual-write", user.Id) {
 }
 ```
 
-These type of features have an added bonus as you may use thier `float64` values as scalars in cetertain cases.
+#### Scalars
+These type of features have an added bonus as you may use thier `float64` values as scalars in certain cases.
 
-Here we use the float value to scale the wait time for DB inserts between 0-1000ms.
+Here we'll use the float value to scale the wait time for DB inserts between 0-1000ms.
 
 ```
  daemon-db-insert-wait-ms => 0.1
@@ -63,7 +66,7 @@ waitMS := dcdr.ScaleValue("daemon-db-insert-wait-ms", 0, 1000)
 time.Sleep(waitMS * time.Millisecond)
 ```
 
-[Read more](#using-the-go-client) on how to use the client.
+[Read more](#using-the-go-client) on how to use the `Client`.
 
 ### Caveat
 
@@ -371,7 +374,9 @@ if scopedClient.IsAvailable("another-feature") {
 
 ### IsAvailableForId
 
-This method works exactly as `IsAvailable` except that it is used for enabling features for only a fraction of requests. Both the `feature` string and `id` are hashed together using `hash/crc32` to create an integer that is used with the `float64` value of a `percentile` feature to determine the enabled state. The code for this functionality can be found [here](https://github.com/vsco/dcdr/blob/master/client/client.go#L223).
+This method is used when a feature needs to be rolled out to only a percentage of requests. Functionally `IsAvailableForId` works exactly as `IsAvailable` with the exception of its `id` argument. Both the `feature` and `id` arguments are joined to generate a `uint64` using `hash/crc32`. Which when combined with the `float64` value of `feature` can compute into what percentile a given request falls. 
+
+See the [`Client#withinPercentile`](https://github.com/vsco/dcdr/blob/master/client/client.go#L224) method for more details.
 
 #### Using percentiles
 
