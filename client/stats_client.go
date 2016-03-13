@@ -28,7 +28,7 @@ func NewStatsClient(cfg *config.Config, stats Statter) (sc *statsClient) {
 		stats: stats,
 	}
 
-	sc.Client.config = cfg
+	sc.Client = *New(cfg)
 
 	return
 }
