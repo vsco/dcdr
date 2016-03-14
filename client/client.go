@@ -72,19 +72,15 @@ func (c *Client) WithScopes(scopes ...string) *Client {
 		return c
 	}
 
-	newScopes := append(c.scopes, scopes...)
+	newScopes := append(scopes, c.scopes...)
 
 	newClient := &Client{
 		featureMap: c.FeatureMap(),
 		scopes:     newScopes,
+		config:     c.config,
 	}
 
 	newClient.MergeScopes()
-
-	if c.watcher != nil {
-		newClient.watcher = watcher.NewWatcher(c.config.Watcher.OutputPath)
-		newClient.Watch()
-	}
 
 	return newClient
 }
