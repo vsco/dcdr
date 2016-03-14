@@ -97,8 +97,15 @@ func (c *Client) Scopes() []string {
 	return c.scopes
 }
 
-// SetFeatureMap assigns a `FeatureMap` and merges the current scopes
+// SetFeatureMap assigns a `FeatureMap` and merges the current
+// scopes. When git is enabled a new `FeatureMap` will not be
+// assigned unless its `CurrentSha` is different from the one
+// currently found in `CurrentSha()`.
 func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
+	if c.config.GitEnabled() && c.CurrentSha() == fm.Dcdr.CurrentSha() {
+		return c
+	}
+
 	c.featureMap = fm
 
 	c.MergeScopes()

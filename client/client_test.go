@@ -208,7 +208,7 @@ func TestUpdateFeatures(t *testing.T) {
 	update := []byte(`{
 	  "dcdr": {
 		"info": {
-		  "current_sha": "abcde"
+		  "current_sha": "updated"
 		},
 		"features": {
 		  "ab": {
@@ -228,7 +228,9 @@ func TestUpdateFeatures(t *testing.T) {
 	  }
 	}`)
 
-	c := NewTestClient()
+	cfg := config.DefaultConfig()
+	cfg.Git.RepoPath = "/tmp"
+	c := New(cfg)
 	c.UpdateFeatures(json)
 
 	scoped := c.WithScopes("ab")
