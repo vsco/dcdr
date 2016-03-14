@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"testing"
 
+	"bytes"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/client/models"
@@ -82,4 +84,22 @@ func TestHTTPCaching(t *testing.T) {
 		Header(handlers.IfNoneMatchHeader, fm.Dcdr.CurrentSha()).Do()
 	http_assert.Response(t, resp.Response).
 		HasStatusCode(http.StatusNotModified)
+}
+
+func TestGetScopes(t *testing.T) {
+	rd := bytes.NewReader([]byte{})
+	r, err := http.NewRequest("GET", "/", rd)
+	assert.NoError(t, err)
+
+	expected := []string{"scope1", "scope2"}
+
+	r.Header.Set(handlers.DcdrScopesHeader, " scope1, scope2 ")
+	assert.Equal(t, expected, handlers.GetScopes(r))
+
+	r.Header.Set(handlers.DcdrScopesHeader, "scope1,scope2")
+	assert.Equal(t, expected, handlers.GetScopes(r))
+
+	expected = []string{"a/b/c", "d/c/b/a"}
+	r.Header.Set(handlers.DcdrScopesHeader, "a/b/c, d/c/b/a")
+	assert.Equal(t, expected, handlers.GetScopes(r))
 }

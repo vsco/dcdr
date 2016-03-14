@@ -22,7 +22,12 @@ const Pragma = "no-cache"
 const Expires = "0"
 
 func GetScopes(r *http.Request) []string {
-	return strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+	scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+	for i := 0; i < len(scopes); i++ {
+		scopes[i] = strings.TrimSpace(scopes[i])
+	}
+
+	return scopes
 }
 
 func SetResponseHeaders(w http.ResponseWriter, r *http.Request, sha string) {
