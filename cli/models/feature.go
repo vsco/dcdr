@@ -11,7 +11,9 @@ import (
 	"github.com/vsco/dcdr/cli/printer"
 )
 
+// Info container struct for CurrentSha
 type Info struct {
+	// CurrentSha the current SHA1 from the audit repository.
 	CurrentSha string `json:"current_sha"`
 }
 
@@ -32,30 +34,6 @@ const (
 	DefaultScope             = "default"
 	FeatureScope             = "features"
 )
-
-// GetFeatureType string to type helper
-func GetFeatureType(t string) FeatureType {
-	switch t {
-	case "percentile":
-		return Percentile
-	case "boolean":
-		return Boolean
-	default:
-		return Invalid
-	}
-}
-
-// GetFeatureTypeFromValue interface to type helper
-func GetFeatureTypeFromValue(v interface{}) FeatureType {
-	switch v.(type) {
-	case bool:
-		return Boolean
-	case float64, int:
-		return Percentile
-	default:
-		return Invalid
-	}
-}
 
 // GetFeatureTypeFromValue interface to type helper
 func ParseValueAndFeatureType(v string) (interface{}, FeatureType) {
@@ -99,6 +77,7 @@ func (f *Feature) GetScope() string {
 	return f.Scope
 }
 
+// GetNamespace formats the fully scoped namespace
 func (f *Feature) GetNamespace() string {
 	return fmt.Sprintf("%s/%s", f.Namespace, FeatureScope)
 }

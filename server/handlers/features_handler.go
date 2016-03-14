@@ -15,7 +15,6 @@ const ContentTypeHeader = "Content-Type"
 const CacheControlHeader = "Cache-Control"
 const PragmaHeader = "Pragma"
 const ExpiresHeader = "Expires"
-
 const ContentType = "application/json"
 const CacheControl = "no-cache, no-store, must-revalidate"
 const Pragma = "no-cache"

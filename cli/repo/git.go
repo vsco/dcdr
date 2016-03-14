@@ -25,10 +25,7 @@ type RepoIFace interface {
 	CurrentSha() (string, error)
 }
 
-const (
-	DefaultConfigFileName = "decider.json"
-	DefaultPerms          = 0755
-)
+const DefaultPerms = 0755
 
 var (
 	gitExec = ""
@@ -70,11 +67,11 @@ func (g *Git) Create() error {
 		return fmt.Errorf("failed to create repo: %v\n", err)
 	}
 
-	fp := fmt.Sprintf("%s/%s", g.Config.Git.RepoPath, DefaultConfigFileName)
+	fp := fmt.Sprintf("%s/%s", g.Config.Git.RepoPath, config.OutputFileName)
 	err = ioutil.WriteFile(fp, []byte{}, DefaultPerms)
 
 	if err != nil {
-		return fmt.Errorf("failed to create %s: %v\n", DefaultConfigFileName, err)
+		return fmt.Errorf("failed to create %s: %v\n", config.OutputFileName, err)
 	}
 
 	cmd := exec.Command(GitExec(), "init")
@@ -163,7 +160,7 @@ func (g *Git) Commit(bts []byte, msg string) error {
 		return fmt.Errorf("could not pull from %s", g.Config.Git.RepoURL)
 	}
 
-	fp := fmt.Sprintf("%s/%s", g.Config.Git.RepoPath, DefaultConfigFileName)
+	fp := fmt.Sprintf("%s/%s", g.Config.Git.RepoPath, config.OutputFileName)
 	err := ioutil.WriteFile(fp, bts, DefaultPerms)
 
 	if err != nil {
