@@ -16,6 +16,7 @@ const InfoNameSpace = "info"
 
 var TypeChangeError = errors.New("cannot change existing feature types.")
 var RepoExistsError = errors.New("repository already exists")
+var NilValueError = errors.New("value cannot be nil")
 
 func KeyNotFoundError(n string) error {
 	return errors.New(fmt.Sprintf("%s not found", n))
@@ -112,6 +113,10 @@ func (c *Client) Set(ft *models.Feature) error {
 		}
 		if ft.FeatureType == "" {
 			ft.FeatureType = existing.FeatureType
+		}
+	} else {
+		if ft.Value == nil {
+			return NilValueError
 		}
 	}
 

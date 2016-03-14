@@ -103,3 +103,23 @@ func TestListFeatures(t *testing.T) {
 
 	assert.Equal(t, Success, code)
 }
+
+func TestSet(t *testing.T) {
+	cfg := config.DefaultConfig()
+	fts := models.Features{
+		models.Feature{
+			Key:   "test",
+			Value: true,
+		},
+	}
+	c := NewMockClient(nil, fts, nil)
+	ctl := NewController(cfg, c)
+
+	ctx := climax.Context{
+		Variable: map[string]string{"name": "null-test"},
+	}
+
+	code := ctl.Set(ctx)
+
+	assert.Equal(t, Success, code)
+}

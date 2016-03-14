@@ -5,99 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/models"
 )
-
-type MockStore struct {
-	Item  *stores.KVByte
-	Items stores.KVBytes
-	Err   error
-}
-
-func NewMockStore(ft *models.Feature, err error) (ms *MockStore) {
-	bts, _ := ft.ToJson()
-
-	ms = &MockStore{
-		Err: err,
-	}
-
-	if ft != nil {
-		kvb := stores.KVBytes{
-			&stores.KVByte{
-				Key:   ft.Key,
-				Bytes: bts,
-			},
-		}
-
-		ms.Item = kvb[0]
-		ms.Items = kvb
-	}
-
-	return
-}
-
-func (ms *MockStore) List(prefix string) (stores.KVBytes, error) {
-	return ms.Items, ms.Err
-}
-
-func (ms *MockStore) Get(key string) (*stores.KVByte, error) {
-	return ms.Item, ms.Err
-}
-
-func (ms *MockStore) Set(key string, bts []byte) error {
-	return ms.Err
-}
-
-func (ms *MockStore) Delete(key string) error {
-	return ms.Err
-}
-
-func (ms *MockStore) Put(key string, bts []byte) error {
-	return ms.Err
-}
-
-type MockRepo struct {
-	error   error
-	sha     string
-	exists  bool
-	enabled bool
-}
-
-func (mr *MockRepo) Clone() error {
-	return mr.error
-}
-
-func (mr *MockRepo) Commit(bts []byte, msg string) error {
-	return mr.error
-}
-
-func (mr *MockRepo) Create() error {
-	return mr.error
-}
-
-func (mr *MockRepo) Exists() bool {
-	return mr.exists
-}
-
-func (mr *MockRepo) Enabled() bool {
-	return mr.enabled
-}
-
-func (mr *MockRepo) Push() error {
-	return mr.error
-}
-
-func (mr *MockRepo) Pull() error {
-	return mr.error
-}
-
-func (mr *MockRepo) CurrentSha() (string, error) {
-	return mr.sha, mr.error
-}
-
-func (mr *MockRepo) Init() {
-}
 
 func TestClientSet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
@@ -162,6 +71,16 @@ func TestSet(t *testing.T) {
 	err := c.Set(ft)
 
 	assert.Nil(t, err)
+}
+
+func TestSetErrorOnNilValue(t *testing.T) {
+	ft := models.NewFeature("test", nil, "c", "u", "s", "n")
+	cs := NewMockStore(nil, nil)
+	c := New(cs, &MockRepo{}, "", nil)
+
+	err := c.Set(ft)
+
+	assert.Equal(t, NilValueError, err)
 }
 
 func TestTypeChangeErrorSet(t *testing.T) {
