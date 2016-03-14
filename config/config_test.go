@@ -12,6 +12,7 @@ import (
 )
 
 func TestDefaultConfig(t *testing.T) {
+	ConfigDir = "/tmp/does/not/exist"
 	cfg := LoadConfig()
 
 	assert.Equal(t, cfg.Namespace, DefaultNamespace)
@@ -19,8 +20,8 @@ func TestDefaultConfig(t *testing.T) {
 	user, err := user.Current()
 	assert.NoError(t, err)
 
-	assert.Equal(t, ConfigPath(), "/etc/dcdr/config.hcl")
-	assert.Equal(t, OutputPath(), "/etc/dcdr/decider.json")
+	assert.Equal(t, ConfigPath(), fmt.Sprintf("%s/%s", ConfigDir, ConfigFileName))
+	assert.Equal(t, OutputPath(), fmt.Sprintf("%s/%s", ConfigDir, OutputFileName))
 
 	assert.False(t, cfg.GitEnabled())
 	assert.False(t, cfg.PushEnabled())
