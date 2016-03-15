@@ -3,13 +3,18 @@ package api
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"encoding/json"
 
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli/api/stores"
+	"github.com/vsco/dcdr/cli/api/watchers"
 	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
+	"github.com/vsco/dcdr/config"
 )
 
 const InfoNameSpace = "info"
@@ -32,28 +37,31 @@ type ClientIFace interface {
 	Commit(ft *models.Feature, deleted bool) error
 	Push() error
 	UpdateCurrentSha() (string, error)
+	Watch()
 	Namespace() string
 }
 
 type Client struct {
-	Store     stores.StoreIFace
-	Repo      repo.RepoIFace
-	Stats     *godspeed.Godspeed
-	namespace string
+	Store   stores.StoreIFace
+	Repo    repo.RepoIFace
+	Watcher watchers.KVWatcherIFace
+	Stats   *godspeed.Godspeed
+	config  *config.Config
 }
 
-func New(st stores.StoreIFace, rp repo.RepoIFace, namespace string, stats *godspeed.Godspeed) (c *Client) {
+func New(st stores.StoreIFace, rp repo.RepoIFace, w watchers.KVWatcherIFace, cfg *config.Config, stats *godspeed.Godspeed) (c *Client) {
 	c = &Client{
-		Store:     st,
-		Repo:      rp,
-		Stats:     stats,
-		namespace: namespace,
+		Store:   st,
+		Repo:    rp,
+		Watcher: w,
+		Stats:   stats,
+		config:  cfg,
 	}
 
 	return
 }
 func (c *Client) Namespace() string {
-	return c.namespace
+	return c.config.Namespace
 }
 
 func (c *Client) List(prefix string, scope string) (models.Features, error) {
@@ -290,6 +298,36 @@ func (c *Client) InitRepo(create bool) error {
 	}
 
 	return c.Repo.Clone()
+}
+
+func (c *Client) Watch() {
+	c.Watcher.Register(c.WriteOutputFile)
+	c.Watcher.Watch()
+}
+
+func (c *Client) WriteOutputFile(kvb stores.KVBytes) {
+	fts, err := models.KVsToFeatureMap(kvb)
+
+	if err != nil {
+		printer.LogErr("parse features error: %v", err)
+		os.Exit(1)
+	}
+
+	bts, err := json.MarshalIndent(fts, "", "  ")
+
+	if err != nil {
+		printer.LogErr("%v", err)
+		os.Exit(1)
+	}
+
+	err = ioutil.WriteFile(c.config.Watcher.OutputPath, bts, 0644)
+
+	if err != nil {
+		printer.LogErr("%v", err)
+		os.Exit(1)
+	}
+
+	printer.Log("wrote changes to: %s", c.config.Watcher.OutputPath)
 }
 
 func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {

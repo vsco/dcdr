@@ -70,6 +70,8 @@ func (m *MockClient) InitRepo(create bool) error {
 	return m.Error
 }
 
+func (m *MockClient) Watch() {}
+
 func TestListEmptyFeatures(t *testing.T) {
 	cfg := config.DefaultConfig()
 	c := NewMockClient(nil, nil, nil)

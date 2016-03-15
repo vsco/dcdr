@@ -13,6 +13,8 @@ Decider has three major components.
 
 Each of these components are comprised of lower level libraries that you can use to to suit your systems specific needs.
 
+Decider is built to be adaptable to any backing datastore. At the moment only Consul is supported but [Etcd](https://coreos.com/etcd/) and [Redis](http://redis.io/) adapters are in the works.
+
 ### About Feature Flags
 
 Feature flags have many use cases and a wide spectrum of implementations. With Decider the two supported types of flags are `boolean` and `percentile`. For out purposes at [VSCO](http://vsco.co) these have been enough to handle most all of our needs.
@@ -72,12 +74,14 @@ time.Sleep(waitMS * time.Millisecond)
 
 Feature flags and remote configuration are hard problems to solve in the general sense. Most organizations will have many corner cases unique to their own infrastructure and policies that are cumbersome to solve in an abstract way. Decider is an extracted set of flexible libraries that we at [VSCO](http://vsco.co) have developed over the past year that have worked well for us in solving these issues. 
 
-This package does not set out to solve problems like authentication or ACLs for your features but It does aim to provide enough of the tooling and libraries so that you can do so yourself.
+This package does not set out to solve problems such as authentication or ACLs for your features but It does aim to provide enough of the tooling and libraries so that you can do so yourself.
 
 ## Integrations
 
 ### Consul
-Decider uses the built in commands from the [Consul](http://consul.io) CLI to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Similar to the concepts introduced by [`consul-template`](https://github.com/hashicorp/consul-template). Decider observes a key prefix in the store and then writes the resulting key/value tree to a flat JSON file on any node running the `dcdr watch` command. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
+Decider uses the built in api from [Consul](http://consul.io) CLI to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Decider observes a key prefix in the store and then writes the resulting key/value tree to a flat JSON file on any node running the `dcdr watch` command. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
+
+For more info see the `ConsulStore` and
 
 ### Scopes
 In order to allow for expanding use cases and to avoid naming collisions, Decider provides arbitrary scoping of feature flags. An example use case would be providing separate features sets according to country code or mobile platform. Additionally, multiple Decider instances can be run within a cluster with separate namespaces and key sets by configuring [`config.hcl`](#configuration).
@@ -181,7 +185,7 @@ dcdr delete -n another-feature -s user-groups/beta
 
 ### Starting the Watcher
 
-The `watch` command is central to how Decider features are distributed to nodes in a cluster. This command is a wrapper around `consul watch`. It observes the configured keyspace and writes a `JSON` file containing the exported structure to the configured [`Server:OutputPath`](#configuration).
+The `watch` command is central to how Decider features are distributed to nodes in a cluster. It observes the configured namespace and writes a `JSON` file containing the exported structure to the [`Server:OutputPath`](#configuration).
 
 By default the Decider configuration and watch path are located in `/etc/dcdr`. If this path does not exist you will need to create it.
 
@@ -197,7 +201,7 @@ You can override this location by setting the `DCDR_CONFIG_DIR` environment vari
 ## Tying the room together
 If you need instructions for getting Consul installed, check their [Getting Started](https://www.consul.io/intro/getting-started/install.html) page.
 
-Let's start a `consul agent` with an empty feature set and see how this all works together. For simplicity we can use the default Decider configuration without a git repository or stats.
+Let's start a development `consul agent` with an empty feature set and see how this all works together. For simplicity we can use the default Decider configuration without a git repository or stats.
 
 ```
 consul agent -bind "127.0.0.1" -dev

@@ -311,11 +311,10 @@ func (c *CLI) Commands() []climax.Command {
 			Help: `
 
 
-	Watches the consul KV store '<Namespace>' for changes using the underlying
-	'consul watch' command. When changes are observed, dcdr writes the entire
-	keyspace to the <FeatureMapPath> from config.hcl as a nested JSON hash.
-	These events trigger a FeatureMap update within any dcdr.Client observing
-	that file.
+	Watches the consul KV store '<Namespace>' for changes. When changes are
+	observed, dcdr writes the entire keyspace to the <FeatureMapPath> from
+	config.hcl as a nested JSON hash. These events trigger a FeatureMap
+	update within any dcdr.Client observing that file.
 
 	Example Output:
 

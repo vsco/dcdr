@@ -9,6 +9,8 @@ import (
 
 	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/printer"
+	"github.com/vsco/dcdr/client/models"
+	"github.com/vsco/dcdr/config"
 )
 
 // Info container struct for CurrentSha
@@ -126,42 +128,24 @@ func (f *Feature) ToJson() ([]byte, error) {
 	return json.Marshal(f)
 }
 
-// ExplodeToMap explode feature namespaces and scopes to nested maps
-func (fts Features) ExplodeToMap() map[string]interface{} {
-	m := make(map[string]interface{})
-
-	for _, f := range fts {
-		explode(m, f.ScopedKey(), f.Value)
-	}
-
-	return m
-}
-
-// ToJSON exploded JSON
-func (fts Features) ToJSON() ([]byte, error) {
-	m := fts.ExplodeToMap()
-	return json.MarshalIndent(m, "", "  ")
-}
-
 // KVsToFeatures helper for unmarshalling consul result
 // sets into Features
-func KVsToFeatureMap(kvb stores.KVBytes) (map[string]interface{}, error) {
-	fm := make(map[string]interface{})
+func KVsToFeatureMap(kvb stores.KVBytes) (*models.FeatureMap, error) {
+	fm := models.EmptyFeatureMap()
 
 	for _, v := range kvb {
 		var key string
 		var value interface{}
 
-		if v.Key == "dcdr/info" {
-			var info Info
+		if v.Key == config.DefaultInfoNamespace {
+			var info models.Info
 			err := json.Unmarshal(v.Bytes, &info)
 
 			if err != nil {
 				return fm, err
 			}
 
-			key = v.Key
-			value = info
+			fm.Dcdr.Info = info
 		} else {
 			var ft Feature
 			err := json.Unmarshal(v.Bytes, &ft)
@@ -171,17 +155,17 @@ func KVsToFeatureMap(kvb stores.KVBytes) (map[string]interface{}, error) {
 				return fm, err
 			}
 
-			key = v.Key
+			key = strings.Replace(v.Key, fmt.Sprintf("%s/features/", config.DefaultNamespace), "", 1)
 			value = ft.Value
 		}
 
-		explode(fm, key, value)
+		explode(fm.Dcdr.Features, key, value)
 	}
 
 	return fm, nil
 }
 
-func explode(m map[string]interface{}, k string, v interface{}) {
+func explode(m models.Features, k string, v interface{}) {
 	if strings.Contains(k, "/") {
 		pts := strings.Split(k, "/")
 		top := pts[0]
