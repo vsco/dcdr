@@ -1,15 +1,10 @@
 package cli
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
-	"io"
 	"os"
 
 	"errors"
-
-	"os/exec"
 
 	"io/ioutil"
 
@@ -17,7 +12,6 @@ import (
 
 	"github.com/tucnak/climax"
 	"github.com/vsco/dcdr/cli/api"
-	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/models"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/ui"
@@ -263,68 +257,10 @@ func (cc *Controller) Serve(ctx climax.Context) int {
 }
 
 func (cc *Controller) Watch(ctx climax.Context) int {
-	cmd := exec.Command(
-		"consul",
-		"watch",
-		"-type",
-		"keyprefix",
-		"-prefix",
-		cc.Config.Namespace,
-		"cat")
-
-	pr, pw := io.Pipe()
-	cmd.Stdout = pw
-	b := &bytes.Buffer{}
-	cmd.Stderr = b
-
-	scanner := bufio.NewScanner(pr)
-	scanner.Split(bufio.ScanLines)
-
-	go func() {
-		for scanner.Scan() {
-			kvb, err := stores.KvPairsBytesToKvBytes(scanner.Bytes())
-
-			if err != nil {
-				printer.LogErr("parse kv error: %v", err)
-				os.Exit(1)
-			}
-
-			fts, err := models.KVsToFeatureMap(kvb)
-
-			if err != nil {
-				printer.LogErr("parse features error: %v", err)
-				os.Exit(1)
-			}
-
-			bts, err := json.MarshalIndent(fts, "", "  ")
-
-			if err != nil {
-				printer.LogErr("%v", err)
-				os.Exit(1)
-			}
-
-			err = ioutil.WriteFile(cc.Config.Watcher.OutputPath, bts, 0644)
-
-			if err != nil {
-				printer.LogErr("%v", err)
-				os.Exit(1)
-			}
-
-			printer.Log("wrote changes to %s",
-				cc.Config.Watcher.OutputPath)
-		}
-
-		if scanner.Err() != nil {
-			printer.LogErr("%v", scanner.Err())
-			os.Exit(1)
-		}
-	}()
 
 	printer.Log("watching namespace: %s", cc.Config.Namespace)
 
-	if err := cmd.Run(); err != nil {
-		printer.LogErr("%v", err)
-	}
+	cc.Client.Watch()
 
 	return 0
 }

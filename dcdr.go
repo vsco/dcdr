@@ -9,6 +9,7 @@ import (
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/cli/api"
 	"github.com/vsco/dcdr/cli/api/stores"
+	"github.com/vsco/dcdr/cli/api/watchers/consul"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
 	"github.com/vsco/dcdr/config"
@@ -36,7 +37,9 @@ func main() {
 		}
 	}
 
-	kv := api.New(store, rp, cfg.Namespace, gs)
+	w := consul.New(cfg)
+
+	kv := api.New(store, rp, w, cfg, gs)
 	ctrl := cli.NewController(cfg, kv)
 
 	dcdr := cli.New(ctrl)

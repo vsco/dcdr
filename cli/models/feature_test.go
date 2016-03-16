@@ -12,6 +12,9 @@ import (
 
 var ExpectedJSON = `{
   "dcdr": {
+    "info": {
+      "current_sha": "43d4b9e7de8ed48a954f3594e6bd33e6d69b5516"
+    },
     "features": {
       "cc": {
         "b": 1
@@ -19,9 +22,6 @@ var ExpectedJSON = `{
       "default": {
         "a": 1
       }
-    },
-    "info": {
-      "current_sha": "43d4b9e7de8ed48a954f3594e6bd33e6d69b5516"
     }
   }
 }`
