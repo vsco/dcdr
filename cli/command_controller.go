@@ -32,6 +32,7 @@ const FilePerms = 0755
 var (
 	InvalidFeatureTypeError = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
 	InvalidRangeError       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
+	NameRequiredError       = errors.New("-name is required")
 )
 
 type Controller struct {
@@ -333,6 +334,10 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 	val, _ := ctx.Get("value")
 	cmt, _ := ctx.Get("comment")
 	scp, _ := ctx.Get("scope")
+
+	if name == "" {
+		return nil, NameRequiredError
+	}
 
 	var v interface{}
 	var ft models.FeatureType
