@@ -16,24 +16,7 @@ import (
 	"github.com/zenazn/goji"
 )
 
-var fm = &models.FeatureMap{
-	Dcdr: models.Root{
-		Info: models.Info{
-			CurrentSha: "abcde",
-		},
-		Features: models.Features{
-			"default": map[string]interface{}{
-				"bool":  true,
-				"float": 0.5,
-			},
-			"scope": map[string]interface{}{
-				"scope-bool":  true,
-				"scope-float": 0.5,
-			},
-		},
-	},
-}
-
+var fm = models.EmptyFeatureMap()
 var cfg = config.TestConfig()
 var cl = client.New(cfg).SetFeatureMap(fm)
 
@@ -46,11 +29,7 @@ func TestGetFeatures(t *testing.T) {
 	resp := builder.WithMux(srv.mux).Get(srv.config.Server.Endpoint).Do()
 	http_assert.Response(t, resp.Response).
 		IsOK().
-		IsJSON().
-		ContainsHeaderValue(handlers.EtagHeader, fm.Dcdr.CurrentSha()).
-		ContainsHeaderValue(handlers.CacheControlHeader, handlers.CacheControl).
-		ContainsHeaderValue(handlers.PragmaHeader, handlers.Pragma).
-		ContainsHeaderValue(handlers.ExpiresHeader, handlers.Expires)
+		IsJSON()
 
 	var m models.FeatureMap
 	err := resp.Response.UnmarshalBody(&m)
@@ -77,29 +56,23 @@ func TestScopeHeader(t *testing.T) {
 	assert.Equal(t, cl.WithScopes("scope").ScopedMap(), &m)
 }
 
-func TestHTTPCaching(t *testing.T) {
-	srv := Server()
-	resp := builder.WithMux(srv.mux).
-		Get(srv.config.Server.Endpoint).
-		Header(handlers.IfNoneMatchHeader, fm.Dcdr.CurrentSha()).Do()
-	http_assert.Response(t, resp.Response).
-		HasStatusCode(http.StatusNotModified)
-}
-
 func TestGetScopes(t *testing.T) {
 	rd := bytes.NewReader([]byte{})
 	r, err := http.NewRequest("GET", "/", rd)
 	assert.NoError(t, err)
 
-	expected := []string{"scope1", "scope2"}
+	cases := []struct {
+		Input    string
+		Expected []string
+	}{
+		{" scope1, scope2 ", []string{"scope1", "scope2"}},
+		{"scope1,scope2", []string{"scope1", "scope2"}},
+		{" a/b/c, d", []string{"a/b/c", "d"}},
+		{"a", []string{"a"}},
+	}
 
-	r.Header.Set(handlers.DcdrScopesHeader, " scope1, scope2 ")
-	assert.Equal(t, expected, handlers.GetScopes(r))
-
-	r.Header.Set(handlers.DcdrScopesHeader, "scope1,scope2")
-	assert.Equal(t, expected, handlers.GetScopes(r))
-
-	expected = []string{"a/b/c", "d/c/b/a"}
-	r.Header.Set(handlers.DcdrScopesHeader, "a/b/c, d/c/b/a")
-	assert.Equal(t, expected, handlers.GetScopes(r))
+	for _, tc := range cases {
+		r.Header.Set(handlers.DcdrScopesHeader, tc.Input)
+		assert.Equal(t, tc.Expected, handlers.GetScopes(r), tc.Input)
+	}
 }

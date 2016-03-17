@@ -18,6 +18,7 @@ import (
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/server"
+	"github.com/vsco/dcdr/server/middleware"
 	"github.com/zenazn/goji"
 )
 
@@ -251,6 +252,7 @@ func (cc *Controller) Serve(ctx climax.Context) int {
 	}
 
 	s := server.New(cc.Config, goji.DefaultMux, c)
+	s.Use(middleware.HTTPCachingHandler(c))
 	s.Serve()
 
 	return 0

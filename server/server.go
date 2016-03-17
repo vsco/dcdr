@@ -10,6 +10,7 @@ import (
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/server/handlers"
+	"github.com/vsco/dcdr/server/middleware"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/graceful"
 	"github.com/zenazn/goji/web"
@@ -41,6 +42,7 @@ func NewDefault() (srv *server) {
 	}
 
 	srv = New(cfg, goji.DefaultMux, client)
+	srv.Use(middleware.HTTPCachingHandler(client))
 
 	return
 }
