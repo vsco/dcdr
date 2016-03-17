@@ -40,8 +40,8 @@ func (sc *statsClient) IsAvailable(feature string) bool {
 	return enabled
 }
 
-func (sc *statsClient) IsAvailableForId(feature string, id uint64) bool {
-	enabled := sc.Client.IsAvailableForId(feature, id)
+func (sc *statsClient) IsAvailableForID(feature string, id uint64) bool {
+	enabled := sc.Client.IsAvailableForID(feature, id)
 	defer sc.Incr(feature, enabled)
 
 	return enabled

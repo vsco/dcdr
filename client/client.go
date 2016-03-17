@@ -13,7 +13,7 @@ import (
 // ClientIFace interface for Decider Clients
 type ClientIFace interface {
 	IsAvailable(feature string) bool
-	IsAvailableForId(feature string, id uint64) bool
+	IsAvailableForID(feature string, id uint64) bool
 	ScaleValue(feature string, min float64, max float64) float64
 	UpdateFeatures(bts []byte)
 	FeatureExists(feature string) bool
@@ -87,6 +87,7 @@ func (c *Client) WithScopes(scopes ...string) *Client {
 
 // MergeScopes delegates merging to the underlying `FeatureMap`
 func (c *Client) MergeScopes() {
+
 	if c.featureMap != nil {
 		c.features = c.featureMap.Dcdr.MergedScopes(c.scopes...)
 	}
@@ -162,8 +163,8 @@ func (c *Client) IsAvailable(feature string) bool {
 	}
 }
 
-// IsAvailableForId used to check features with float values between 0.0-1.0.
-func (c *Client) IsAvailableForId(feature string, id uint64) bool {
+// IsAvailableForID used to check features with float values between 0.0-1.0.
+func (c *Client) IsAvailableForID(feature string, id uint64) bool {
 	val, exists := c.Features()[feature]
 
 	switch val.(type) {

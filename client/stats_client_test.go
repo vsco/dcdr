@@ -40,12 +40,12 @@ func TestStatsClientIsAvailable(t *testing.T) {
 	assert.Equal(t, 1, ms.Count[key])
 }
 
-func TestStatsClientIsAvailableForId(t *testing.T) {
+func TestStatsClientIsAvailableForID(t *testing.T) {
 	ft := "feature-2"
 	ms := NewMockStatter()
 	c := NewStatsClient(&config.Config{}, ms)
 
-	enabled := c.IsAvailableForId(ft, 1)
+	enabled := c.IsAvailableForID(ft, 1)
 	key := c.statKey(ft, enabled)
 	assert.Equal(t, 1, ms.Count[key])
 }
