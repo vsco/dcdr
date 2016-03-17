@@ -38,7 +38,7 @@ func NewDefault() (srv *server) {
 	client, err := client.New(cfg).Watch()
 
 	if err != nil {
-		printer.LogErr("could not create client: %v", err)
+		printer.LogErrf("could not create client: %v", err)
 	}
 
 	srv = New(cfg, goji.DefaultMux, client)
@@ -70,10 +70,10 @@ func (srv *server) Serve() {
 
 	graceful.AddSignal(syscall.SIGINT, syscall.SIGTERM)
 	graceful.PreHook(func() {
-		printer.Log("received kill signal, gracefully stopping...")
+		printer.Logf("received kill signal, gracefully stopping...")
 	})
 
-	printer.Log("pid: %d serving %s on %s", os.Getpid(), srv.config.Server.Endpoint, srv.config.Server.Host)
+	printer.Logf("pid: %d serving %s on %s", os.Getpid(), srv.config.Server.Endpoint, srv.config.Server.Host)
 	err := graceful.ListenAndServe(srv.config.Server.Host, srv.mux)
 
 	if err != nil {

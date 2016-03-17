@@ -309,25 +309,25 @@ func (c *Client) WriteOutputFile(kvb stores.KVBytes) {
 	fts, err := models.KVsToFeatureMap(kvb)
 
 	if err != nil {
-		printer.LogErr("parse features error: %v", err)
+		printer.LogErrf("parse features error: %v", err)
 		os.Exit(1)
 	}
 
 	bts, err := json.MarshalIndent(fts, "", "  ")
 
 	if err != nil {
-		printer.LogErr("%v", err)
+		printer.LogErrf("%v", err)
 		os.Exit(1)
 	}
 
 	err = ioutil.WriteFile(c.config.Watcher.OutputPath, bts, 0644)
 
 	if err != nil {
-		printer.LogErr("%v", err)
+		printer.LogErrf("%v", err)
 		os.Exit(1)
 	}
 
-	printer.Log("wrote changes to: %s", c.config.Watcher.OutputPath)
+	printer.Logf("wrote changes to: %s", c.config.Watcher.OutputPath)
 }
 
 func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {

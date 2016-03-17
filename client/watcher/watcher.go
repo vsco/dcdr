@@ -27,7 +27,7 @@ func NewWatcher(path string) (w *Watcher) {
 	_, err := os.Stat(path)
 
 	if err != nil {
-		printer.LogErr("could not start watcher: %v", err)
+		printer.LogErrf("could not start watcher: %v", err)
 		os.Exit(1)
 	}
 
@@ -66,7 +66,7 @@ func (w *Watcher) Watch() {
 					w.Updated()
 				}
 			case err := <-w.watcher.Errors:
-				printer.LogErr("[dcdr] watch error: %v", err)
+				printer.LogErrf("[dcdr] watch error: %v", err)
 			}
 		}
 	}()

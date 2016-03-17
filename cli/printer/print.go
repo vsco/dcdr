@@ -30,10 +30,10 @@ func SayErr(format string, v ...interface{}) {
 	fmt.Printf(Err(format, v...))
 }
 
-func Log(format string, v ...interface{}) {
+func Logf(format string, v ...interface{}) {
 	log.Printf(Info(format, v...))
 }
 
-func LogErr(format string, v ...interface{}) {
+func LogErrf(format string, v ...interface{}) {
 	log.Printf(Err(format, v...))
 }
