@@ -27,3 +27,5 @@ release
 .idea
 .goxc.local.json
 ./debian
+
+vendor/

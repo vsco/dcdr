@@ -30,7 +30,7 @@ func (cw *ConsulWatcher) Updated(kvs interface{}) {
 	kvb, err := stores.KvPairsToKvBytes(kvp)
 
 	if err != nil {
-		printer.LogErr("%v", err)
+		printer.LogErrf("%v", err)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (cw *ConsulWatcher) Watch() {
 	defer wp.Stop()
 
 	if err != nil {
-		printer.LogErr("%v", err)
+		printer.LogErrf("%v", err)
 	}
 
 	wp.Handler = func(idx uint64, data interface{}) {
@@ -55,6 +55,6 @@ func (cw *ConsulWatcher) Watch() {
 	}
 
 	if err := wp.Run(""); err != nil {
-		printer.LogErr("Error querying Consul agent: %s", err)
+		printer.LogErrf("Error querying Consul agent: %s", err)
 	}
 }

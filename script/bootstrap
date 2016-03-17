@@ -1,31 +1,8 @@
 #!/bin/bash
-set -x
 
-GPM="gpm"
+set -e
 
-which gpm > /dev/null 2>&1 || {
-  wget https://raw.githubusercontent.com/pote/gpm/154853157fbdd53d489a60a93f30c95123701992/bin/gpm
-  chmod 755 ./gpm
-  GPM="./gpm"
-}
+export GO15VENDOREXPERIMENT=1
+script/require-glide
 
-$GPM install
-
-test -z "$CI" || exit 0 # all done for travis stuff
-
-# Link local work so you don't have to keep getting from the web.
-SYNC_GOPATH_LINK_PATH="$GOPATH/src/github.com/vsco/escher"
-if test -L $SYNC_GOPATH_LINK_PATH; then
-  echo "Removing old symlink"
-  rm $SYNC_GOPATH_LINK_PATH
-fi
-test -e $SYNC_GOPATH_LINK_PATH || {
-  echo "Adding symlink to source"
-  mkdir -p $(dirname $SYNC_GOPATH_LINK_PATH)
-  ln -s $(pwd) $SYNC_GOPATH_LINK_PATH
-}
-
-test -n "$DEPLOY" && {
-  rm -rf $GOPATH/pkg # remove go version upgrade errors.
-  exit 0 # succeed fast for deploys
-} || true
+glide install

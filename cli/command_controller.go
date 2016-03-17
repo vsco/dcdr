@@ -260,7 +260,7 @@ func (cc *Controller) Serve(ctx climax.Context) int {
 
 func (cc *Controller) Watch(ctx climax.Context) int {
 
-	printer.Log("watching namespace: %s", cc.Config.Namespace)
+	printer.Logf("watching namespace: %s", cc.Config.Namespace)
 
 	cc.Client.Watch()
 
