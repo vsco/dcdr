@@ -30,7 +30,9 @@ func EmptyFeatureMap() (fm *FeatureMap) {
 			Info: Info{
 				CurrentSha: "",
 			},
-			Features: Features{},
+			Features: Features{
+				DefaultScope: make(map[string]interface{}),
+			},
 		},
 	}
 

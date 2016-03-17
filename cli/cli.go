@@ -114,7 +114,7 @@ func (c *CLI) Commands() []climax.Command {
 
 	d := dcdr.NewDefault().WithScopes("cc/us")
 
-	fmt.Printf("%t", d.IsAvailableForId("new-signup-flow", <unint64>))
+	fmt.Printf("%t", d.IsAvailableForID("new-signup-flow", <unint64>))
 	=> true
 
 	If the audit repo has been configured in config.hcl, dcdr

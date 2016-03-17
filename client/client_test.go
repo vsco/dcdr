@@ -150,16 +150,16 @@ func TestIsAvailableScoped(t *testing.T) {
 	assert.False(t, c.IsAvailable("bool"))
 }
 
-func TestIsAvailableForId(t *testing.T) {
+func TestIsAvailableForID(t *testing.T) {
 	m := MockFeatureMap()
 	c := NewTestClient().SetFeatureMap(m)
 
-	assert.False(t, c.IsAvailableForId("float", 1))
-	assert.False(t, c.IsAvailableForId("float", 100))
-	assert.False(t, c.IsAvailableForId("bool", 100))
+	assert.False(t, c.IsAvailableForID("float", 1))
+	assert.False(t, c.IsAvailableForID("float", 100))
+	assert.False(t, c.IsAvailableForID("bool", 100))
 
-	assert.True(t, c.IsAvailableForId("default_float", 10))
-	assert.True(t, c.IsAvailableForId("default_float", 5))
+	assert.True(t, c.IsAvailableForID("default_float", 10))
+	assert.True(t, c.IsAvailableForID("default_float", 5))
 }
 
 func TestScaleValue(t *testing.T) {

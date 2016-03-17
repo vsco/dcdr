@@ -48,7 +48,7 @@ rollout-new-fancy-db-dual-write => 0.1
 ```Go
 // Handle the write to the existing store 
 
-if dcdr.IsAvailableForId("rollout-new-fancy-db-dual-write", user.Id) {
+if dcdr.IsAvailableForID("rollout-new-fancy-db-dual-write", user.Id) {
 	// If the `user.Id` falls into 10% of requests do the dual write
 }
 ```
@@ -299,7 +299,7 @@ if err != nil {
 
 ### Checking feature flags
 
-The client has three main methods for interacting with flags `IsAvailable(feature string)`. `IsAvailableForId(feature string, id uint64)`, and `ScaleValue(feature string, min float64, max float64)`.
+The client has three main methods for interacting with flags `IsAvailable(feature string)`. `IsAvailableForID(feature string, id uint64)`, and `ScaleValue(feature string, min float64, max float64)`.
 
 #### IsAvailable
 
@@ -376,9 +376,9 @@ if scopedClient.IsAvailable("another-feature") {
 }
 ```
 
-### IsAvailableForId
+### IsAvailableForID
 
-This method is used when a feature needs to be rolled out to only a percentage of requests. Functionally `IsAvailableForId` works exactly as `IsAvailable` with the exception of its `id` argument. Both the `feature` and `id` arguments are joined to generate a `uint64` using `hash/crc32`. Which when combined with the `float64` value of `feature` can compute into what percentile a given request falls. 
+This method is used when a feature needs to be rolled out to only a percentage of requests. Functionally `IsAvailableForID` works exactly as `IsAvailable` with the exception of its `id` argument. Both the `feature` and `id` arguments are joined to generate a `uint64` using `hash/crc32`. Which when combined with the `float64` value of `feature` can compute into what percentile a given request falls. 
 
 See the [`Client#withinPercentile`](https://github.com/vsco/dcdr/blob/master/client/client.go#L224) method for more details.
 
@@ -399,7 +399,7 @@ if err != nil {
 userId := unint64(5)
 
 // new-feature-rollout would be true
-if client.IsAvailableForId("new-feature-rollout", userId) {
+if client.IsAvailableForID("new-feature-rollout", userId) {
 	fmt.Println("new-feature-rollout enabled")
 } else {
 	fmt.Println("new-feature-rollout disabled")
@@ -408,7 +408,7 @@ if client.IsAvailableForId("new-feature-rollout", userId) {
 
 ### ScaleValue
 
-`ScaleValue` uses the same `float64` values as `IsAvailableForId` but in this case these values are used to obtain a new value scaled between a `min` and a `max`.
+`ScaleValue` uses the same `float64` values as `IsAvailableForID` but in this case these values are used to obtain a new value scaled between a `min` and a `max`.
 
 For instance:
 
