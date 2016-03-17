@@ -28,7 +28,7 @@ func NewWatcher(path string) (w *Watcher) {
 
 	if err != nil {
 		printer.LogErrf("could not start watcher: %v", err)
-		os.Exit(1)
+		return nil
 	}
 
 	w = &Watcher{
