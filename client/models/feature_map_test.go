@@ -91,7 +91,7 @@ func TestMergedScopes(t *testing.T) {
 func TestToJson(t *testing.T) {
 	fm := FixtureMap()
 
-	bts, err := fm.ToJson()
+	bts, err := fm.ToJSON()
 	assert.NoError(t, err)
 
 	assert.Equal(t, FixtureBytes(), bts)

@@ -19,12 +19,12 @@ import (
 
 const InfoNameSpace = "info"
 
-var TypeChangeError = errors.New("cannot change existing feature types.")
-var RepoExistsError = errors.New("repository already exists")
-var NilValueError = errors.New("value cannot be nil")
+var ErrTypeChange = errors.New("cannot change existing feature types")
+var ErrRepoExists = errors.New("repository already exists")
+var ErrNilValue = errors.New("value cannot be nil")
 
 func KeyNotFoundError(n string) error {
-	return errors.New(fmt.Sprintf("%s not found", n))
+	return fmt.Errorf("%s not found", n)
 }
 
 type ClientIFace interface {
@@ -43,13 +43,13 @@ type ClientIFace interface {
 
 type Client struct {
 	Store   stores.StoreIFace
-	Repo    repo.RepoIFace
+	Repo    repo.IFace
 	Watcher watchers.KVWatcherIFace
 	Stats   *godspeed.Godspeed
 	config  *config.Config
 }
 
-func New(st stores.StoreIFace, rp repo.RepoIFace, w watchers.KVWatcherIFace, cfg *config.Config, stats *godspeed.Godspeed) (c *Client) {
+func New(st stores.StoreIFace, rp repo.IFace, w watchers.KVWatcherIFace, cfg *config.Config, stats *godspeed.Godspeed) (c *Client) {
 	c = &Client{
 		Store:   st,
 		Repo:    rp,
@@ -117,18 +117,18 @@ func (c *Client) Set(ft *models.Feature) error {
 			ft.Value = existing.Value
 		}
 		if ft.FeatureType != existing.FeatureType && ft.FeatureType != "" {
-			return TypeChangeError
+			return ErrTypeChange
 		}
 		if ft.FeatureType == "" {
 			ft.FeatureType = existing.FeatureType
 		}
 	} else {
 		if ft.Value == nil {
-			return NilValueError
+			return ErrNilValue
 		}
 	}
 
-	bts, err := ft.ToJson()
+	bts, err := ft.ToJSON()
 
 	if err != nil {
 		return err
@@ -290,7 +290,7 @@ func (c *Client) UpdateCurrentSha() (string, error) {
 
 func (c *Client) InitRepo(create bool) error {
 	if c.Repo.Exists() {
-		return RepoExistsError
+		return ErrRepoExists
 	}
 
 	if create {

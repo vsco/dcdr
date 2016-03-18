@@ -39,15 +39,15 @@ func GetScopes(r *http.Request) []string {
 
 // ScopeMapFromRequest helper method for returning a FeatureMap scoped to
 // the values found in DcdrScopesHeader.
-func ScopeMapFromRequest(c client.ClientIFace, r *http.Request) *models.FeatureMap {
+func ScopeMapFromRequest(c client.IFace, r *http.Request) *models.FeatureMap {
 	return c.WithScopes(GetScopes(r)...).ScopedMap()
 }
 
 // FeaturesHandler default handler for serving a FeatureMap via HTTP
-func FeaturesHandler(c client.ClientIFace) func(
+func FeaturesHandler(c client.IFace) func(
 	w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		json, err := ScopeMapFromRequest(c, r).ToJson()
+		json, err := ScopeMapFromRequest(c, r).ToJSON()
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

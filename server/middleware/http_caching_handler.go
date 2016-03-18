@@ -47,7 +47,7 @@ func SetCacheHeaders(w http.ResponseWriter, r *http.Request) {
 // HTTPCachingHandle middleware that provides HTTP level caching
 // using the If-None-Match header. If the value of this header contains
 // a matching CurrentSha this handler will write a 304 status and return.
-func HTTPCachingHandler(dcdr client.ClientIFace) func(*web.C, http.Handler) http.Handler {
+func HTTPCachingHandler(dcdr client.IFace) func(*web.C, http.Handler) http.Handler {
 	return func(c *web.C, h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			if sha := dcdr.CurrentSha(); sha != "" {

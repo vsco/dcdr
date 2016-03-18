@@ -123,8 +123,8 @@ func (f *Feature) BoolValue() bool {
 	return f.Value.(bool)
 }
 
-// ToJson marshal feature to json
-func (f *Feature) ToJson() ([]byte, error) {
+// ToJSON marshal feature to json
+func (f *Feature) ToJSON() ([]byte, error) {
 	return json.Marshal(f)
 }
 

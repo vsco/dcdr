@@ -38,7 +38,7 @@ func (u *UI) DrawFeatures(features models.Features) {
 func (u *UI) DrawConfig(cfg *config.Config) {
 	tbl := table.New("Component", "Name", "Value", "Description").WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
-	tbl.AddRow("Config", "ConfigPath", config.ConfigPath(), "Path to config.hcl")
+	tbl.AddRow("Config", "ConfigPath", config.Path(), "Path to config.hcl")
 	tbl.AddRow("Defaults", "Username", cfg.Username, "The username for commits. default: `whoami`")
 	tbl.AddRow("Defaults", "Namespace", cfg.Namespace, "K/V namespace")
 
@@ -46,7 +46,7 @@ func (u *UI) DrawConfig(cfg *config.Config) {
 
 	tbl.AddRow("Server", "Endpoint", cfg.Server.Endpoint, "The path to serve (GET '/dcdr.json')")
 	tbl.AddRow("Server", "Host", cfg.Server.Host, "The server host (:8000")
-	tbl.AddRow("Server", "JsonRoot", cfg.Server.JsonRoot, "JSON root node ('dcdr')")
+	tbl.AddRow("Server", "JsonRoot", cfg.Server.JSONRoot, "JSON root node ('dcdr')")
 
 	if cfg.GitEnabled() {
 		tbl.AddRow("Git", "RepoPath", cfg.Git.RepoPath, "Audit repo location")

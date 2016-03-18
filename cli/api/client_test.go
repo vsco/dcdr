@@ -81,7 +81,7 @@ func TestSetErrorOnNilValue(t *testing.T) {
 
 	err := c.Set(ft)
 
-	assert.Equal(t, NilValueError, err)
+	assert.Equal(t, ErrNilValue, err)
 }
 
 func TestTypeChangeErrorSet(t *testing.T) {
@@ -92,7 +92,7 @@ func TestTypeChangeErrorSet(t *testing.T) {
 	c := New(cs, nil, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(bad)
-	assert.Equal(t, TypeChangeError, err)
+	assert.Equal(t, ErrTypeChange, err)
 }
 
 func TestSetWithError(t *testing.T) {

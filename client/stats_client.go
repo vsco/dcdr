@@ -18,13 +18,13 @@ const (
 	JoinWith = "."
 )
 
-type statsClient struct {
+type StatsClient struct {
 	Client
 	stats Statter
 }
 
-func NewStatsClient(cfg *config.Config, stats Statter) (sc *statsClient) {
-	sc = &statsClient{
+func NewStatsClient(cfg *config.Config, stats Statter) (sc *StatsClient) {
+	sc = &StatsClient{
 		stats: stats,
 	}
 
@@ -33,46 +33,46 @@ func NewStatsClient(cfg *config.Config, stats Statter) (sc *statsClient) {
 	return
 }
 
-func (sc *statsClient) IsAvailable(feature string) bool {
+func (sc *StatsClient) IsAvailable(feature string) bool {
 	enabled := sc.Client.IsAvailable(feature)
 	defer sc.Incr(feature, enabled)
 
 	return enabled
 }
 
-func (sc *statsClient) IsAvailableForID(feature string, id uint64) bool {
+func (sc *StatsClient) IsAvailableForID(feature string, id uint64) bool {
 	enabled := sc.Client.IsAvailableForID(feature, id)
 	defer sc.Incr(feature, enabled)
 
 	return enabled
 }
 
-func (sc *statsClient) ScaleValue(feature string, min float64, max float64) float64 {
+func (sc *StatsClient) ScaleValue(feature string, min float64, max float64) float64 {
 	return sc.Client.ScaleValue(feature, min, max)
 }
 
-func (sc *statsClient) UpdateFeatures(bts []byte) {
+func (sc *StatsClient) UpdateFeatures(bts []byte) {
 	sc.Client.UpdateFeatures(bts)
 }
 
-func (sc *statsClient) FeatureExists(feature string) bool {
+func (sc *StatsClient) FeatureExists(feature string) bool {
 	return sc.Client.FeatureExists(feature)
 }
 
-func (sc *statsClient) Features() models.Features {
+func (sc *StatsClient) Features() models.Features {
 	return sc.Client.Features()
 }
 
-func (sc *statsClient) Scopes() []string {
+func (sc *StatsClient) Scopes() []string {
 	return sc.Client.Scopes()
 }
 
-func (sc *statsClient) Incr(feature string, enabled bool) {
+func (sc *StatsClient) Incr(feature string, enabled bool) {
 	key := sc.statKey(feature, enabled)
 	sc.stats.Incr(key)
 }
 
-func (sc *statsClient) statKey(feature string, enabled bool) string {
+func (sc *StatsClient) statKey(feature string, enabled bool) string {
 	status := Enabled
 
 	if enabled == false {

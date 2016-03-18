@@ -20,7 +20,7 @@ func TestDefaultConfig(t *testing.T) {
 	user, err := user.Current()
 	assert.NoError(t, err)
 
-	assert.Equal(t, ConfigPath(), fmt.Sprintf("%s/%s", ConfigDir, ConfigFileName))
+	assert.Equal(t, Path(), fmt.Sprintf("%s/%s", ConfigDir, ConfigFileName))
 	assert.Equal(t, OutputPath(), fmt.Sprintf("%s/%s", ConfigDir, OutputFileName))
 
 	assert.False(t, cfg.GitEnabled())
@@ -31,7 +31,7 @@ func TestDefaultConfig(t *testing.T) {
 	assert.Equal(t, cfg.Watcher.OutputPath, OutputPath())
 	assert.Equal(t, cfg.Server.Endpoint, DefaultEndpoint)
 	assert.Equal(t, cfg.Server.Host, DefaultHost)
-	assert.Equal(t, cfg.Server.JsonRoot, DefaultNamespace)
+	assert.Equal(t, cfg.Server.JSONRoot, DefaultNamespace)
 	assert.Equal(t, cfg.Git.RepoPath, "")
 	assert.Equal(t, cfg.Git.RepoURL, "")
 	assert.Equal(t, cfg.Stats.Host, "")
@@ -43,7 +43,7 @@ func TestEnvOverride(t *testing.T) {
 	os.Setenv(EnvConfigDirOverride, "/tmp/dcdr")
 	cfg := LoadConfig()
 
-	assert.Equal(t, ConfigPath(), fmt.Sprintf("%s/%s", os.Getenv(EnvConfigDirOverride), ConfigFileName))
+	assert.Equal(t, Path(), fmt.Sprintf("%s/%s", os.Getenv(EnvConfigDirOverride), ConfigFileName))
 	assert.Equal(t, OutputPath(), fmt.Sprintf("%s/%s", os.Getenv(EnvConfigDirOverride), OutputFileName))
 	assert.Equal(t, cfg.Watcher.OutputPath, OutputPath())
 }

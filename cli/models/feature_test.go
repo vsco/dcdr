@@ -26,7 +26,7 @@ var ExpectedJSON = `{
   }
 }`
 
-var ExportJson = []byte(`[
+var ExportJSON = []byte(`[
   {
     "CreateIndex": 4398,
     "ModifyIndex": 4398,
@@ -90,7 +90,7 @@ func TestTypes(t *testing.T) {
 }
 
 func TestFeaturesToKVMapToJSON(t *testing.T) {
-	kvp, err := stores.KvPairsBytesToKvBytes(ExportJson)
+	kvp, err := stores.KvPairsBytesToKvBytes(ExportJSON)
 	assert.NoError(t, err)
 
 	fts, err := KVsToFeatureMap(kvp)

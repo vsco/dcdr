@@ -6,8 +6,8 @@ import (
 	"github.com/vsco/dcdr/config"
 )
 
-func New() (d *mockDecider) {
-	d = &mockDecider{
+func New() (d *Client) {
+	d = &Client{
 		Client:     *client.New(&config.Config{}),
 		featureMap: models.EmptyFeatureMap(),
 	}
@@ -16,35 +16,35 @@ func New() (d *mockDecider) {
 	return
 }
 
-type mockDecider struct {
+type Client struct {
 	client.Client
 	featureMap *models.FeatureMap
 }
 
 // EnableBoolFeature set a boolean feature to true
-func (d *mockDecider) EnableBoolFeature(feature string) {
+func (d *Client) EnableBoolFeature(feature string) {
 	d.FeatureMap().Dcdr.Defaults()[feature] = true
 	d.MergeScopes()
 }
 
 // DisableBoolFeature set a boolean feature to false
-func (d *mockDecider) DisableBoolFeature(feature string) {
+func (d *Client) DisableBoolFeature(feature string) {
 	d.Client.FeatureMap().Dcdr.Defaults()[feature] = false
 	d.MergeScopes()
 }
 
 // EnablePercentileFeature set a percentile feature to true
-func (d *mockDecider) EnablePercentileFeature(feature string) {
+func (d *Client) EnablePercentileFeature(feature string) {
 	d.Client.FeatureMap().Dcdr.Defaults()[feature] = 1.0
 	d.MergeScopes()
 }
 
 // DisablePercentileFeature set a percentile feature to false
-func (d *mockDecider) DisablePercentileFeature(feature string) {
+func (d *Client) DisablePercentileFeature(feature string) {
 	d.Client.FeatureMap().Dcdr.Defaults()[feature] = 0.0
 	d.MergeScopes()
 }
 
-func (d *mockDecider) Watch() *mockDecider {
+func (d *Client) Watch() *Client {
 	return d
 }

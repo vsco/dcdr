@@ -24,7 +24,7 @@ const (
 
 var ConfigDir = "/etc/dcdr"
 
-func ConfigPath() string {
+func Path() string {
 	return fmt.Sprintf("%s/%s", ConfigDir, ConfigFileName)
 }
 
@@ -59,7 +59,7 @@ var ExampleConfig = []byte(`
 type Server struct {
 	Endpoint string
 	Host     string
-	JsonRoot string
+	JSONRoot string
 }
 
 type Watcher struct {
@@ -126,16 +126,16 @@ func DefaultConfig() *Config {
 		Server: Server{
 			Endpoint: DefaultEndpoint,
 			Host:     DefaultHost,
-			JsonRoot: DefaultNamespace,
+			JSONRoot: DefaultNamespace,
 		},
 	}
 }
 
 func readConfig() *Config {
-	bts, err := ioutil.ReadFile(ConfigPath())
+	bts, err := ioutil.ReadFile(Path())
 
 	if err != nil {
-		printer.SayErr("Could not read %s", ConfigPath())
+		printer.SayErr("Could not read %s", Path())
 		os.Exit(1)
 	}
 
@@ -169,8 +169,8 @@ func readConfig() *Config {
 		cfg.Server.Endpoint = defaults.Server.Endpoint
 	}
 
-	if cfg.Server.JsonRoot == "" {
-		cfg.Server.JsonRoot = defaults.Server.JsonRoot
+	if cfg.Server.JSONRoot == "" {
+		cfg.Server.JSONRoot = defaults.Server.JSONRoot
 	}
 
 	return cfg
@@ -181,9 +181,9 @@ func LoadConfig() *Config {
 		ConfigDir = v
 	}
 
-	if _, err := os.Stat(ConfigPath()); err == nil {
+	if _, err := os.Stat(Path()); err == nil {
 		return readConfig()
-	} else {
-		return DefaultConfig()
 	}
+
+	return DefaultConfig()
 }

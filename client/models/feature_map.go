@@ -50,7 +50,7 @@ func NewFeatureMap(bts []byte) (*FeatureMap, error) {
 	return fm, nil
 }
 
-func (fm *FeatureMap) ToJson() ([]byte, error) {
+func (fm *FeatureMap) ToJSON() ([]byte, error) {
 	bts, err := json.MarshalIndent(fm, "", "  ")
 
 	if err != nil {

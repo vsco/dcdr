@@ -13,7 +13,7 @@ import (
 	"github.com/vsco/dcdr/config"
 )
 
-type RepoIFace interface {
+type IFace interface {
 	Init()
 	Clone() error
 	Commit(bts []byte, msg string) error
