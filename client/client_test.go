@@ -15,7 +15,7 @@ func NewTestClient() (c *Client) {
 	return
 }
 
-var JsonBytes = []byte(`{
+var JSONBytes = []byte(`{
   "dcdr": {
     "features": {
       "ab": {
@@ -41,38 +41,10 @@ var JsonBytes = []byte(`{
   }
 }`)
 
-var UpdatedJsonBytes = []byte(`{
-  "dcdr": {
-    "features": {
-      "ab": {
-      	"new_ab_feature":0.5,
-        "float": 0.0,
-        "bool": false
-      },
-      "cc": {
-        "cn": {
-          "float": 1,
-          "bool": true
-        }
-      },
-      "default": {
-      	"new_feature": 0.5,
-        "float": 1,
-        "bool_false": false,
-        "bool": false,
-        "default_float": 1
-      }
-    },
-    "info": {
-      "current_sha": "abcde"
-    }
-  }
-}`)
-
 func MockFeatureMap() *models.FeatureMap {
 	var fm models.FeatureMap
 
-	err := json.Unmarshal(JsonBytes, &fm)
+	err := json.Unmarshal(JSONBytes, &fm)
 
 	if err != nil {
 		panic(err)
@@ -103,7 +75,7 @@ func TestEmptyFeatureMap(t *testing.T) {
 	assert.NoError(t, err)
 
 	// ensure nil pointer guards
-	c.WithScopes("scope").ScopedMap().ToJson()
+	c.WithScopes("scope").ScopedMap().ToJSON()
 }
 
 func TestScopedFeaturesCreateNewInstance(t *testing.T) {

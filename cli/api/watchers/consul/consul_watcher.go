@@ -8,24 +8,24 @@ import (
 	"github.com/vsco/dcdr/config"
 )
 
-type ConsulWatcher struct {
+type Watcher struct {
 	config *config.Config
 	cb     func(kvb stores.KVBytes)
 }
 
-func New(cfg *config.Config) (cw *ConsulWatcher) {
-	cw = &ConsulWatcher{
+func New(cfg *config.Config) (cw *Watcher) {
+	cw = &Watcher{
 		config: cfg,
 	}
 
 	return
 }
 
-func (cw *ConsulWatcher) Register(cb func(kvb stores.KVBytes)) {
+func (cw *Watcher) Register(cb func(kvb stores.KVBytes)) {
 	cw.cb = cb
 }
 
-func (cw *ConsulWatcher) Updated(kvs interface{}) {
+func (cw *Watcher) Updated(kvs interface{}) {
 	kvp := kvs.(api.KVPairs)
 	kvb, err := stores.KvPairsToKvBytes(kvp)
 
@@ -37,7 +37,7 @@ func (cw *ConsulWatcher) Updated(kvs interface{}) {
 	cw.cb(kvb)
 }
 
-func (cw *ConsulWatcher) Watch() {
+func (cw *Watcher) Watch() {
 	params := map[string]interface{}{
 		"type":   "keyprefix",
 		"prefix": cw.config.Namespace,

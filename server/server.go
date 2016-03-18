@@ -16,15 +16,15 @@ import (
 	"github.com/zenazn/goji/web"
 )
 
-type server struct {
-	Client     client.ClientIFace
+type Server struct {
+	Client     client.IFace
 	middleware []interface{}
 	config     *config.Config
 	mux        *web.Mux
 }
 
-func New(cfg *config.Config, mux *web.Mux, cl client.ClientIFace) (srv *server) {
-	srv = &server{
+func New(cfg *config.Config, mux *web.Mux, cl client.IFace) (srv *Server) {
+	srv = &Server{
 		Client: cl,
 		mux:    mux,
 		config: cfg,
@@ -33,7 +33,7 @@ func New(cfg *config.Config, mux *web.Mux, cl client.ClientIFace) (srv *server) 
 	return
 }
 
-func NewDefault() (srv *server) {
+func NewDefault() (srv *Server) {
 	cfg := config.DefaultConfig()
 	client, err := client.New(cfg).Watch()
 
@@ -47,7 +47,7 @@ func NewDefault() (srv *server) {
 	return
 }
 
-func (srv *server) Use(mdl ...web.MiddlewareType) *server {
+func (srv *Server) Use(mdl ...web.MiddlewareType) *Server {
 	for _, m := range mdl {
 		srv.middleware = append(srv.middleware, m)
 	}
@@ -55,7 +55,7 @@ func (srv *server) Use(mdl ...web.MiddlewareType) *server {
 	return srv
 }
 
-func (srv *server) BindMux() *server {
+func (srv *Server) BindMux() *Server {
 	for _, md := range srv.middleware {
 		srv.mux.Use(md)
 	}
@@ -65,7 +65,7 @@ func (srv *server) BindMux() *server {
 	return srv
 }
 
-func (srv *server) Serve() {
+func (srv *Server) Serve() {
 	srv.BindMux()
 
 	graceful.AddSignal(syscall.SIGINT, syscall.SIGTERM)

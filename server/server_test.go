@@ -20,12 +20,12 @@ var fm = models.EmptyFeatureMap()
 var cfg = config.TestConfig()
 var cl = client.New(cfg).SetFeatureMap(fm)
 
-func Server() *server {
+func mockServer() *Server {
 	return New(cfg, goji.DefaultMux, cl).BindMux()
 }
 
 func TestGetFeatures(t *testing.T) {
-	srv := Server()
+	srv := mockServer()
 	resp := builder.WithMux(srv.mux).Get(srv.config.Server.Endpoint).Do()
 	http_assert.Response(t, resp.Response).
 		IsOK().
@@ -39,7 +39,7 @@ func TestGetFeatures(t *testing.T) {
 }
 
 func TestScopeHeader(t *testing.T) {
-	srv := Server()
+	srv := mockServer()
 	resp := builder.WithMux(srv.mux).
 		Get(srv.config.Server.Endpoint).
 		Header(handlers.DcdrScopesHeader, "scope, scope2").Do()

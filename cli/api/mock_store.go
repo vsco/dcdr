@@ -12,7 +12,7 @@ type MockStore struct {
 }
 
 func NewMockStore(ft *models.Feature, err error) (ms *MockStore) {
-	bts, _ := ft.ToJson()
+	bts, _ := ft.ToJSON()
 
 	ms = &MockStore{
 		Err: err,

@@ -25,9 +25,9 @@ import (
 const FilePerms = 0755
 
 var (
-	InvalidFeatureTypeError = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
-	InvalidRangeError       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
-	NameRequiredError       = errors.New("-name is required")
+	ErrInvalidFeatureType = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
+	ErrInvalidRange       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
+	ErrNameRequired       = errors.New("-name is required")
 )
 
 type Controller struct {
@@ -156,18 +156,18 @@ func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
 }
 
 func (cc *Controller) Init(ctx climax.Context) int {
-	if _, err := os.Stat(config.ConfigPath()); os.IsNotExist(err) {
-		err = os.MkdirAll(path.Dir(config.ConfigPath()), FilePerms)
+	if _, err := os.Stat(config.Path()); os.IsNotExist(err) {
+		err = os.MkdirAll(path.Dir(config.Path()), FilePerms)
 
-		printer.Say("creating %s", path.Dir(config.ConfigPath()))
+		printer.Say("creating %s", path.Dir(config.Path()))
 
 		if err != nil {
 			printer.SayErr("could not create config directory: %v", err)
 			return 1
 		}
 
-		err = ioutil.WriteFile(config.ConfigPath(), config.ExampleConfig, FilePerms)
-		printer.Say("%s not found. creating example config", config.ConfigPath())
+		err = ioutil.WriteFile(config.Path(), config.ExampleConfig, FilePerms)
+		printer.Say("%s not found. creating example config", config.Path())
 
 		if err != nil {
 			printer.SayErr("could not write config.hcl %v", err)
@@ -274,7 +274,7 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 	scp, _ := ctx.Get("scope")
 
 	if name == "" {
-		return nil, NameRequiredError
+		return nil, ErrNameRequired
 	}
 
 	var v interface{}
@@ -284,12 +284,12 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 		v, ft = models.ParseValueAndFeatureType(val)
 
 		if ft == models.Invalid {
-			return nil, InvalidFeatureTypeError
+			return nil, ErrInvalidFeatureType
 		}
 
 		if ft == models.Percentile {
 			if v.(float64) > 1.0 || v.(float64) < 0 {
-				return nil, InvalidRangeError
+				return nil, ErrInvalidRange
 			}
 		}
 	}

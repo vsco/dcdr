@@ -12,8 +12,8 @@ import (
 	"github.com/vsco/dcdr/config"
 )
 
-// ClientIFace interface for Decider Clients
-type ClientIFace interface {
+// IFace interface for Decider Clients
+type IFace interface {
 	IsAvailable(feature string) bool
 	IsAvailableForID(feature string, id uint64) bool
 	ScaleValue(feature string, min float64, max float64) float64
@@ -31,7 +31,7 @@ type ClientIFace interface {
 type Client struct {
 	featureMap *models.FeatureMap
 	config     *config.Config
-	watcher    watcher.WatcherIFace
+	watcher    watcher.IFace
 	features   models.Features
 	scopes     []string
 }
@@ -127,9 +127,9 @@ func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
 func (c *Client) FeatureMap() *models.FeatureMap {
 	if c.featureMap != nil {
 		return c.featureMap
-	} else {
-		return models.EmptyFeatureMap()
 	}
+
+	return models.EmptyFeatureMap()
 }
 
 // ScopedMap a `FeatureMap` containing only merged features.

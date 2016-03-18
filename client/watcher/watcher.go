@@ -9,7 +9,7 @@ import (
 	"gopkg.in/fsnotify.v1"
 )
 
-type WatcherIFace interface {
+type IFace interface {
 	Init() error
 	Watch()
 	Register(func(bts []byte))
