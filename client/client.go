@@ -4,6 +4,8 @@ import (
 	"hash/crc32"
 	"strconv"
 
+	"os"
+
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/client/models"
 	"github.com/vsco/dcdr/client/watcher"
@@ -41,6 +43,13 @@ func New(cfg *config.Config) (c *Client) {
 	}
 
 	if c.config.Watcher.OutputPath != "" {
+		_, err := os.Stat(c.config.Watcher.OutputPath)
+
+		if err != nil {
+			printer.LogErrf("%v", err)
+			return c
+		}
+
 		c.watcher = watcher.NewWatcher(c.config.Watcher.OutputPath)
 		printer.Say("started watching %s", c.config.Watcher.OutputPath)
 	}
