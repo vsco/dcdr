@@ -2,7 +2,7 @@ package cli
 
 import "github.com/tucnak/climax"
 
-const Version = "0.2"
+const Version = "0.2.1"
 
 // CLI main CLI runner
 type CLI struct {

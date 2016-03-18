@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-goxc  -bc="linux,darwin" -d ./bin
+export GO15VENDOREXPERIMENT=1
+
+goxc  -main-dirs-exclude="vendor" -bc="linux,darwin" -d ./bin
