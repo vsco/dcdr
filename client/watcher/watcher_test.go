@@ -34,20 +34,12 @@ func TestNewWatcher(t *testing.T) {
 	assert.NoError(t, err)
 
 	var wg sync.WaitGroup
-	wg.Add(2)
-
-	updateCount := 0
+	wg.Add(1)
 
 	w.Register(func(bts []byte) {
-		if updateCount == 0 {
-			// check original bytes when watch is started
-			assert.Equal(t, fmt.Sprintf("%s", origBytes), fmt.Sprintf("%s", bts))
-		} else {
-			// check updated bytes on write
-			assert.Equal(t, fmt.Sprintf("%s", updatedBytes), fmt.Sprintf("%s", bts))
-		}
+		// check updated bytes on write
+		assert.Equal(t, fmt.Sprintf("%s", updatedBytes), fmt.Sprintf("%s", bts))
 
-		updateCount++
 		wg.Done()
 	})
 

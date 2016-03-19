@@ -71,7 +71,6 @@ func (w *Watcher) Watch() {
 		}
 	}()
 
-	w.Updated()
 	defer w.watcher.Close()
 
 	<-done

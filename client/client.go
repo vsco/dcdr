@@ -51,7 +51,7 @@ func New(cfg *config.Config) (c *Client) {
 		}
 
 		c.watcher = watcher.NewWatcher(c.config.Watcher.OutputPath)
-		printer.Say("started watching %s", c.config.Watcher.OutputPath)
+		printer.Logf("started watching %s", c.config.Watcher.OutputPath)
 	}
 
 	return
@@ -229,6 +229,9 @@ func (c *Client) Watch() (*Client, error) {
 		}
 
 		c.watcher.Register(c.UpdateFeatures)
+
+		// Load initial values into `FeatureMap`
+		c.watcher.Updated()
 		go c.watcher.Watch()
 	}
 
