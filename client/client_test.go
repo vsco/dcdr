@@ -2,7 +2,10 @@ package client
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
+
+	"io/ioutil"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/vsco/dcdr/client/models"
@@ -216,4 +219,22 @@ func TestUpdateFeatures(t *testing.T) {
 	assert.Equal(t, float64(0.3), scoped.Features()["float"])
 	assert.True(t, scoped.FeatureExists("new_ab_feature"))
 	assert.Equal(t, true, scoped.Features()["default_bool"])
+}
+
+func TestWatch(t *testing.T) {
+	p := "/tmp/decider.json"
+	fm, err := models.NewFeatureMap(JSONBytes)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(p, JSONBytes, 0644)
+	assert.NoError(t, err)
+
+	cfg := config.DefaultConfig()
+	cfg.Watcher.OutputPath = p
+	c := New(cfg)
+	c.Watch()
+
+	assert.Equal(t, fm, c.FeatureMap())
+
+	err = os.Remove(p)
+	assert.NoError(t, err)
 }
