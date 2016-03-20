@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"fmt"
-
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/cli/api/stores"
 )
 
 var ExpectedJSON = `{
@@ -87,17 +84,4 @@ func TestTypes(t *testing.T) {
 	pf = NewFeature("key", true, "comment", "user", "scope", "n")
 	assert.Equal(t, Boolean, pf.FeatureType)
 	assert.Equal(t, true, pf.BoolValue())
-}
-
-func TestFeaturesToKVMapToJSON(t *testing.T) {
-	kvp, err := stores.KvPairsBytesToKvBytes(ExportJSON)
-	assert.NoError(t, err)
-
-	fts, err := KVsToFeatureMap(kvp)
-	assert.NoError(t, err)
-
-	json, err := json.MarshalIndent(fts, "", "  ")
-
-	assert.NoError(t, err)
-	assert.Equal(t, fmt.Sprintf("%s", ExpectedJSON), fmt.Sprintf("%s", json))
 }

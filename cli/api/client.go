@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"encoding/json"
 
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/api/watchers"
-	"github.com/vsco/dcdr/cli/models"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 const InfoNameSpace = "info"
@@ -36,7 +37,7 @@ type ClientIFace interface {
 	InitRepo(create bool) error
 	Commit(ft *models.Feature, deleted bool) error
 	Push() error
-	UpdateCurrentSha() (string, error)
+	UpdateCurrentSHA() (string, error)
 	Watch()
 	Namespace() string
 }
@@ -209,7 +210,7 @@ func (c *Client) Commit(ft *models.Feature, deleted bool) error {
 		return err
 	}
 
-	fm, err := models.KVsToFeatureMap(kvb)
+	fm, err := c.KVsToFeatureMap(kvb)
 
 	if err != nil {
 		return err
@@ -266,8 +267,8 @@ func (c *Client) GetInfo() (*models.Info, error) {
 	return info, err
 }
 
-func (c *Client) UpdateCurrentSha() (string, error) {
-	sha, err := c.Repo.CurrentSha()
+func (c *Client) UpdateCurrentSHA() (string, error) {
+	sha, err := c.Repo.CurrentSHA()
 
 	if err != nil {
 		return sha, err
@@ -276,7 +277,7 @@ func (c *Client) UpdateCurrentSha() (string, error) {
 	key := fmt.Sprintf("%s/%s", c.Namespace(), InfoNameSpace)
 
 	info := &models.Info{
-		CurrentSha: sha,
+		CurrentSHA: sha,
 	}
 
 	bts, err := json.Marshal(info)
@@ -306,7 +307,7 @@ func (c *Client) Watch() {
 }
 
 func (c *Client) WriteOutputFile(kvb stores.KVBytes) {
-	fts, err := models.KVsToFeatureMap(kvb)
+	fts, err := c.KVsToFeatureMap(kvb)
 
 	if err != nil {
 		printer.LogErrf("parse features error: %v", err)
@@ -350,4 +351,58 @@ func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
 	tags := []string{"source_type:dcdr"}
 
 	return c.Stats.Event(title, text, optionals, tags)
+}
+
+// KVsToFeatures helper for unmarshalling `KVBytes` to a `FeatureMap`
+func (c *Client) KVsToFeatureMap(kvb stores.KVBytes) (*models.FeatureMap, error) {
+	fm := models.EmptyFeatureMap()
+
+	for _, v := range kvb {
+		var key string
+		var value interface{}
+
+		if v.Key == config.DefaultInfoNamespace {
+			var info models.Info
+			err := json.Unmarshal(v.Bytes, &info)
+
+			if err != nil {
+				return fm, err
+			}
+
+			fm.Dcdr.Info = info
+		} else {
+			var ft models.Feature
+			err := json.Unmarshal(v.Bytes, &ft)
+
+			if err != nil {
+				printer.SayErr("%s: %s", v.Key, v.Bytes)
+				return fm, err
+			}
+
+			key = strings.Replace(v.Key, fmt.Sprintf("%s/features/", c.Namespace()), "", 1)
+			value = ft.Value
+		}
+
+		explode(fm.Dcdr.FeatureScopes, key, value)
+	}
+
+	return fm, nil
+}
+
+func explode(m models.FeatureScopes, k string, v interface{}) {
+	if strings.Contains(k, "/") {
+		pts := strings.Split(k, "/")
+		top := pts[0]
+		key := strings.Join(pts[1:], "/")
+
+		if _, ok := m[top]; !ok {
+			m[top] = make(map[string]interface{})
+		}
+
+		explode(m[top].(map[string]interface{}), key, v)
+	} else {
+		if k != "" {
+			m[k] = v
+		}
+	}
 }

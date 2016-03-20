@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/vsco/dcdr/client"
-	"github.com/vsco/dcdr/client/models"
+	"github.com/vsco/dcdr/models"
 )
 
 const (

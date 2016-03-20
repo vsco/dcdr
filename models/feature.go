@@ -4,20 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-
-	"strings"
-
-	"github.com/vsco/dcdr/cli/api/stores"
-	"github.com/vsco/dcdr/cli/printer"
-	"github.com/vsco/dcdr/client/models"
-	"github.com/vsco/dcdr/config"
 )
-
-// Info container struct for CurrentSha
-type Info struct {
-	// CurrentSha the current SHA1 from the audit repository.
-	CurrentSha string `json:"current_sha"`
-}
 
 // Features a Feature result set
 type Features []Feature
@@ -30,14 +17,17 @@ func (a Features) Less(i, j int) bool { return a[i].Key < a[j].Key }
 type FeatureType string
 
 const (
-	Percentile   FeatureType = "percentile"
-	Boolean      FeatureType = "boolean"
-	Invalid      FeatureType = "invalid"
-	DefaultScope             = "default"
-	FeatureScope             = "features"
+	// Percentile percentile `FeatureType`
+	Percentile FeatureType = "percentile"
+	// Boolean boolean `FeatureType`
+	Boolean FeatureType = "boolean"
+	// Invalid invalid `FeatureType`
+	Invalid FeatureType = "invalid"
+	// FeatureScope scoping for feature keys
+	FeatureScope = "features"
 )
 
-// GetFeatureTypeFromValue interface to type helper
+// ParseValueAndFeatureType string to type helper
 func ParseValueAndFeatureType(v string) (interface{}, FeatureType) {
 	b, err := strconv.ParseBool(v)
 
@@ -71,6 +61,7 @@ type Feature struct {
 	UpdatedBy   string      `json:"updated_by"`
 }
 
+// GetScope scope accessor
 func (f *Feature) GetScope() string {
 	if f.Scope == "" {
 		f.Scope = DefaultScope
@@ -126,59 +117,4 @@ func (f *Feature) BoolValue() bool {
 // ToJSON marshal feature to json
 func (f *Feature) ToJSON() ([]byte, error) {
 	return json.Marshal(f)
-}
-
-// KVsToFeatures helper for unmarshalling consul result
-// sets into Features
-func KVsToFeatureMap(kvb stores.KVBytes) (*models.FeatureMap, error) {
-	fm := models.EmptyFeatureMap()
-
-	for _, v := range kvb {
-		var key string
-		var value interface{}
-
-		if v.Key == config.DefaultInfoNamespace {
-			var info models.Info
-			err := json.Unmarshal(v.Bytes, &info)
-
-			if err != nil {
-				return fm, err
-			}
-
-			fm.Dcdr.Info = info
-		} else {
-			var ft Feature
-			err := json.Unmarshal(v.Bytes, &ft)
-
-			if err != nil {
-				printer.SayErr("%s: %s", v.Key, v.Bytes)
-				return fm, err
-			}
-
-			key = strings.Replace(v.Key, fmt.Sprintf("%s/features/", config.DefaultNamespace), "", 1)
-			value = ft.Value
-		}
-
-		explode(fm.Dcdr.Features, key, value)
-	}
-
-	return fm, nil
-}
-
-func explode(m models.Features, k string, v interface{}) {
-	if strings.Contains(k, "/") {
-		pts := strings.Split(k, "/")
-		top := pts[0]
-		key := strings.Join(pts[1:], "/")
-
-		if _, ok := m[top]; !ok {
-			m[top] = make(map[string]interface{})
-		}
-
-		explode(m[top].(map[string]interface{}), key, v)
-	} else {
-		if k != "" {
-			m[k] = v
-		}
-	}
 }

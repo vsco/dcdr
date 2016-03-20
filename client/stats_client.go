@@ -3,27 +3,19 @@ package client
 import (
 	"strings"
 
-	"github.com/vsco/dcdr/client/models"
+	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/client/stats"
 )
 
-type Statter interface {
-	Incr(feature string)
-	Tags() []string
-}
-
-const (
-	Enabled  = "enabled"
-	Disabled = "disabled"
-	JoinWith = "."
-)
-
+// StatsClient delegates `Client` methods with metrics.
 type StatsClient struct {
 	Client
-	stats Statter
+	stats stats.IFace
 }
 
-func NewStatsClient(cfg *config.Config, stats Statter) (sc *StatsClient) {
+// NewStatsClient creates a new client.
+func NewStatsClient(cfg *config.Config, stats stats.IFace) (sc *StatsClient) {
 	sc = &StatsClient{
 		stats: stats,
 	}
@@ -33,6 +25,7 @@ func NewStatsClient(cfg *config.Config, stats Statter) (sc *StatsClient) {
 	return
 }
 
+// IsAvailable delegates `IsAvailable` and increments the provided `feature` status.
 func (sc *StatsClient) IsAvailable(feature string) bool {
 	enabled := sc.Client.IsAvailable(feature)
 	defer sc.Incr(feature, enabled)
@@ -40,6 +33,7 @@ func (sc *StatsClient) IsAvailable(feature string) bool {
 	return enabled
 }
 
+// IsAvailableForID delegates `IsAvailableForID` and increments the provided `feature` status.
 func (sc *StatsClient) IsAvailableForID(feature string, id uint64) bool {
 	enabled := sc.Client.IsAvailableForID(feature, id)
 	defer sc.Incr(feature, enabled)
@@ -47,43 +41,49 @@ func (sc *StatsClient) IsAvailableForID(feature string, id uint64) bool {
 	return enabled
 }
 
+// ScaleValue delegates `ScaleValue`.
 func (sc *StatsClient) ScaleValue(feature string, min float64, max float64) float64 {
 	return sc.Client.ScaleValue(feature, min, max)
 }
 
+// UpdateFeatures delegates `UpdateFeatures`.
 func (sc *StatsClient) UpdateFeatures(bts []byte) {
 	sc.Client.UpdateFeatures(bts)
 }
 
+// FeatureExists delegates `FeatureExists`.
 func (sc *StatsClient) FeatureExists(feature string) bool {
 	return sc.Client.FeatureExists(feature)
 }
 
-func (sc *StatsClient) Features() models.Features {
+// Features delegates `Features`.
+func (sc *StatsClient) Features() models.FeatureScopes {
 	return sc.Client.Features()
 }
 
+// Scopes delegates `Scopes`.
 func (sc *StatsClient) Scopes() []string {
 	return sc.Client.Scopes()
 }
 
+// Incr increments the formatted `statKey`.
 func (sc *StatsClient) Incr(feature string, enabled bool) {
 	key := sc.statKey(feature, enabled)
 	sc.stats.Incr(key)
 }
 
 func (sc *StatsClient) statKey(feature string, enabled bool) string {
-	status := Enabled
+	status := stats.Enabled
 
 	if enabled == false {
-		status = Disabled
+		status = stats.Disabled
 	}
 
 	scopes := models.DefaultScope
 
 	if len(sc.Client.Scopes()) > 0 {
-		scopes = strings.Replace(strings.Join(sc.Client.Scopes(), JoinWith), "/", JoinWith, -1)
+		scopes = strings.Replace(strings.Join(sc.Client.Scopes(), stats.JoinWith), "/", stats.JoinWith, -1)
 	}
 
-	return strings.Join([]string{sc.config.Namespace, scopes, feature, status}, JoinWith)
+	return strings.Join([]string{sc.config.Namespace, scopes, feature, status}, stats.JoinWith)
 }

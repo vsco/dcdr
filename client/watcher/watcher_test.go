@@ -28,7 +28,7 @@ func TestNewWatcher(t *testing.T) {
 	err := writeFile(origBytes)
 	assert.NoError(t, err)
 
-	w := NewWatcher(WatchPath)
+	w := New(WatchPath)
 
 	err = w.Init()
 	assert.NoError(t, err)

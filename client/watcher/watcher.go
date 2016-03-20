@@ -9,21 +9,25 @@ import (
 	"gopkg.in/fsnotify.v1"
 )
 
+// IFace interface for the the file system watcher.
 type IFace interface {
 	Init() error
 	Watch()
 	Register(func(bts []byte))
+	UpdateBytes() error
 	ReadFile() ([]byte, error)
-	Updated() error
 }
 
+// Watcher is a wrapper for `fsnotify` that provides the
+// registration of a callback for WRITE events.
 type Watcher struct {
-	path    string
-	cb      func(bts []byte)
-	watcher *fsnotify.Watcher
+	path          string
+	writeCallback func(bts []byte)
+	watcher       *fsnotify.Watcher
 }
 
-func NewWatcher(path string) (w *Watcher) {
+// New initializes a Watcher and verifies that `path` exists.
+func New(path string) (w *Watcher) {
 	_, err := os.Stat(path)
 
 	if err != nil {
@@ -38,6 +42,7 @@ func NewWatcher(path string) (w *Watcher) {
 	return
 }
 
+// Init creates a new `fsnotify` watcher observing `path`.
 func (w *Watcher) Init() error {
 	watcher, err := fsnotify.NewWatcher()
 
@@ -56,6 +61,7 @@ func (w *Watcher) Init() error {
 	return nil
 }
 
+// Watch observes WRITE events, forwarding them to `Updated`
 func (w *Watcher) Watch() {
 	done := make(chan bool)
 	go func() {
@@ -63,7 +69,7 @@ func (w *Watcher) Watch() {
 			select {
 			case event := <-w.watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					w.Updated()
+					w.UpdateBytes()
 				}
 			case err := <-w.watcher.Errors:
 				printer.LogErrf("[dcdr] watch error: %v", err)
@@ -76,24 +82,28 @@ func (w *Watcher) Watch() {
 	<-done
 }
 
+// Register assigns the WRITE event callback.
 func (w *Watcher) Register(cb func(bts []byte)) {
-	w.cb = cb
+	w.writeCallback = cb
 }
 
-func (w *Watcher) ReadFile() ([]byte, error) {
-	bts, err := ioutil.ReadFile(w.path)
-
-	return bts, err
-}
-
-func (w *Watcher) Updated() error {
+// UpdateBytes reads the contents of `path` and passes
+// the bytes to `writeCallback`.
+func (w *Watcher) UpdateBytes() error {
 	bts, err := w.ReadFile()
 
 	if err != nil {
 		return err
 	}
 
-	w.cb(bts)
+	w.writeCallback(bts)
 
 	return nil
+}
+
+// ReadFile reads the contents of `path`.
+func (w *Watcher) ReadFile() ([]byte, error) {
+	bts, err := ioutil.ReadFile(w.path)
+
+	return bts, err
 }

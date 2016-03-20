@@ -1,10 +1,6 @@
 package stores
 
-import (
-	"encoding/json"
-
-	"github.com/hashicorp/consul/api"
-)
+import "github.com/hashicorp/consul/api"
 
 type ConsulKVIFace interface {
 	List(prefix string, q *api.QueryOptions) (api.KVPairs, *api.QueryMeta, error)
@@ -112,20 +108,6 @@ func KvPairsToKvBytes(kvp api.KVPairs) (KVBytes, error) {
 			Bytes: kvp[i].Value,
 		}
 	}
-
-	return kvb, nil
-}
-
-func KvPairsBytesToKvBytes(bts []byte) (KVBytes, error) {
-	var kvp api.KVPairs
-
-	err := json.Unmarshal(bts, &kvp)
-
-	if err != nil {
-		return make(KVBytes, 0), nil
-	}
-
-	kvb, err := KvPairsToKvBytes(kvp)
 
 	return kvb, nil
 }

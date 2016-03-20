@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/vsco/dcdr/cli/api/stores"
-	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/models"
 )
 
 type MockStore struct {
@@ -88,7 +88,7 @@ func (mr *MockRepo) Pull() error {
 	return mr.error
 }
 
-func (mr *MockRepo) CurrentSha() (string, error) {
+func (mr *MockRepo) CurrentSHA() (string, error) {
 	return mr.sha, mr.error
 }
 

@@ -2,10 +2,11 @@ package mock
 
 import (
 	"github.com/vsco/dcdr/client"
-	"github.com/vsco/dcdr/client/models"
+	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
 )
 
+// New creates a `Client` with an empty `FeatureMap` and `Config`.
 func New() (d *Client) {
 	d = &Client{
 		Client:     *client.New(&config.Config{}),
@@ -16,6 +17,7 @@ func New() (d *Client) {
 	return
 }
 
+// Client mock `Client` for testing.
 type Client struct {
 	client.Client
 	featureMap *models.FeatureMap
@@ -45,6 +47,7 @@ func (d *Client) DisablePercentileFeature(feature string) {
 	d.MergeScopes()
 }
 
+// Watch noop for tests.
 func (d *Client) Watch() *Client {
 	return d
 }

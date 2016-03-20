@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/vsco/dcdr/cli/api/stores"
-	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
 )
 

@@ -5,8 +5,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/rodaine/table"
-	"github.com/vsco/dcdr/cli/models"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 var (
@@ -46,7 +46,7 @@ func (u *UI) DrawConfig(cfg *config.Config) {
 
 	tbl.AddRow("Server", "Endpoint", cfg.Server.Endpoint, "The path to serve (GET '/dcdr.json')")
 	tbl.AddRow("Server", "Host", cfg.Server.Host, "The server host (:8000")
-	tbl.AddRow("Server", "JsonRoot", cfg.Server.JSONRoot, "JSON root node ('dcdr')")
+	tbl.AddRow("Server", "JSONRoot", cfg.Server.JSONRoot, "JSON root node ('dcdr')")
 
 	if cfg.GitEnabled() {
 		tbl.AddRow("Git", "RepoPath", cfg.Git.RepoPath, "Audit repo location")

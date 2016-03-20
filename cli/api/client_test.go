@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
 )
 

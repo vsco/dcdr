@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/client/models"
+	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
 )
 
@@ -97,8 +97,8 @@ func TestScopedMap(t *testing.T) {
 	c := NewTestClient().SetFeatureMap(m)
 	c2 := c.WithScopes(scopes...)
 
-	assert.False(t, c2.ScopedMap().Dcdr.Features["bool"].(bool))
-	assert.Equal(t, 0.5, c2.ScopedMap().Dcdr.Features["float"])
+	assert.False(t, c2.ScopedMap().Dcdr.FeatureScopes["bool"].(bool))
+	assert.Equal(t, 0.5, c2.ScopedMap().Dcdr.FeatureScopes["float"])
 }
 
 func TestFeatureExists(t *testing.T) {
