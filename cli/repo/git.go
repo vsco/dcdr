@@ -22,7 +22,7 @@ type IFace interface {
 	Enabled() bool
 	Push() error
 	Pull() error
-	CurrentSha() (string, error)
+	CurrentSHA() (string, error)
 }
 
 const DefaultPerms = 0755
@@ -139,7 +139,7 @@ func (g *Git) Pull() error {
 	return nil
 }
 
-func (g *Git) CurrentSha() (string, error) {
+func (g *Git) CurrentSHA() (string, error) {
 	cmd := exec.Command(GitExec(), "rev-parse", "HEAD")
 	cmd.Dir = g.Config.Git.RepoPath
 	bts, err := cmd.Output()

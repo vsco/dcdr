@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	// IfNoneMatchHeader http header containing the clients CurrentSha
+	// IfNoneMatchHeader http header containing the clients CurrentSHA
 	IfNoneMatchHeader = "If-None-Match"
-	// EtagHeader header used to pass the CurrentSha in responses
+	// EtagHeader header used to pass the CurrentSHA in responses
 	EtagHeader = "Etag"
 	// CacheControlHeader sets the caches control header for the response
 	CacheControlHeader = "Cache-Control"
@@ -27,7 +27,7 @@ const (
 )
 
 // NotModified checks the requests If-None-Match header for a matching
-// CurrentSha in the Client.
+// CurrentSHA in the Client.
 func NotModified(sha string, r *http.Request) bool {
 	if v := r.Header.Get(IfNoneMatchHeader); v != "" && sha != "" {
 		return sha == r.Header.Get(IfNoneMatchHeader)
@@ -44,19 +44,19 @@ func SetCacheHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(ExpiresHeader, Expires)
 }
 
-// HTTPCachingHandle middleware that provides HTTP level caching
+// HTTPCachingHandler middleware that provides HTTP level caching
 // using the If-None-Match header. If the value of this header contains
-// a matching CurrentSha this handler will write a 304 status and return.
+// a matching CurrentSHA this handler will write a 304 status and return.
 func HTTPCachingHandler(dcdr client.IFace) func(*web.C, http.Handler) http.Handler {
 	return func(c *web.C, h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			if sha := dcdr.CurrentSha(); sha != "" {
+			if sha := dcdr.CurrentSHA(); sha != "" {
 				w.Header().Set(EtagHeader, sha)
 			}
 
 			SetCacheHeaders(w, r)
 
-			if NotModified(dcdr.CurrentSha(), r) {
+			if NotModified(dcdr.CurrentSHA(), r) {
 				w.WriteHeader(http.StatusNotModified)
 				return
 			}

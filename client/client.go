@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/vsco/dcdr/cli/printer"
-	"github.com/vsco/dcdr/client/models"
 	"github.com/vsco/dcdr/client/watcher"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 // IFace interface for Decider Clients
@@ -19,11 +19,11 @@ type IFace interface {
 	ScaleValue(feature string, min float64, max float64) float64
 	UpdateFeatures(bts []byte)
 	FeatureExists(feature string) bool
-	Features() models.Features
+	Features() models.FeatureScopes
 	FeatureMap() *models.FeatureMap
 	ScopedMap() *models.FeatureMap
 	Scopes() []string
-	CurrentSha() string
+	CurrentSHA() string
 	WithScopes(scopes ...string) *Client
 }
 
@@ -32,7 +32,7 @@ type Client struct {
 	featureMap *models.FeatureMap
 	config     *config.Config
 	watcher    watcher.IFace
-	features   models.Features
+	features   models.FeatureScopes
 	scopes     []string
 }
 
@@ -50,7 +50,7 @@ func New(cfg *config.Config) (c *Client) {
 			return c
 		}
 
-		c.watcher = watcher.NewWatcher(c.config.Watcher.OutputPath)
+		c.watcher = watcher.New(c.config.Watcher.OutputPath)
 		printer.Logf("started watching %s", c.config.Watcher.OutputPath)
 	}
 
@@ -64,14 +64,10 @@ func NewDefault() (c *Client) {
 	return
 }
 
-// WithScopes creates a new Client from an existing one that is "scoped"
+// WithScopes creates a new Client from `c` that is "scoped"
 // to the provided scopes param. `scopes` are provided in priority order.
 // For example, when given WithScopes("a", "b", "c"). Keys found in "a"
 // will override the same keys found in "b" and so on for "c".
-//
-// The provided `scopes` are appended to the existing Client's `scopes`,
-// merged, and then a new `Watcher` is assigned to the new `Client` so
-// that future changes to the `FeatureMap` will be observed.
 func (c *Client) WithScopes(scopes ...string) *Client {
 	if len(scopes) == 0 {
 		return c
@@ -109,10 +105,10 @@ func (c *Client) Scopes() []string {
 
 // SetFeatureMap assigns a `FeatureMap` and merges the current
 // scopes. When git is enabled a new `FeatureMap` will not be
-// assigned unless its `CurrentSha` is different from the one
-// currently found in `CurrentSha()`.
+// assigned unless its `CurrentSHA` is different from the one
+// currently found in `CurrentSHA()`.
 func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
-	if c.config.GitEnabled() && c.CurrentSha() == fm.Dcdr.CurrentSha() {
+	if c.config.GitEnabled() && c.CurrentSHA() == fm.Dcdr.CurrentSHA() {
 		return c
 	}
 
@@ -123,7 +119,8 @@ func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
 	return c
 }
 
-// FeatureMap `featureMap` accessor
+// FeatureMap `featureMap` accessor. Returns an empty `FeatureMap`
+// if the `featureMap` is nil.
 func (c *Client) FeatureMap() *models.FeatureMap {
 	if c.featureMap != nil {
 		return c.featureMap
@@ -132,25 +129,23 @@ func (c *Client) FeatureMap() *models.FeatureMap {
 	return models.EmptyFeatureMap()
 }
 
-// ScopedMap a `FeatureMap` containing only merged features.
-// Mostly used for JSON output.
+// ScopedMap a `FeatureMap` containing only merged features and `Info`.
 func (c *Client) ScopedMap() *models.FeatureMap {
 	fm := models.EmptyFeatureMap()
-	fm.Dcdr.Features = c.Features()
+	fm.Dcdr.FeatureScopes = c.Features()
 	fm.Dcdr.Info = c.FeatureMap().Dcdr.Info
 
 	return fm
 }
 
 // Features `features` accessor
-func (c *Client) Features() models.Features {
+func (c *Client) Features() models.FeatureScopes {
 	return c.features
 }
 
-// CurrentSha accessor for the underlying `CurrentSha` from
-// the `FeatureMap`
-func (c *Client) CurrentSha() string {
-	return c.FeatureMap().Dcdr.Info.CurrentSha
+// CurrentSHA accessor for the underlying `CurrentSHA` from `FeatureMap`
+func (c *Client) CurrentSHA() string {
+	return c.FeatureMap().Dcdr.Info.CurrentSHA
 }
 
 // FeatureExists checks the existence of a key
@@ -160,7 +155,8 @@ func (c *Client) FeatureExists(feature string) bool {
 	return exists
 }
 
-// IsAvailable used to check features with boolean values.
+// IsAvailable used to check features with boolean values. Returns false
+// if a non-boolean type `feature` is passed.
 func (c *Client) IsAvailable(feature string) bool {
 	val, exists := c.Features()[feature]
 
@@ -173,6 +169,7 @@ func (c *Client) IsAvailable(feature string) bool {
 }
 
 // IsAvailableForID used to check features with float values between 0.0-1.0.
+// Returns false if a non-percentile type `feature` is passed.
 func (c *Client) IsAvailableForID(feature string, id uint64) bool {
 	val, exists := c.Features()[feature]
 
@@ -218,7 +215,7 @@ func (c *Client) ScaleValue(feature string, min float64, max float64) float64 {
 }
 
 // Watch initializes the `Watcher`, registers the `UpdateFeatures`
-// method with it and spawns the watch in a go routine returning the
+// method, and spawns the watch in a go routine returning the
 // `Client` for a fluent interface.
 func (c *Client) Watch() (*Client, error) {
 	if c.watcher != nil {
@@ -231,7 +228,7 @@ func (c *Client) Watch() (*Client, error) {
 		c.watcher.Register(c.UpdateFeatures)
 
 		// Load initial values into `FeatureMap`
-		c.watcher.Updated()
+		c.watcher.UpdateBytes()
 		go c.watcher.Watch()
 	}
 

@@ -12,26 +12,33 @@ import (
 )
 
 const (
-	ConfigFileName       = "config.hcl"
-	OutputFileName       = "decider.json"
-	DefaultNamespace     = "dcdr"
-	DefaultInfoNamespace = DefaultNamespace + "/" + "info"
-	DefaultUsername      = "unknown"
-	EnvConfigDirOverride = "DCDR_CONFIG_DIR"
-	DefaultEndpoint      = "/dcdr.json"
-	DefaultHost          = ":8000"
+	configFileName       = "config.hcl"
+	defaultNamespace     = "dcdr"
+	defaultUsername      = "unknown"
+	envConfigDirOverride = "DCDR_CONFIG_DIR"
+	defaultHost          = ":8000"
+	defaultEndpoint      = "/dcdr.json"
+
+	// OutputFileName name used for output path.
+	OutputFileName = "decider.json"
+	// DefaultInfoNamespace path for the info key.
+	DefaultInfoNamespace = defaultNamespace + "/" + "info"
 )
 
+// ConfigDir default config directory.
 var ConfigDir = "/etc/dcdr"
 
+// Path path to config.hcl
 func Path() string {
-	return fmt.Sprintf("%s/%s", ConfigDir, ConfigFileName)
+	return fmt.Sprintf("%s/%s", ConfigDir, configFileName)
 }
 
+// OutputPath path to write `OutputFileName`
 func OutputPath() string {
 	return fmt.Sprintf("%s/%s", ConfigDir, OutputFileName)
 }
 
+// ExampleConfig an example config written by `dcdr init`
 var ExampleConfig = []byte(`
 // Username = "dcdr admin"
 // Namespace = "dcdr"
@@ -56,27 +63,32 @@ var ExampleConfig = []byte(`
 //   Port = 8126
 // }`)
 
+// Server config struct for `dcdr server`
 type Server struct {
 	Endpoint string
 	Host     string
 	JSONRoot string
 }
 
+// Watcher config struct for `dcdr watch`
 type Watcher struct {
 	OutputPath string
 }
 
+// Stats config struct for statsd
 type Stats struct {
 	Namespace string
 	Host      string
 	Port      int
 }
 
+// Git config struct for the audit repo
 type Git struct {
 	RepoPath string
 	RepoURL  string
 }
 
+// Config config struct for the `CLI`, `Client`, and `Server`
 type Config struct {
 	Username  string
 	Namespace string
@@ -86,18 +98,22 @@ type Config struct {
 	Server    Server
 }
 
+// GitEnabled checks if a git repo has been configured.
 func (c *Config) GitEnabled() bool {
 	return c.Git.RepoPath != ""
 }
 
+// PushEnabled checks if a git repo has a remote origin.
 func (c *Config) PushEnabled() bool {
 	return c.Git.RepoURL != ""
 }
 
+// StatsEnabled checks if statsd has been configured.
 func (c *Config) StatsEnabled() bool {
 	return c.Stats.Host != ""
 }
 
+// TestConfig used for testing.
 func TestConfig() *Config {
 	cfg := DefaultConfig()
 	cfg.Watcher.OutputPath = ""
@@ -105,12 +121,13 @@ func TestConfig() *Config {
 	return cfg
 }
 
+// DefaultConfig returns a `Config` with default values.
 func DefaultConfig() *Config {
-	uname := DefaultUsername
+	uname := defaultUsername
 	u, err := user.Current()
 
 	if err != nil {
-		uname = DefaultUsername
+		uname = defaultUsername
 	}
 
 	if u != nil {
@@ -119,16 +136,29 @@ func DefaultConfig() *Config {
 
 	return &Config{
 		Username:  uname,
-		Namespace: DefaultNamespace,
+		Namespace: defaultNamespace,
 		Watcher: Watcher{
 			OutputPath: OutputPath(),
 		},
 		Server: Server{
-			Endpoint: DefaultEndpoint,
-			Host:     DefaultHost,
-			JSONRoot: DefaultNamespace,
+			Endpoint: defaultEndpoint,
+			Host:     defaultHost,
+			JSONRoot: defaultNamespace,
 		},
 	}
+}
+
+// LoadConfig reads config.hcl if found and merges with `DefaultConfig`.
+func LoadConfig() *Config {
+	if v := os.Getenv(envConfigDirOverride); v != "" {
+		ConfigDir = v
+	}
+
+	if _, err := os.Stat(Path()); err == nil {
+		return readConfig()
+	}
+
+	return DefaultConfig()
 }
 
 func readConfig() *Config {
@@ -174,16 +204,4 @@ func readConfig() *Config {
 	}
 
 	return cfg
-}
-
-func LoadConfig() *Config {
-	if v := os.Getenv(EnvConfigDirOverride); v != "" {
-		ConfigDir = v
-	}
-
-	if _, err := os.Stat(Path()); err == nil {
-		return readConfig()
-	}
-
-	return DefaultConfig()
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/vsco/dcdr/client"
-	"github.com/vsco/dcdr/client/models"
+	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/server/handlers"
 	http_assert "github.com/vsco/goji-test/assert"

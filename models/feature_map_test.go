@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var FixturePath, _ = filepath.Abs("../../config/decider_fixtures.json")
+var FixturePath, _ = filepath.Abs("../config/decider_fixtures.json")
 
 func FixtureBytes() []byte {
 	bts, err := ioutil.ReadFile(FixturePath)
@@ -37,7 +37,7 @@ func TestUnmarshalling(t *testing.T) {
 	err := json.Unmarshal(FixtureBytes(), &fm)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "abcde", fm.Dcdr.Info.CurrentSha)
+	assert.Equal(t, "abcde", fm.Dcdr.Info.CurrentSHA)
 }
 
 func TestInScope(t *testing.T) {

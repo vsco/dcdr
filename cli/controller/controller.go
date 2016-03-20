@@ -1,4 +1,4 @@
-package cli
+package controller
 
 import (
 	"encoding/json"
@@ -12,30 +12,32 @@ import (
 
 	"github.com/tucnak/climax"
 	"github.com/vsco/dcdr/cli/api"
-	"github.com/vsco/dcdr/cli/models"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/ui"
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/server"
 	"github.com/vsco/dcdr/server/middleware"
 	"github.com/zenazn/goji"
 )
 
-const FilePerms = 0755
+const filePerms = 0775
 
 var (
-	ErrInvalidFeatureType = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
-	ErrInvalidRange       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
-	ErrNameRequired       = errors.New("-name is required")
+	errInvalidFeatureType = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
+	errInvalidRange       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
+	errNameRequired       = errors.New("-name is required")
 )
 
+// Controller handler for CLI commands
 type Controller struct {
 	Config *config.Config
 	Client api.ClientIFace
 }
 
-func NewController(cfg *config.Config, kv api.ClientIFace) (cc *Controller) {
+// New creates a `Controller`
+func New(cfg *config.Config, kv api.ClientIFace) (cc *Controller) {
 	cc = &Controller{
 		Config: cfg,
 		Client: kv,
@@ -132,7 +134,7 @@ func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
 			return 1
 		}
 
-		sha, err := cc.Client.UpdateCurrentSha()
+		sha, err := cc.Client.UpdateCurrentSHA()
 		printer.Say("set info/current_sha: %s", sha)
 
 		if err != nil {
@@ -157,7 +159,7 @@ func (cc *Controller) CommitFeatures(ft *models.Feature, deleted bool) int {
 
 func (cc *Controller) Init(ctx climax.Context) int {
 	if _, err := os.Stat(config.Path()); os.IsNotExist(err) {
-		err = os.MkdirAll(path.Dir(config.Path()), FilePerms)
+		err = os.MkdirAll(path.Dir(config.Path()), filePerms)
 
 		printer.Say("creating %s", path.Dir(config.Path()))
 
@@ -166,7 +168,7 @@ func (cc *Controller) Init(ctx climax.Context) int {
 			return 1
 		}
 
-		err = ioutil.WriteFile(config.Path(), config.ExampleConfig, FilePerms)
+		err = ioutil.WriteFile(config.Path(), config.ExampleConfig, filePerms)
 		printer.Say("%s not found. creating example config", config.Path())
 
 		if err != nil {
@@ -274,7 +276,7 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 	scp, _ := ctx.Get("scope")
 
 	if name == "" {
-		return nil, ErrNameRequired
+		return nil, errNameRequired
 	}
 
 	var v interface{}
@@ -284,12 +286,12 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 		v, ft = models.ParseValueAndFeatureType(val)
 
 		if ft == models.Invalid {
-			return nil, ErrInvalidFeatureType
+			return nil, errInvalidFeatureType
 		}
 
 		if ft == models.Percentile {
 			if v.(float64) > 1.0 || v.(float64) < 0 {
-				return nil, ErrInvalidRange
+				return nil, errInvalidRange
 			}
 		}
 	}

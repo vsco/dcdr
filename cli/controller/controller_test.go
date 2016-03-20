@@ -1,12 +1,12 @@
-package cli
+package controller
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tucnak/climax"
-	"github.com/vsco/dcdr/cli/models"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 const (
@@ -62,7 +62,7 @@ func (m *MockClient) Push() error {
 	return m.Error
 }
 
-func (m *MockClient) UpdateCurrentSha() (string, error) {
+func (m *MockClient) UpdateCurrentSHA() (string, error) {
 	return "", m.Error
 }
 
@@ -75,7 +75,7 @@ func (m *MockClient) Watch() {}
 func TestListEmptyFeatures(t *testing.T) {
 	cfg := config.DefaultConfig()
 	c := NewMockClient(nil, nil, nil)
-	ctl := NewController(cfg, c)
+	ctl := New(cfg, c)
 
 	ctx := climax.Context{
 		Variable: map[string]string{},
@@ -95,7 +95,7 @@ func TestListFeatures(t *testing.T) {
 		},
 	}
 	c := NewMockClient(nil, fts, nil)
-	ctl := NewController(cfg, c)
+	ctl := New(cfg, c)
 
 	ctx := climax.Context{
 		Variable: map[string]string{},
@@ -115,7 +115,7 @@ func TestSet(t *testing.T) {
 		},
 	}
 	c := NewMockClient(nil, fts, nil)
-	ctl := NewController(cfg, c)
+	ctl := New(cfg, c)
 
 	ctx := climax.Context{
 		Variable: map[string]string{"name": "null-test"},

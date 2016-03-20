@@ -6,7 +6,8 @@ import (
 	"strings"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/cli/models"
+	"github.com/vsco/dcdr/models"
+	"github.com/vsco/dcdr/client/stats"
 	"github.com/vsco/dcdr/config"
 )
 
@@ -58,14 +59,14 @@ func TestFormatKey(t *testing.T) {
 	}
 	c := NewStatsClient(cfg, ms)
 
-	expected := strings.Join([]string{cfg.Namespace, models.DefaultScope, ft, Enabled}, JoinWith)
+	expected := strings.Join([]string{cfg.Namespace, models.DefaultScope, ft, stats.Enabled}, stats.JoinWith)
 	assert.Equal(t, expected, c.statKey(ft, true))
 
 	c.scopes = []string{"a", "b/c"}
 
-	expected = strings.Join([]string{cfg.Namespace, "a.b.c", ft, Enabled}, JoinWith)
+	expected = strings.Join([]string{cfg.Namespace, "a.b.c", ft, stats.Enabled}, stats.JoinWith)
 	assert.Equal(t, expected, c.statKey(ft, true))
 
-	expected = strings.Join([]string{cfg.Namespace, "a.b.c", ft, Disabled}, JoinWith)
+	expected = strings.Join([]string{cfg.Namespace, "a.b.c", ft, stats.Disabled}, stats.JoinWith)
 	assert.Equal(t, expected, c.statKey(ft, false))
 }

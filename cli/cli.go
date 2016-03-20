@@ -1,16 +1,19 @@
 package cli
 
-import "github.com/tucnak/climax"
+import (
+	"github.com/tucnak/climax"
+	"github.com/vsco/dcdr/cli/controller"
+)
 
 const Version = "0.2.1"
 
 // CLI main CLI runner
 type CLI struct {
-	Ctrl *Controller
+	Ctrl *controller.Controller
 }
 
 // New init a new CLI
-func New(ctlr *Controller) (c *CLI) {
+func New(ctlr *controller.Controller) (c *CLI) {
 	c = &CLI{
 		Ctrl: ctlr,
 	}
