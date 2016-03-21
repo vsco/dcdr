@@ -12,8 +12,8 @@ import (
 	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/server/handlers"
 	"github.com/vsco/dcdr/server/middleware"
-	http_assert "github.com/vsco/goji-test/assert"
-	"github.com/vsco/goji-test/builder"
+	http_assert "github.com/vsco/http-test/assert"
+	"github.com/vsco/http-test/builder"
 )
 
 var fm = models.EmptyFeatureMap()

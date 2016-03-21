@@ -24,5 +24,4 @@ import:
     # Testing
   - package: github.com/stretchr/testify
     ref: 6fe211e493929a8aac0469b93f28b1d0688a9a3a
-  - package: github.com/vsco/goji-test
-    ref: 46465634f115f2824da675a195f1e2bcbf860dbd
+  - package: github.com/vsco/http-test

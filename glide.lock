@@ -1,8 +1,14 @@
-hash: d47fb1366d7dd237c398702cf32bf98c4ea942ebdad7c0fcbc2da0f93a1eecbb
-updated: 2016-03-17T15:20:57.697826805-07:00
+hash: 7d869f369929098d0d66b0509a43eedfb547cfc27ebdd9ba85948bc3b020241e
+updated: 2016-03-21T15:13:32.40769375-07:00
 imports:
 - name: github.com/fatih/color
   version: 533cd7fd8a85905f67a1753afb4deddc85ea174f
+- name: github.com/gorilla/context
+  version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
+- name: github.com/gorilla/handlers
+  version: ee54c7b44cab12289237fb8631314790076e728b
+- name: github.com/gorilla/mux
+  version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/hashicorp/consul
   version: 0e41fa5340de77a78234d543e6d01314a177d21f
   subpackages:
@@ -39,17 +45,10 @@ imports:
   version: 6fe211e493929a8aac0469b93f28b1d0688a9a3a
 - name: github.com/tucnak/climax
   version: 4c021a579ddac03b8a085bebcb87d66c072341ef
-- name: github.com/vsco/goji-test
-  version: 46465634f115f2824da675a195f1e2bcbf860dbd
+- name: github.com/vsco/http-test
+  version: a980d7f6637bab571bcda35f37b2028e2a888b5a
 - name: github.com/zenazn/goji
   version: 1925ec6302925f4760d7a11cc17036f44ec98d5b
-  subpackages:
-  - graceful
-  - web
-  - bind
-  - web/middleware
-  - graceful/listener
-  - web/mutil
 - name: golang.org/x/sys
   version: 20457ee8ea8546920d3f4e19e405da45250dc5a5
   subpackages:
