@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/client/stats"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 type MockStatter struct {
@@ -34,7 +34,8 @@ func NewMockStatter() (ms *MockStatter) {
 func TestStatsClientIsAvailable(t *testing.T) {
 	ft := "feature"
 	ms := NewMockStatter()
-	c := NewStatsClient(&config.Config{}, ms)
+	c, err := NewStatsClient(&config.Config{}, ms)
+	assert.NoError(t, err)
 
 	enabled := c.IsAvailable(ft)
 	key := c.statKey(ft, enabled)
@@ -44,7 +45,8 @@ func TestStatsClientIsAvailable(t *testing.T) {
 func TestStatsClientIsAvailableForID(t *testing.T) {
 	ft := "feature-2"
 	ms := NewMockStatter()
-	c := NewStatsClient(&config.Config{}, ms)
+	c, err := NewStatsClient(&config.Config{}, ms)
+	assert.NoError(t, err)
 
 	enabled := c.IsAvailableForID(ft, 1)
 	key := c.statKey(ft, enabled)
@@ -57,7 +59,8 @@ func TestFormatKey(t *testing.T) {
 	cfg := &config.Config{
 		Namespace: "test",
 	}
-	c := NewStatsClient(cfg, ms)
+	c, err := NewStatsClient(cfg, ms)
+	assert.NoError(t, err)
 
 	expected := strings.Join([]string{cfg.Namespace, models.DefaultScope, ft, stats.Enabled}, stats.JoinWith)
 	assert.Equal(t, expected, c.statKey(ft, true))

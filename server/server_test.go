@@ -8,25 +8,26 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/vsco/dcdr/client"
-	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/server/handlers"
+	"github.com/vsco/dcdr/server/middleware"
 	http_assert "github.com/vsco/goji-test/assert"
 	"github.com/vsco/goji-test/builder"
-	"github.com/zenazn/goji"
 )
 
 var fm = models.EmptyFeatureMap()
 var cfg = config.TestConfig()
-var cl = client.New(cfg).SetFeatureMap(fm)
+var cl, _ = client.New(cfg)
 
 func mockServer() *Server {
-	return New(cfg, goji.DefaultMux, cl).BindMux()
+	cl.SetFeatureMap(fm)
+	return New(cfg, cl)
 }
 
 func TestGetFeatures(t *testing.T) {
 	srv := mockServer()
-	resp := builder.WithMux(srv.mux).Get(srv.config.Server.Endpoint).Do()
+	resp := builder.WithMux(srv).Get(srv.config.Server.Endpoint).Do()
 	http_assert.Response(t, resp.Response).
 		IsOK().
 		IsJSON()
@@ -40,7 +41,7 @@ func TestGetFeatures(t *testing.T) {
 
 func TestScopeHeader(t *testing.T) {
 	srv := mockServer()
-	resp := builder.WithMux(srv.mux).
+	resp := builder.WithMux(srv).
 		Get(srv.config.Server.Endpoint).
 		Header(handlers.DcdrScopesHeader, "scope, scope2").Do()
 
@@ -75,4 +76,33 @@ func TestGetScopes(t *testing.T) {
 		r.Header.Set(handlers.DcdrScopesHeader, tc.Input)
 		assert.Equal(t, tc.Expected, handlers.GetScopes(r), tc.Input)
 	}
+}
+
+func TestHTTPCaching(t *testing.T) {
+	srv := mockServer()
+	fm := models.EmptyFeatureMap()
+	fm.Dcdr.Info.CurrentSHA = "current-sha"
+	srv.Client.SetFeatureMap(fm)
+
+	resp := builder.WithMux(srv).
+		Get(srv.config.Server.Endpoint).
+		Header(middleware.IfNoneMatchHeader, fm.Dcdr.Info.CurrentSHA).Do()
+
+	http_assert.Response(t, resp.Response).
+		HasStatusCode(http.StatusNotModified).
+		ContainsHeaderValue(middleware.EtagHeader, fm.Dcdr.CurrentSHA()).
+		ContainsHeaderValue(middleware.CacheControlHeader, middleware.CacheControl).
+		ContainsHeaderValue(middleware.PragmaHeader, middleware.Pragma).
+		ContainsHeaderValue(middleware.ExpiresHeader, middleware.Expires)
+
+	resp = builder.WithMux(srv).
+		Get(srv.config.Server.Endpoint).
+		Header(middleware.IfNoneMatchHeader, "").Do()
+
+	http_assert.Response(t, resp.Response).
+		HasStatusCode(http.StatusOK).
+		ContainsHeaderValue(middleware.EtagHeader, fm.Dcdr.CurrentSHA()).
+		ContainsHeaderValue(middleware.CacheControlHeader, middleware.CacheControl).
+		ContainsHeaderValue(middleware.PragmaHeader, middleware.Pragma).
+		ContainsHeaderValue(middleware.ExpiresHeader, middleware.Expires)
 }

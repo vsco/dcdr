@@ -7,13 +7,19 @@ import (
 
 	"io/ioutil"
 
+	"log"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 func NewTestClient() (c *Client) {
-	c = New(&config.Config{})
+	c, err := New(&config.Config{})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return
 }
@@ -205,7 +211,8 @@ func TestUpdateFeatures(t *testing.T) {
 
 	cfg := config.DefaultConfig()
 	cfg.Git.RepoPath = "/tmp"
-	c := New(cfg)
+	c, err := New(cfg)
+	assert.NoError(t, err)
 	c.UpdateFeatures(json)
 
 	scoped := c.WithScopes("ab")
@@ -230,7 +237,10 @@ func TestWatch(t *testing.T) {
 
 	cfg := config.DefaultConfig()
 	cfg.Watcher.OutputPath = p
-	c := New(cfg)
+	c, err := New(cfg)
+	if err != nil {
+		assert.NoError(t, err)
+	}
 	c.Watch()
 
 	assert.Equal(t, fm, c.FeatureMap())

@@ -2,14 +2,16 @@ package mock
 
 import (
 	"github.com/vsco/dcdr/client"
-	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 // New creates a `Client` with an empty `FeatureMap` and `Config`.
 func New() (d *Client) {
+	c, _ := client.New(&config.Config{})
+
 	d = &Client{
-		Client:     *client.New(&config.Config{}),
+		Client:     *c,
 		featureMap: models.EmptyFeatureMap(),
 	}
 

@@ -18,8 +18,6 @@ import (
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/server"
-	"github.com/vsco/dcdr/server/middleware"
-	"github.com/zenazn/goji"
 )
 
 const filePerms = 0775
@@ -247,21 +245,29 @@ func (cc *Controller) Info(ctx climax.Context) int {
 }
 
 func (cc *Controller) Serve(ctx climax.Context) int {
-	c, err := client.New(cc.Config).Watch()
+	c, err := client.New(cc.Config)
 
 	if err != nil {
-		panic(err)
+		printer.LogErrf("%v", err)
+		return 1
 	}
 
-	s := server.New(cc.Config, goji.DefaultMux, c)
-	s.Use(middleware.HTTPCachingHandler(c))
-	s.Serve()
+	s := server.New(cc.Config, c)
+
+	printer.Logf("pid: %d serving %s on %s", os.Getpid(),
+		cc.Config.Server.Endpoint, cc.Config.Server.Host)
+
+	err = s.Serve()
+
+	if err != nil {
+		printer.LogErrf("%v", err)
+		return 1
+	}
 
 	return 0
 }
 
 func (cc *Controller) Watch(ctx climax.Context) int {
-
 	printer.Logf("watching namespace: %s", cc.Config.Namespace)
 
 	cc.Client.Watch()

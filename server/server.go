@@ -1,82 +1,92 @@
 package server
 
 import (
-	"log"
-	"syscall"
+	"net/http"
 
 	"os"
 
-	"github.com/vsco/dcdr/cli/printer"
+	gh "github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/server/handlers"
 	"github.com/vsco/dcdr/server/middleware"
-	"github.com/zenazn/goji"
-	"github.com/zenazn/goji/graceful"
-	"github.com/zenazn/goji/web"
 )
 
+// Middleware helper type for handlers that receive a `Client`.
+type Middleware func(client.IFace) func(http.Handler) http.Handler
+
+// Server HTTP API for accessing `Features`
 type Server struct {
 	Client     client.IFace
-	middleware []interface{}
+	Router     *mux.Router
+	middleware []Middleware
 	config     *config.Config
-	mux        *web.Mux
 }
 
-func New(cfg *config.Config, mux *web.Mux, cl client.IFace) (srv *Server) {
+// NewDefault creates a new `Server` using `config.hcl`.
+func NewDefault() (srv *Server, err error) {
+	cfg := config.DefaultConfig()
+	client, err := client.New(cfg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	srv = New(cfg, client)
+
+	return
+}
+
+// New create a new `Server`
+func New(cfg *config.Config, dcdr client.IFace) (srv *Server) {
 	srv = &Server{
-		Client: cl,
-		mux:    mux,
+		Client: dcdr,
+		Router: mux.NewRouter(),
 		config: cfg,
 	}
 
 	return
 }
 
-func NewDefault() (srv *Server) {
-	cfg := config.DefaultConfig()
-	client, err := client.New(cfg).Watch()
-
-	if err != nil {
-		printer.LogErrf("could not create client: %v", err)
-	}
-
-	srv = New(cfg, goji.DefaultMux, client)
-	srv.Use(middleware.HTTPCachingHandler(client))
-
-	return
+// RegisterRoutes binds `Endpoint` to the `FeaturesHandler`.
+func (srv *Server) RegisterRoutes() {
+	srv.Router.Handle(srv.config.Server.Endpoint, srv.FeaturesHandler()).Methods("GET")
 }
 
-func (srv *Server) Use(mdl ...web.MiddlewareType) *Server {
-	for _, m := range mdl {
-		srv.middleware = append(srv.middleware, m)
-	}
+// FeaturesHandler delegates to `handlers.FeaturesHandler` and adds the
+// middleware chain.
+func (srv *Server) FeaturesHandler() http.Handler {
+	fn := handlers.FeaturesHandler(srv.Client)
 
-	return srv
+	return srv.WithMiddleware(http.HandlerFunc(fn))
 }
 
-func (srv *Server) BindMux() *Server {
-	for _, md := range srv.middleware {
-		srv.mux.Use(md)
-	}
-
-	srv.mux.Get(srv.config.Server.Endpoint, handlers.FeaturesHandler(srv.Client))
-
-	return srv
+// Use appends `Middleware` to the internal chain.
+func (srv *Server) Use(h ...Middleware) {
+	srv.middleware = append(srv.middleware, h...)
 }
 
-func (srv *Server) Serve() {
-	srv.BindMux()
+// ServeHTTP registers the `HTTPCachingHandler` and sets up the route
+// handlers and logging.
+func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	srv.Use(middleware.HTTPCachingHandler)
+	srv.RegisterRoutes()
 
-	graceful.AddSignal(syscall.SIGINT, syscall.SIGTERM)
-	graceful.PreHook(func() {
-		printer.Logf("received kill signal, gracefully stopping...")
-	})
+	logger := gh.CombinedLoggingHandler(os.Stdout, srv.Router)
+	logger.ServeHTTP(w, r)
+}
 
-	printer.Logf("pid: %d serving %s on %s", os.Getpid(), srv.config.Server.Endpoint, srv.config.Server.Host)
-	err := graceful.ListenAndServe(srv.config.Server.Host, srv.mux)
+// Serve starts the server on the configured `Host`.
+func (srv *Server) Serve() error {
+	return http.ListenAndServe(srv.config.Server.Host, srv)
+}
 
-	if err != nil {
-		log.Println(err)
+// WithMiddleware adds the middleware chain to `h` passing each the `Client`.
+func (srv *Server) WithMiddleware(h http.Handler) http.Handler {
+	for _, mw := range srv.middleware {
+		h = mw(srv.Client)(h)
 	}
+
+	return h
 }
