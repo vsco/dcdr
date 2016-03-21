@@ -3,9 +3,9 @@ package client
 import (
 	"strings"
 
-	"github.com/vsco/dcdr/models"
-	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/client/stats"
+	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 // StatsClient delegates `Client` methods with metrics.
@@ -15,12 +15,15 @@ type StatsClient struct {
 }
 
 // NewStatsClient creates a new client.
-func NewStatsClient(cfg *config.Config, stats stats.IFace) (sc *StatsClient) {
+func NewStatsClient(cfg *config.Config, stats stats.IFace) (sc *StatsClient, err error) {
 	sc = &StatsClient{
 		stats: stats,
 	}
 
-	sc.Client = *New(cfg)
+	c, err := New(cfg)
+
+	sc.Client = *c
+	sc.Client.Watch()
 
 	return
 }

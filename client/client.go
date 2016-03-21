@@ -21,6 +21,7 @@ type IFace interface {
 	FeatureExists(feature string) bool
 	Features() models.FeatureScopes
 	FeatureMap() *models.FeatureMap
+	SetFeatureMap(fm *models.FeatureMap) *Client
 	ScopedMap() *models.FeatureMap
 	Scopes() []string
 	CurrentSHA() string
@@ -37,29 +38,28 @@ type Client struct {
 }
 
 // New creates a new Client with a custom Config
-func New(cfg *config.Config) (c *Client) {
+func New(cfg *config.Config) (c *Client, err error) {
 	c = &Client{
 		config: cfg,
 	}
 
 	if c.config.Watcher.OutputPath != "" {
-		_, err := os.Stat(c.config.Watcher.OutputPath)
+		_, err = os.Stat(c.config.Watcher.OutputPath)
 
 		if err != nil {
-			printer.LogErrf("%v", err)
-			return c
+			return
 		}
 
 		c.watcher = watcher.New(c.config.Watcher.OutputPath)
-		printer.Logf("started watching %s", c.config.Watcher.OutputPath)
+		_, err = c.Watch()
 	}
 
 	return
 }
 
 // NewDefault creates a new default Client
-func NewDefault() (c *Client) {
-	c = New(config.LoadConfig())
+func NewDefault() (c *Client, err error) {
+	c, err = New(config.LoadConfig())
 
 	return
 }

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vsco/dcdr/models"
 	"github.com/vsco/dcdr/config"
+	"github.com/vsco/dcdr/models"
 )
 
 func TestClientSet(t *testing.T) {

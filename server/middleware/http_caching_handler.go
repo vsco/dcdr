@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/vsco/dcdr/client"
-	"github.com/zenazn/goji/web"
 )
 
 const (
@@ -14,14 +13,14 @@ const (
 	EtagHeader = "Etag"
 	// CacheControlHeader sets the caches control header for the response
 	CacheControlHeader = "Cache-Control"
+	// CacheControl ensure no client-side or proxy caching
+	CacheControl = "private, max-age=0, no-cache, no-store, must-revalidate, proxy-revalidate"
 	// PragmaHeader sets the pragma header for the response
 	PragmaHeader = "Pragma"
-	// ExpiresHeader sets the expires header for the response
-	ExpiresHeader = "Expires"
-	// CacheControl ensure no client-side caching
-	CacheControl = "no-cache, no-store, must-revalidate"
 	// Pragma ensure no client-side caching
 	Pragma = "no-cache"
+	// ExpiresHeader sets the expires header for the response
+	ExpiresHeader = "Expires"
 	// Expires ensure no client-side caching
 	Expires = "0"
 )
@@ -29,8 +28,8 @@ const (
 // NotModified checks the requests If-None-Match header for a matching
 // CurrentSHA in the Client.
 func NotModified(sha string, r *http.Request) bool {
-	if v := r.Header.Get(IfNoneMatchHeader); v != "" && sha != "" {
-		return sha == r.Header.Get(IfNoneMatchHeader)
+	if val := r.Header.Get(IfNoneMatchHeader); val != "" && sha != "" {
+		return sha == val
 	}
 
 	return false
@@ -47,8 +46,8 @@ func SetCacheHeaders(w http.ResponseWriter, r *http.Request) {
 // HTTPCachingHandler middleware that provides HTTP level caching
 // using the If-None-Match header. If the value of this header contains
 // a matching CurrentSHA this handler will write a 304 status and return.
-func HTTPCachingHandler(dcdr client.IFace) func(*web.C, http.Handler) http.Handler {
-	return func(c *web.C, h http.Handler) http.Handler {
+func HTTPCachingHandler(dcdr client.IFace) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			if sha := dcdr.CurrentSHA(); sha != "" {
 				w.Header().Set(EtagHeader, sha)
