@@ -27,13 +27,13 @@ type Server struct {
 // NewDefault creates a new `Server` using `config.hcl`.
 func NewDefault() (srv *Server, err error) {
 	cfg := config.DefaultConfig()
-	client, err := client.New(cfg)
+	cl, err := client.New(cfg)
 
 	if err != nil {
 		return nil, err
 	}
 
-	srv = New(cfg, client)
+	srv = New(cfg, cl)
 
 	return
 }
