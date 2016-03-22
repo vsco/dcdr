@@ -28,6 +28,24 @@ func NewStatsClient(cfg *config.Config, stats stats.IFace) (sc *StatsClient, err
 	return
 }
 
+// NewStatsClient creates a new client.
+func NewStatsDefault(stats stats.IFace) (sc *StatsClient, err error) {
+	sc = &StatsClient{
+		stats: stats,
+	}
+
+	c, err := NewDefault()
+
+	if err != nil {
+		return c, err
+	}
+
+	sc.Client = *c
+	sc.Client.Watch()
+
+	return
+}
+
 // IsAvailable delegates `IsAvailable` and increments the provided `feature` status.
 func (sc *StatsClient) IsAvailable(feature string) bool {
 	enabled := sc.Client.IsAvailable(feature)
