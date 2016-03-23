@@ -16,6 +16,8 @@ const (
 	ContentTypeHeader = "Content-Type"
 	// ContentType set JSON content type for responses
 	ContentType = "application/json"
+	// MaxScopeLimit the maximum amount of scopes allowed
+	MaxScopeLimit = 8
 )
 
 // SetResponseHeaders set the common response headers
@@ -24,17 +26,36 @@ func SetResponseHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(DcdrScopesHeader, r.Header.Get(DcdrScopesHeader))
 }
 
+func contains(s []string, str string) bool {
+	for _, i := range s {
+		if i == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 // GetScopes parses the comma delimited string from DcdrScopesHeader into
 // a slice of strings.
 //
 // x-dcdr-scopes: "a/b/c, d" => []string{"a/b/c", "d"}
 func GetScopes(r *http.Request) []string {
 	scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
-	for i := 0; i < len(scopes); i++ {
-		scopes[i] = strings.TrimSpace(scopes[i])
+
+	if len(scopes) > MaxScopeLimit {
+		scopes = scopes[:MaxScopeLimit]
 	}
 
-	return scopes
+	deduped := make([]string, 0)
+
+	for i := 0; i < len(scopes); i++ {
+		if !contains(deduped, scopes[i]) {
+			deduped = append(deduped, strings.TrimSpace(scopes[i]))
+		}
+	}
+
+	return deduped
 }
 
 // ScopeMapFromRequest helper method for returning a FeatureMap scoped to

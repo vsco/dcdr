@@ -37,7 +37,7 @@ func NewStatsDefault(stats stats.IFace) (sc *StatsClient, err error) {
 	c, err := NewDefault()
 
 	if err != nil {
-		return c, err
+		return sc, err
 	}
 
 	sc.Client = *c

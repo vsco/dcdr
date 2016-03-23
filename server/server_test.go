@@ -69,6 +69,9 @@ func TestGetScopes(t *testing.T) {
 		{" scope1, scope2 ", []string{"scope1", "scope2"}},
 		{"scope1,scope2", []string{"scope1", "scope2"}},
 		{" a/b/c, d", []string{"a/b/c", "d"}},
+		// Prevent unbounded scopes
+		{"1,2,3,4,5,6,7,8,9", []string{"1", "2", "3", "4", "5", "6", "7", "8"}},
+		{"a,a,a", []string{"a"}},
 		{"a", []string{"a"}},
 	}
 
