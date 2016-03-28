@@ -17,5 +17,5 @@ type StoreIFace interface {
 	List(prefix string) (KVBytes, error)
 	Get(key string) (*KVByte, error)
 	Delete(key string) error
-	Put(key string, bts []byte) error
+	Set(key string, bts []byte) error
 }

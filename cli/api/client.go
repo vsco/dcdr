@@ -135,7 +135,7 @@ func (c *Client) Set(ft *models.Feature) error {
 		return err
 	}
 
-	err = c.Store.Put(ft.ScopedKey(), bts)
+	err = c.Store.Set(ft.ScopedKey(), bts)
 
 	if err != nil {
 		return err
@@ -286,7 +286,7 @@ func (c *Client) UpdateCurrentSHA() (string, error) {
 		return sha, err
 	}
 
-	return sha, c.Store.Put(key, bts)
+	return sha, c.Store.Set(key, bts)
 }
 
 func (c *Client) InitRepo(create bool) error {

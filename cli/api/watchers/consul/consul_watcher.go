@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/watch"
 	"github.com/vsco/dcdr/cli/api/stores"
+	"github.com/vsco/dcdr/cli/api/stores/consul"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/config"
 )
@@ -27,7 +28,7 @@ func (cw *Watcher) Register(cb func(kvb stores.KVBytes)) {
 
 func (cw *Watcher) Updated(kvs interface{}) {
 	kvp := kvs.(api.KVPairs)
-	kvb, err := stores.KvPairsToKvBytes(kvp)
+	kvb, err := consul.KvPairsToKvBytes(kvp)
 
 	if err != nil {
 		printer.LogErrf("%v", err)
