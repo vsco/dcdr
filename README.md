@@ -79,9 +79,9 @@ This package does not set out to solve problems such as authentication or ACLs f
 ## Integrations
 
 ### Consul
-Decider uses the built in api from [Consul](http://consul.io) CLI to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Decider observes a key prefix in the store and then writes the resulting key/value tree to a flat JSON file on any node running the `dcdr watch` command. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
+Decider uses the built in api from [Consul](http://consul.io) to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Decider uses a `key-prefix` Watch of the store and then writes the resulting key/value tree to a flat JSON file when changes are observed. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
 
-For more info see the `ConsulStore` and
+For more info see the `dcdr watch` command.
 
 ### Scopes
 In order to allow for expanding use cases and to avoid naming collisions, Decider provides arbitrary scoping of feature flags. An example use case would be providing separate features sets according to country code or mobile platform. Additionally, multiple Decider instances can be run within a cluster with separate namespaces and key sets by configuring [`config.hcl`](#configuration).
