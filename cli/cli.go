@@ -78,7 +78,7 @@ func (c *CLI) Commands() []climax.Command {
 		{
 			Name:  "set",
 			Brief: "create or update a feature flag",
-			Usage: `set -name flag_name -type [boolean|percentile] -value [0.0-1.0|true/false] -comment "flag description"`,
+			Usage: `set -name flag_name -value [0.0-1.0|true/false] -comment "flag description"`,
 			Help: `
 
 
