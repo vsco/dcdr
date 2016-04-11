@@ -1,5 +1,5 @@
-hash: 7d869f369929098d0d66b0509a43eedfb547cfc27ebdd9ba85948bc3b020241e
-updated: 2016-03-21T15:13:32.40769375-07:00
+hash: ea57553b9d2c30f8a3bcad0a57c1c2b8d1f58cb52e0a29c78e758f24cc06446b
+updated: 2016-04-11T07:12:17.898345487-07:00
 imports:
 - name: github.com/fatih/color
   version: 533cd7fd8a85905f67a1753afb4deddc85ea174f
@@ -41,6 +41,10 @@ imports:
   version: ef757b820a7d6760a89641ac29541967eb6d9f05
 - name: github.com/rodaine/table
   version: c35ded4ccfec23e952469a4de8edc168e61c8d58
+- name: github.com/samuel/go-zookeeper
+  version: 218e9c81c0dd8b3b18172b2bbfad92cc7d6db55f
+  subpackages:
+  - zk
 - name: github.com/stretchr/testify
   version: 6fe211e493929a8aac0469b93f28b1d0688a9a3a
 - name: github.com/tucnak/climax

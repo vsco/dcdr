@@ -12,6 +12,8 @@ import:
     ref: c35ded4ccfec23e952469a4de8edc168e61c8d58
   - package: github.com/fatih/color
     ref: 533cd7fd8a85905f67a1753afb4deddc85ea174f
+  - package: github.com/samuel/go-zookeeper/zk
+    ref: 218e9c81c0dd8b3b18172b2bbfad92cc7d6db55f
   - package: github.com/PagerDuty/godspeed
     ref: ef757b820a7d6760a89641ac29541967eb6d9f05
   - package: github.com/tucnak/climax
