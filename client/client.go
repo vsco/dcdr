@@ -28,7 +28,7 @@ type IFace interface {
 	WithScopes(scopes ...string) *Client
 }
 
-// Client handles access to the FeatureMap
+// Client handles access to the `FeatureMap`
 type Client struct {
 	featureMap *models.FeatureMap
 	config     *config.Config
@@ -65,7 +65,7 @@ func NewDefault() (c *Client, err error) {
 }
 
 // WithScopes creates a new Client from `c` that is "scoped"
-// to the provided scopes param. `scopes` are provided in priority order.
+// to the provided scopes argument. `scopes` are provided in priority order.
 // For example, when given WithScopes("a", "b", "c"). Keys found in "a"
 // will override the same keys found in "b" and so on for "c".
 func (c *Client) WithScopes(scopes ...string) *Client {
@@ -145,7 +145,7 @@ func (c *Client) Features() models.FeatureScopes {
 
 // CurrentSHA accessor for the underlying `CurrentSHA` from `FeatureMap`
 func (c *Client) CurrentSHA() string {
-	return c.FeatureMap().Dcdr.Info.CurrentSHA
+	return c.FeatureMap().Dcdr.CurrentSHA()
 }
 
 // FeatureExists checks the existence of a key

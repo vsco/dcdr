@@ -88,34 +88,14 @@ func (c *CLI) Commands() []climax.Command {
 
 	Example:
 
-	# set a key to 100% for only the US country code
-	dcdr set -n new-signup-flow -v 1.0 -s country-codes/us
-
-	Would be reflected when <FeatureMapPath> is written by 'dcdr watch' as the following.
-
-	{
-		"dcdr": {
-			"info": {
-				"current_sha": "faf9b666c0a51e66bc36828f819f0497720d4215"
-			},
-			"features": {
-				"default": {
-					"new-signup-flow": 0
-				},
-				"country-codes": {
-					"us": {
-						"new-signup-flow": 1.0
-					}
-				}
-			}
-		}
-	}
+	# set a key to 100% for only the 'beta_users' scope.
+	$ dcdr set -n new-signup-flow -v 1.0 -s beta_users
 
 	Clients can then read this value by using WithScopes. If no value is found within
 	the provided scope, the client will fall back to the 'default' namespace value
 	or return false when the key cannot be found.
 
-	d := dcdr.NewDefault().WithScopes("cc/us")
+	d := dcdr.NewDefault().WithScopes("beta_users")
 
 	fmt.Printf("%t", d.IsAvailableForID("new-signup-flow", <unint64>))
 	=> true
@@ -177,7 +157,7 @@ func (c *CLI) Commands() []climax.Command {
 			Help: `
 
 
-	Delete a feature flag matching --name. Use --scope to delete a flag within
+	Deletes a feature flag matching --name. Use --scope to delete a flag within
 	a given scope. If the audit repo has been configured in config.hcl, dcdr
 	will export the full feature set and write it to <Git:RepoPath> and then
 	attempt to commit and push the changeset to <Git:RepoURL>.`,
@@ -260,7 +240,7 @@ func (c *CLI) Commands() []climax.Command {
 		{
 			Name:  "server",
 			Brief: "start dcdr http server",
-			Usage: ``,
+			Usage: `dcdr server`,
 			Help: `
 
 	Starts the dcdr http server on <Server:Host>/<Sever:Endpoint>.
@@ -268,11 +248,15 @@ func (c *CLI) Commands() []climax.Command {
 	set by changing the <Server:JsonRoot> value.
 
 	Example:
+	$ curl -s :8000/dcdr.json
 
 	{
 		"<Server:JsonRoot>": {
-			"some-feature":true,
-			"some-other-feature": 0.5
+			"features":{
+				"some-feature":true,
+				"some-other-feature": 0.5
+			}
+
 		}
 	}
 	`,

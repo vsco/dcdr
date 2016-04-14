@@ -80,7 +80,7 @@ func (f *Feature) ScopedKey() string {
 	return fmt.Sprintf("%s/%s/%s", f.GetNamespace(), f.GetScope(), f.Key)
 }
 
-// NewFeature init a Feature
+// NewFeature create a Feature
 func NewFeature(name string, value interface{}, comment string, user string, scope string, ns string) (f *Feature) {
 	var ft FeatureType
 

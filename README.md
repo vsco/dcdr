@@ -11,13 +11,13 @@ Decider has three major components.
 * The [`Server`](#decider-server) for accessing features over HTTP
 * A [`CLI`](#cli) for managing features, watches, and starting the server
 
-Each of these components are comprised of lower level libraries that you can use to to suit your systems specific needs.
+Each of these components are comprised of lower level libraries that you can use to suit your systems specific needs.
 
-Decider is built to be adaptable to any backing datastore. At the moment only Consul is supported but [Etcd](https://coreos.com/etcd/) and [Redis](http://redis.io/) adapters are in the works.
+Decider is built to be adaptable to any backing datastore. At the moment only Consul is supported but [Etcd](https://coreos.com/etcd/), [ZooKeeper](https://zookeeper.apache.org/), and [Redis](http://redis.io/) adapters are in the works.
 
 ### About Feature Flags
 
-Feature flags have many use cases and a wide spectrum of implementations. With Decider the two supported types of flags are `boolean` and `percentile`. For out purposes at [VSCO](http://vsco.co) these have been enough to handle most all of our needs.
+Feature flags have many use cases and a wide spectrum of implementations. With Decider the two supported types of flags are `boolean` and `percentile`. For our purposes at [VSCO](http://vsco.co) these have been enough to handle most all of our needs.
 
 #### Boolean Flags
 An example use case for a `boolean` flag would be an API kill switch that could alleviate load for a backing database.
@@ -54,7 +54,7 @@ if dcdr.IsAvailableForID("rollout-new-fancy-db-dual-write", user.Id) {
 ```
 
 #### Scalars
-These type of features have an added bonus as you may use thier `float64` values as scalars in certain cases.
+These type of features have an added bonus as you may use their `float64` values as scalars in certain cases.
 
 Here we'll use the float value to scale the wait time for DB inserts between 0-1000ms.
 
@@ -79,7 +79,7 @@ This package does not set out to solve problems such as authentication or ACLs f
 ## Integrations
 
 ### Consul
-Decider uses the built in api from [Consul](http://consul.io) to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Decider uses a `key-prefix` Watch of the store and then writes the resulting key/value tree to a flat JSON file when changes are observed. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
+Decider provides an adapter for the [Consul](http://consul.io) client to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Decider uses a [`key-prefix`](https://www.consul.io/docs/agent/watches.html) Watch of the store and then writes the resulting key/value tree to a flat JSON file when changes are observed. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
 
 For more info see the `dcdr watch` command.
 
@@ -92,7 +92,7 @@ Due to the sensitive nature of configuration management, knowing the who, what, 
 ![](./resources/repo.png)
 
 ### Observabilty 
-It's nice to know when changes are happening. Decider can be configured to emit [Statsd](https://github.com/etsy/statsd) events when changes occur. Custom event tags can be sent as well if your collector supports them. Included in this package is a [DataDog](https://www.datadoghq.com/) adapter with Event and Tag support.
+It's nice to know when changes are happening. Decider can be configured to emit [Statsd](https://github.com/etsy/statsd) events when changes occur. Custom event tags can be sent as well if your collector supports them. Included in this package is a [DataDog](https://www.datadoghq.com/) adapter with Event and Tag support. Custom stats can also be configured by supplying a custom `stats.IFace` implementation.
 
 ## Installation
 
@@ -243,7 +243,7 @@ Here we have set the feature `example-feature` into two separate scopes. In the 
 The watcher is now observing your <Namespace> and writing all changes to the [`Server:OutputPath`](#configuration) ( default `/etc/dcdr/decider.json`).
 
 ### Decider Server
-The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with the [Goji](https://github.com/zenazn/goji) framework and is extensible by adding additional middleware. Read more on custom servers [here](#building-a-custom-server).
+The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with [gorilla/mux](https://github.com/gorilla/mux) router and is extensible by adding additional middleware. Read more on custom servers [here](#building-a-custom-server).
 
 ```
 # start the server
@@ -264,7 +264,6 @@ The server is now running on `:8000` and features can be accessed by curling `:8
 }
 ```
 Here we see that the default value of false is returned. The `info` key is where information  like the current SHA of the repository would be if one was configured. Next, if we add the scope header we can access our scoped values.
-
 ```
 ~  → curl -sH "x-dcdr-scopes: user-groups/beta" :8000/dcdr.json
 {
@@ -338,7 +337,7 @@ dcdr set -n example-feature -v true -s user-groups/beta
 ```
 
 ```Go
-client, err := client.NewDefault().Watch()
+client, err := client.NewDefault()
 scopedClient := client.WithScopes("user-groups/beta")
 
 if err != nil {
@@ -361,7 +360,7 @@ dcdr set -n another-feature -v true
 ```
 
 ```Go
-client, err := client.NewDefault().Watch()
+client, err := client.NewDefault()
 scopedClient := client.WithScopes("user-groups/beta")
 
 if err != nil {
@@ -429,7 +428,12 @@ Exposing your feature flags to the open internet would be a terrible idea in mos
 
 ### Extending with middleware
 
-Below is an example of how to do authentication very poorly. However, if you look close enough you can imagine exactly where you might add a DB lookup for an OAuth token or something similar. The `Use` method takes variadic `MiddlewareType` as a param to allow chainable customizations.
+Below is an example of how to do authentication very poorly. However, if you look close enough you can imagine exactly where you might add a DB lookup for an OAuth token or something similar. The `Use` method takes variadic `server.Middleware` as a param to allow chainable customizations.
+
+```Go 
+// Middleware helper type for handlers that receive a `Client`.
+type Middleware func(client.IFace) func(http.Handler) http.Handler
+```
 
 ```Go
 const AuthorizationHeader = "Authorization"
@@ -437,21 +441,26 @@ const AuthorizationHeader = "Authorization"
 // MockAuth example authentication middleware.
 // Checks for any value in the http Authorization header.
 // If no value is found a 401 status is sent.
-func MockAuth(c *web.C, h http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get(AuthorizationHeader) != "" {
-			h.ServeHTTP(w, r)
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
-		}
-	}
-
-	return http.HandlerFunc(fn)
+func MockAuth(c client.IFace) func(http.Handler) http.Handler {
+  return func(h http.Handler) http.Handler {
+    fn := func(w http.ResponseWriter, r *http.Request) {
+      if r.Header.Get(AuthorizationHeader) != "" {
+        h.ServeHTTP(w, r)
+      } else {
+         w.WriteHeader(http.StatusUnauthorized)
+      }
+    }
+    return http.HandlerFunc(fn)
+  }
 }
 
 func main() {
 	// Create a new Server and Client
-	srv := server.NewDefault()
+	srv, err := server.NewDefault()
+
+    if err != nil {
+      panic(err)
+    }
 
 	// Add the MockAuth to the middleware chain
 	srv.Use(MockAuth)
@@ -468,21 +477,23 @@ Here is a bit more useful example. This `ScopedCountryCode` middleware takes the
 const CountryCodeHeader = "X-Country"
 const DcdrScopesHeader = "x-dcdr-scopes"
 
-func ScopedCountryCode(c *web.C, h http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		cc := strings.ToLower(r.Header.Get(CountryCodeHeader))
+func ScopedCountryCode(c client.IFace) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			cc := strings.ToLower(r.Header.Get(CountryCodeHeader))
 
-		if cc != "" {
-			// Check for existing scopes and append 'country-code/xx'
-			scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
-			scopes = append(scopes, fmt.Sprintf("country-codes/%s", cc))
-			r.Header.Set(DcdrScopesHeader, strings.Join(scopes, ","))
+			if cc != "" {
+				// Check for existing scopes and append 'country-code/xx'
+				scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+				scopes = append(scopes, fmt.Sprintf("country-codes/%s", cc))
+				r.Header.Set(DcdrScopesHeader, strings.Join(scopes, ","))
+			}
+
+			h.ServeHTTP(w, r)
 		}
 
-		h.ServeHTTP(w, r)
+		return http.HandlerFunc(fn)
 	}
-
-	return http.HandlerFunc(fn)
 }
 ```
 
