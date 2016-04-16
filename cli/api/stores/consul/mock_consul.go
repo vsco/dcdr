@@ -1,14 +1,17 @@
-package stores
+package consul
 
-import "github.com/hashicorp/consul/api"
+import (
+	"github.com/hashicorp/consul/api"
+	"github.com/vsco/dcdr/cli/api/stores"
+)
 
 type MockConsul struct {
-	Item  *KVByte
-	Items KVBytes
+	Item  *stores.KVByte
+	Items stores.KVBytes
 	Err   error
 }
 
-func NewMockConsul(key string, kvb KVBytes, err error) (mc *MockConsul) {
+func NewMockConsul(key string, kvb stores.KVBytes, err error) (mc *MockConsul) {
 	mc = &MockConsul{
 		Err: err,
 	}

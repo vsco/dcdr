@@ -15,6 +15,7 @@ const (
 	configFileName       = "config.hcl"
 	defaultNamespace     = "dcdr"
 	defaultUsername      = "unknown"
+	defaultStorage       = "consul"
 	envConfigDirOverride = "DCDR_CONFIG_DIR"
 	defaultHost          = ":8000"
 	defaultEndpoint      = "/dcdr.json"
@@ -42,6 +43,15 @@ func OutputPath() string {
 var ExampleConfig = []byte(`
 // Username = "dcdr admin"
 // Namespace = "dcdr"
+// Storage = "consul"
+
+// Etcd {
+//	 Endpoints = ["http://127.0.0.1:2379"]
+// }
+
+// Consul {
+//	 Address = "127.0.0.1:8500"
+// }
 
 // Watcher {
 //   OutputPath = "/etc/dcdr/decider.json"
@@ -70,6 +80,17 @@ type Server struct {
 	JSONRoot string
 }
 
+// Consul config struct for the consul store. Most of consul
+// configuration is handled by environment variables
+type Consul struct {
+	Address string
+}
+
+// Etcd config struct for the etcd store.
+type Etcd struct {
+	Endpoints []string
+}
+
 // Watcher config struct for `dcdr watch`
 type Watcher struct {
 	OutputPath string
@@ -92,6 +113,9 @@ type Git struct {
 type Config struct {
 	Username  string
 	Namespace string
+	Storage   string
+	Consul    Consul
+	Etcd      Etcd
 	Watcher   Watcher
 	Git       Git
 	Stats     Stats
@@ -137,6 +161,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Username:  uname,
 		Namespace: defaultNamespace,
+		Storage:   defaultStorage,
 		Watcher: Watcher{
 			OutputPath: OutputPath(),
 		},

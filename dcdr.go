@@ -1,15 +1,12 @@
 package main
 
 import (
-	"fmt"
-
 	"os"
 
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/cli/api"
-	"github.com/vsco/dcdr/cli/api/stores"
-	"github.com/vsco/dcdr/cli/api/watchers/consul"
+	"github.com/vsco/dcdr/cli/api/loader"
 	"github.com/vsco/dcdr/cli/controller"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
@@ -18,17 +15,12 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-	store, err := stores.DefaultConsulStore()
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	store := loader.LoadStore(cfg)
 
 	rp := repo.New(cfg)
 
 	var gs *godspeed.Godspeed
-
+	var err error
 	if cfg.StatsEnabled() {
 		gs, err = godspeed.New(cfg.Stats.Host, cfg.Stats.Port, false)
 
@@ -38,7 +30,7 @@ func main() {
 		}
 	}
 
-	w := consul.New(cfg)
+	w := loader.LoadWatcher(cfg)
 
 	kv := api.New(store, rp, w, cfg, gs)
 	ctrl := controller.New(cfg, kv)

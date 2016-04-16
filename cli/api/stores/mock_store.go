@@ -1,13 +1,10 @@
-package api
+package stores
 
-import (
-	"github.com/vsco/dcdr/cli/api/stores"
-	"github.com/vsco/dcdr/models"
-)
+import "github.com/vsco/dcdr/models"
 
 type MockStore struct {
-	Item  *stores.KVByte
-	Items stores.KVBytes
+	Item  *KVByte
+	Items KVBytes
 	Err   error
 }
 
@@ -19,8 +16,8 @@ func NewMockStore(ft *models.Feature, err error) (ms *MockStore) {
 	}
 
 	if ft != nil {
-		kvb := stores.KVBytes{
-			&stores.KVByte{
+		kvb := KVBytes{
+			&KVByte{
 				Key:   ft.Key,
 				Bytes: bts,
 			},
@@ -33,11 +30,11 @@ func NewMockStore(ft *models.Feature, err error) (ms *MockStore) {
 	return
 }
 
-func (ms *MockStore) List(prefix string) (stores.KVBytes, error) {
+func (ms *MockStore) List(prefix string) (KVBytes, error) {
 	return ms.Items, ms.Err
 }
 
-func (ms *MockStore) Get(key string) (*stores.KVByte, error) {
+func (ms *MockStore) Get(key string) (*KVByte, error) {
 	return ms.Item, ms.Err
 }
 

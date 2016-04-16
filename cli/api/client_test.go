@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/models"
 )
@@ -12,7 +13,7 @@ import (
 func TestClientSet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 
-	c := New(NewMockStore(ft, nil), &MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(stores.NewMockStore(ft, nil), &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(ft)
 
@@ -23,7 +24,7 @@ func TestClientSetExisting(t *testing.T) {
 	update := models.NewFeature("test", nil, "c", "u", "s", "n")
 	orig := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 
-	c := New(NewMockStore(orig, nil), &MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(stores.NewMockStore(orig, nil), &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(update)
 
@@ -32,8 +33,8 @@ func TestClientSetExisting(t *testing.T) {
 
 func TestList(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
-	cs := NewMockStore(ft, nil)
-	c := New(cs, &MockRepo{}, nil, config.DefaultConfig(), nil)
+	cs := stores.NewMockStore(ft, nil)
+	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	fts, err := c.List("test", "")
 
@@ -43,8 +44,8 @@ func TestList(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
-	cs := NewMockStore(ft, nil)
-	c := New(cs, &MockRepo{}, nil, config.DefaultConfig(), nil)
+	cs := stores.NewMockStore(ft, nil)
+	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	var f *models.Feature
 	err := c.Get("test", &f)
@@ -54,8 +55,8 @@ func TestGet(t *testing.T) {
 }
 
 func TestNilGet(t *testing.T) {
-	cs := NewMockStore(nil, nil)
-	c := New(cs, &MockRepo{}, nil, config.DefaultConfig(), nil)
+	cs := stores.NewMockStore(nil, nil)
+	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	var f *models.Feature
 	err := c.Get("test", &f)
@@ -66,8 +67,8 @@ func TestNilGet(t *testing.T) {
 
 func TestSet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
-	cs := NewMockStore(ft, nil)
-	c := New(cs, &MockRepo{}, nil, config.DefaultConfig(), nil)
+	cs := stores.NewMockStore(ft, nil)
+	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(ft)
 
@@ -76,8 +77,8 @@ func TestSet(t *testing.T) {
 
 func TestSetErrorOnNilValue(t *testing.T) {
 	ft := models.NewFeature("test", nil, "c", "u", "s", "n")
-	cs := NewMockStore(nil, nil)
-	c := New(cs, &MockRepo{}, nil, config.DefaultConfig(), nil)
+	cs := stores.NewMockStore(nil, nil)
+	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(ft)
 
@@ -88,7 +89,7 @@ func TestTypeChangeErrorSet(t *testing.T) {
 	orig := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	bad := models.NewFeature("test", false, "c", "u", "s", "n")
 
-	cs := NewMockStore(orig, nil)
+	cs := stores.NewMockStore(orig, nil)
 	c := New(cs, nil, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(bad)
@@ -98,7 +99,7 @@ func TestTypeChangeErrorSet(t *testing.T) {
 func TestSetWithError(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	e := errors.New("")
-	cs := NewMockStore(ft, e)
+	cs := stores.NewMockStore(ft, e)
 	c := New(cs, nil, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(ft)
@@ -108,8 +109,8 @@ func TestSetWithError(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
-	cs := NewMockStore(ft, nil)
-	c := New(cs, &MockRepo{}, nil, config.DefaultConfig(), nil)
+	cs := stores.NewMockStore(ft, nil)
+	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	err := c.Delete(ft.Key, "")
 
@@ -119,8 +120,8 @@ func TestDelete(t *testing.T) {
 func TestDeleteWithError(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	e := errors.New("")
-	cs := NewMockStore(ft, e)
-	c := New(cs, &MockRepo{}, nil, config.DefaultConfig(), nil)
+	cs := stores.NewMockStore(ft, e)
+	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
 
 	err := c.Delete(ft.Key, "")
 

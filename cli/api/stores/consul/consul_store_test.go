@@ -1,14 +1,15 @@
-package stores
+package consul
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vsco/dcdr/cli/api/stores"
 )
 
 var MockBytes = []byte("asdf")
-var MockKVBytes = KVBytes{
-	&KVByte{
+var MockKVBytes = stores.KVBytes{
+	&stores.KVByte{
 		Key:   "a",
 		Bytes: MockBytes,
 	},
@@ -16,7 +17,7 @@ var MockKVBytes = KVBytes{
 
 func TestConsulGet(t *testing.T) {
 	mc := NewMockConsul("a", MockKVBytes, nil)
-	cs := NewConsulStore(mc)
+	cs := New(mc)
 
 	bts, err := cs.Get("a")
 
@@ -26,7 +27,7 @@ func TestConsulGet(t *testing.T) {
 
 func TestConsulList(t *testing.T) {
 	mc := NewMockConsul("n", MockKVBytes, nil)
-	cs := NewConsulStore(mc)
+	cs := New(mc)
 
 	bts, err := cs.List("n")
 
@@ -36,16 +37,16 @@ func TestConsulList(t *testing.T) {
 
 func TestConsulPut(t *testing.T) {
 	mc := NewMockConsul("n", MockKVBytes, nil)
-	cs := NewConsulStore(mc)
+	cs := New(mc)
 
-	err := cs.Put("n", MockBytes)
+	err := cs.Set("n", MockBytes)
 
 	assert.NoError(t, err)
 }
 
 func TestConsulDelete(t *testing.T) {
 	mc := NewMockConsul("n", MockKVBytes, nil)
-	cs := NewConsulStore(mc)
+	cs := New(mc)
 
 	err := cs.Delete("n")
 

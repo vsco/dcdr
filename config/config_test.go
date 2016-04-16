@@ -28,6 +28,7 @@ func TestDefaultConfig(t *testing.T) {
 	assert.False(t, cfg.StatsEnabled())
 
 	assert.Equal(t, cfg.Username, user.Username)
+	assert.Equal(t, cfg.Storage, defaultStorage)
 	assert.Equal(t, cfg.Watcher.OutputPath, OutputPath())
 	assert.Equal(t, cfg.Server.Endpoint, defaultEndpoint)
 	assert.Equal(t, cfg.Server.Host, defaultHost)

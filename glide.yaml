@@ -2,6 +2,7 @@ package: github.com/vsco/dcdr
 
 import:
     # Runtime dependencies
+  - package: github.com/coreos/etcd/client
   - package: github.com/hashicorp/consul
     subpackages:
       - api

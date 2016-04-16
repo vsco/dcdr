@@ -1,19 +1,18 @@
 # dcdr (decider)
-Distributed Feature Flags for the Consul K/V Store
+Distributed Feature Flags
 
 ## Overview
 
-Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system built using the [Consul Key/Value Store](https://www.consul.io/intro/getting-started/kv.html). It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. 
+Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system with adaptable backends. It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Decider is built to be adaptable to any backing datastore. At the moment only [Consul](https://www.consul.io/intro/getting-started/kv.html) and [Etcd](https://coreos.com/etcd/) are supported but [ZooKeeper](https://zookeeper.apache.org/), and [Redis](http://redis.io/) adapters are in the works.
 
-Decider has three major components.
+Decider has four major components.
 
-* A [`Client`](#using-the-go-client) for use within your Go applications
-* The [`Server`](#decider-server) for accessing features over HTTP
-* A [`CLI`](#cli) for managing features, watches, and starting the server
+* [`Client`](#using-the-go-client) for use within your Go applications
+* [`Server`](#decider-server) for accessing features over HTTP
+* [`Watcher`](#starting-the-watcher) observes change in the datastore and writes them to disk
+* [`CLI`](#cli) for managing features, watches, and starting the server
 
 Each of these components are comprised of lower level libraries that you can use to suit your systems specific needs.
-
-Decider is built to be adaptable to any backing datastore. At the moment only Consul is supported but [Etcd](https://coreos.com/etcd/), [ZooKeeper](https://zookeeper.apache.org/), and [Redis](http://redis.io/) adapters are in the works.
 
 ### About Feature Flags
 
@@ -26,7 +25,7 @@ An example use case for a `boolean` flag would be an API kill switch that could 
 disable-load-heavy-api-endpoint => true
 ```
 
-In your code this would look something like this.
+Your code would look something like this.
 
 ```Go
 if dcdr.IsAvailable("disable-load-heavy-api-endpoint") {
@@ -46,7 +45,7 @@ rollout-new-fancy-db-dual-write => 0.1
 ```
 
 ```Go
-// Handle the write to the existing store 
+// Handle the write to the existing store
 
 if dcdr.IsAvailableForID("rollout-new-fancy-db-dual-write", user.Id) {
 	// If the `user.Id` falls into 10% of requests do the dual write
@@ -72,16 +71,9 @@ time.Sleep(waitMS * time.Millisecond)
 
 ### Caveat
 
-Feature flags and remote configuration are hard problems to solve in the general sense. Most organizations will have many corner cases unique to their own infrastructure and policies that are cumbersome to solve in an abstract way. Decider is an extracted set of flexible libraries that we at [VSCO](http://vsco.co) have developed over the past year that have worked well for us in solving these issues. 
+Feature flags and remote configuration are hard problems to solve in the general sense. Most organizations will have many corner cases unique to their own infrastructure and policies that are cumbersome to solve in an abstract way. Decider is an extracted set of flexible libraries that we at [VSCO](http://vsco.co) have developed over the past year that have worked well for us in solving these issues.
 
 This package does not set out to solve problems such as authentication or ACLs for your features but It does aim to provide enough of the tooling and libraries so that you can do so yourself.
-
-## Integrations
-
-### Consul
-Decider provides an adapter for the [Consul](http://consul.io) client to distribute feature flags throughout your cluster. All Consul configuration environment variables are used to ensure that Decider can be used anywhere a `consul agent` can be run. Decider uses a [`key-prefix`](https://www.consul.io/docs/agent/watches.html) Watch of the store and then writes the resulting key/value tree to a flat JSON file when changes are observed. Clients then observe this file using `fsnotify` and reload their internal feature maps accordingly.
-
-For more info see the `dcdr watch` command.
 
 ### Scopes
 In order to allow for expanding use cases and to avoid naming collisions, Decider provides arbitrary scoping of feature flags. An example use case would be providing separate features sets according to country code or mobile platform. Additionally, multiple Decider instances can be run within a cluster with separate namespaces and key sets by configuring [`config.hcl`](#configuration).
@@ -91,7 +83,7 @@ Due to the sensitive nature of configuration management, knowing the who, what, 
 
 ![](./resources/repo.png)
 
-### Observabilty 
+### Observabilty
 It's nice to know when changes are happening. Decider can be configured to emit [Statsd](https://github.com/etsy/statsd) events when changes occur. Custom event tags can be sent as well if your collector supports them. Included in this package is a [DataDog](https://www.datadoghq.com/) adapter with Event and Tag support. Custom stats can also be configured by supplying a custom `stats.IFace` implementation.
 
 ## Installation
@@ -263,7 +255,7 @@ The server is now running on `:8000` and features can be accessed by curling `:8
   }
 }
 ```
-Here we see that the default value of false is returned. The `info` key is where information  like the current SHA of the repository would be if one was configured. Next, if we add the scope header we can access our scoped values.
+Here we see that the default value of false is returned. The `info` key is where information like the current SHA of the repository would be if one was configured. Next, if we add the scope header we can access our scoped values.
 ```
 ~  → curl -sH "x-dcdr-scopes: user-groups/beta" :8000/dcdr.json
 {
@@ -329,7 +321,7 @@ This example initializes a new `Client` and begins watching the 'default' featur
 
 #### So what about scopes?
 
-To initialize a Decider `Client` into a given set of scopes use the `WithScopes(scopes ...string)` method. This method creates a new `Client` with an underlying feature set that has the provided `scope` values merged onto the default set. If a feature does not exist in any of the provided scopes the client will fallback to the 'default' `scope` to find the value. If the feature does not exist in any scope the client simply returns `false`. 
+To initialize a Decider `Client` into a given set of scopes use the `WithScopes(scopes ...string)` method. This method creates a new `Client` with an underlying feature set that has the provided `scope` values merged onto the default set. If a feature does not exist in any of the provided scopes the client will fallback to the 'default' `scope` to find the value. If the feature does not exist in any scope the client simply returns `false`.
 
 ```
 # set the scoped feature
@@ -377,7 +369,7 @@ if scopedClient.IsAvailable("another-feature") {
 
 ### IsAvailableForID
 
-This method is used when a feature needs to be rolled out to only a percentage of requests. Functionally `IsAvailableForID` works exactly as `IsAvailable` with the exception of its `id` argument. Both the `feature` and `id` arguments are joined to generate a `uint64` using `hash/crc32`. Which when combined with the `float64` value of `feature` can compute into what percentile a given request falls. 
+This method is used when a feature needs to be rolled out to only a percentage of requests. Functionally `IsAvailableForID` works exactly as `IsAvailable` with the exception of its `id` argument. Both the `feature` and `id` arguments are joined to generate a `uint64` using `hash/crc32`. Which when combined with the `float64` value of `feature` can compute into what percentile a given request falls.
 
 See the [`Client#withinPercentile`](https://github.com/vsco/dcdr/blob/master/client/client.go#L224) method for more details.
 
@@ -430,7 +422,7 @@ Exposing your feature flags to the open internet would be a terrible idea in mos
 
 Below is an example of how to do authentication very poorly. However, if you look close enough you can imagine exactly where you might add a DB lookup for an OAuth token or something similar. The `Use` method takes variadic `server.Middleware` as a param to allow chainable customizations.
 
-```Go 
+```Go
 // Middleware helper type for handlers that receive a `Client`.
 type Middleware func(client.IFace) func(http.Handler) http.Handler
 ```
@@ -501,7 +493,7 @@ A full working example can be found in [server/demo/main.go](https://github.com/
 
 ## Configuration
 
-All configuration lives in `config.hcl`. By default Decider looks for this file in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory. Your permissions depending on the machine may differ but to get started locally do the following. 
+All configuration lives in `config.hcl`. By default Decider looks for this file in `/etc/dcdr/config.hcl`. You will need to create the `/etc/dcdr` directory. Your permissions depending on the machine may differ but to get started locally do the following.
 
 ```
  sudo mkdir /etc/dcdr
@@ -523,6 +515,16 @@ To create a new repository from scratch. Configure the `config.hcl` file with yo
 Username = "twoism"
 Namespace = "dcdr"
 
+Storage = "consul" // or etcd
+
+Consul {
+  Address = "127.0.0.1:8500"
+}
+
+//Etcd {
+//  Endpoints = ["http://127.0.0.1:2379"]
+//}
+
 Watcher {
   OutputPath = "/etc/dcdr/decider.json"
 }
@@ -538,7 +540,7 @@ Git {
 }
 
 Stats {
-  Namespace = "decider"
+  Namespace = "dcdr"
   Host = "127.0.0.1"
   Port = 8126
 }
