@@ -6,7 +6,7 @@ import (
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/cli/api"
-	"github.com/vsco/dcdr/cli/api/loader"
+	"github.com/vsco/dcdr/cli/api/resolver"
 	"github.com/vsco/dcdr/cli/controller"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
@@ -15,7 +15,7 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-	store := loader.LoadStore(cfg)
+	store := resolver.LoadStore(cfg)
 
 	rp := repo.New(cfg)
 
@@ -30,7 +30,7 @@ func main() {
 		}
 	}
 
-	w := loader.LoadWatcher(cfg)
+	w := resolver.LoadWatcher(cfg)
 
 	kv := api.New(store, rp, w, cfg, gs)
 	ctrl := controller.New(cfg, kv)
