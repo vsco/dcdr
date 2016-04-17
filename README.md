@@ -1,6 +1,10 @@
 # dcdr (decider)
 Distributed Feature Flags
 
+## Pre-Release
+
+This is pre-release software. The Consul backend support has been used in production at VSCO for a year but the Ectd backend should be considered experimental at the moment.
+
 ## Overview
 
 Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system with adaptable backends. It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Decider is built to be adaptable to any backing datastore. At the moment only [Consul](https://www.consul.io/intro/getting-started/kv.html) and [Etcd](https://coreos.com/etcd/) are supported but [ZooKeeper](https://zookeeper.apache.org/), and [Redis](http://redis.io/) adapters are in the works.
