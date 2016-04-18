@@ -1,20 +1,21 @@
-hash: 98ef408ea194196c686c41ffa1d10de6d5411516bfcd2b0686fd9a9f3586d418
-updated: 2016-04-17T17:32:51.145675823-07:00
+hash: 588ad6415e66bbe89c010c93718f99ea2f3023cabc943c99eda4d4633a9b503c
+updated: 2016-04-24T17:12:08.380898118-07:00
 imports:
 - name: github.com/coreos/etcd
-  version: 9504df2917efb3f43883a9e9326719acb9a36278
+  version: f8673b5f60477fa2123a1195267938b21c102fb0
   subpackages:
   - client
   - pkg/pathutil
   - pkg/types
 - name: github.com/fatih/color
   version: 533cd7fd8a85905f67a1753afb4deddc85ea174f
-- name: github.com/fsouza/go-dockerclient
-  version: 9b6c9720043b74304a6dd07a2a901d16e7bf3d3d
+- name: github.com/garyburd/redigo
+  version: 8873b2f1995f59d4bcdd2b0dc9858e2cb9bf0c13
   subpackages:
-  - external/golang.org/x/net/context
+  - redis
+  - internal
 - name: github.com/gorilla/context
-  version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
+  version: a8d44e7d8e4d532b6a27a02dd82abb31cc1b01bd
 - name: github.com/gorilla/handlers
   version: 66e6c6f01d8da976ee113437745ca029c2b585a6
 - name: github.com/gorilla/mux
@@ -60,11 +61,9 @@ imports:
   subpackages:
   - codec
 - name: github.com/vsco/http-test
-  version: 829b868c0fb51729b96533b26153ca380a3f4860
-- name: github.com/zenazn/goji
-  version: 1925ec6302925f4760d7a11cc17036f44ec98d5b
+  version: 3e41d620190387f858d0105313cd352883b72627
 - name: golang.org/x/net
-  version: fb93926129b8ec0056f2f458b1f519654814edf0
+  version: b797637b7aeeed133049c7281bfa31dcc9ca42d6
   subpackages:
   - context
 - name: golang.org/x/sys

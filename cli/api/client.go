@@ -11,7 +11,6 @@ import (
 
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli/api/stores"
-	"github.com/vsco/dcdr/cli/api/watchers"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
 	"github.com/vsco/dcdr/config"
@@ -43,20 +42,18 @@ type ClientIFace interface {
 }
 
 type Client struct {
-	Store   stores.StoreIFace
-	Repo    repo.IFace
-	Watcher watchers.KVWatcherIFace
-	Stats   *godspeed.Godspeed
-	config  *config.Config
+	Store  stores.IFace
+	Repo   repo.IFace
+	Stats  *godspeed.Godspeed
+	config *config.Config
 }
 
-func New(st stores.StoreIFace, rp repo.IFace, w watchers.KVWatcherIFace, cfg *config.Config, stats *godspeed.Godspeed) (c *Client) {
+func New(st stores.IFace, rp repo.IFace, cfg *config.Config, stats *godspeed.Godspeed) (c *Client) {
 	c = &Client{
-		Store:   st,
-		Repo:    rp,
-		Watcher: w,
-		Stats:   stats,
-		config:  cfg,
+		Store:  st,
+		Repo:   rp,
+		Stats:  stats,
+		config: cfg,
 	}
 
 	return
@@ -66,7 +63,14 @@ func (c *Client) Namespace() string {
 }
 
 func (c *Client) List(prefix string, scope string) (models.Features, error) {
-	prefix = fmt.Sprintf("%s/features/%s/%s", c.Namespace(), scope, prefix)
+	defer c.Store.Close()
+
+	if prefix == "" {
+		prefix = fmt.Sprintf("%s/features/%s", c.Namespace(), scope)
+	} else {
+		prefix = fmt.Sprintf("%s/features/%s/%s", c.Namespace(), scope, prefix)
+	}
+
 	res, err := c.Store.List(prefix)
 
 	fts := make(models.Features, len(res))
@@ -90,6 +94,8 @@ func (c *Client) List(prefix string, scope string) (models.Features, error) {
 }
 
 func (c *Client) Set(ft *models.Feature) error {
+	defer c.Store.Close()
+
 	var existing *models.Feature
 
 	kvb, err := c.Store.Get(ft.ScopedKey())
@@ -147,6 +153,8 @@ func (c *Client) Set(ft *models.Feature) error {
 }
 
 func (c *Client) Get(key string, v interface{}) error {
+	defer c.Store.Close()
+
 	key = fmt.Sprintf("%s/%s", c.Namespace(), key)
 
 	bts, err := c.Store.Get(key)
@@ -163,6 +171,8 @@ func (c *Client) Get(key string, v interface{}) error {
 }
 
 func (c *Client) Delete(key string, scope string) error {
+	defer c.Store.Close()
+
 	var existing *models.Feature
 
 	key = fmt.Sprintf("%s/features/%s/%s", c.Namespace(), scope, key)
@@ -244,6 +254,8 @@ func (c *Client) Push() error {
 }
 
 func (c *Client) GetInfo() (*models.Info, error) {
+	defer c.Store.Close()
+
 	key := fmt.Sprintf("%s/%s", c.Namespace(), InfoNameSpace)
 
 	var info *models.Info
@@ -268,6 +280,8 @@ func (c *Client) GetInfo() (*models.Info, error) {
 }
 
 func (c *Client) UpdateCurrentSHA() (string, error) {
+	defer c.Store.Close()
+
 	sha, err := c.Repo.CurrentSHA()
 
 	if err != nil {
@@ -302,8 +316,8 @@ func (c *Client) InitRepo(create bool) error {
 }
 
 func (c *Client) Watch() {
-	c.Watcher.Register(c.WriteOutputFile)
-	c.Watcher.Watch()
+	c.Store.Register(c.WriteOutputFile)
+	c.Store.Watch()
 }
 
 func (c *Client) WriteOutputFile(kvb stores.KVBytes) {

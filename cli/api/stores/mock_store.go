@@ -50,6 +50,16 @@ func (ms *MockStore) Put(key string, bts []byte) error {
 	return ms.Err
 }
 
+func (ms *MockStore) Register(func(kvb KVBytes)) {}
+
+func (ms *MockStore) Close() {}
+
+func (ms *MockStore) Watch() error {
+	return nil
+}
+
+func (ms *MockStore) Updated(kvs interface{}) {}
+
 type MockRepo struct {
 	error   error
 	sha     string

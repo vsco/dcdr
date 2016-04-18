@@ -2,7 +2,10 @@ package consul
 
 import (
 	"github.com/hashicorp/consul/api"
+	"github.com/hashicorp/consul/watch"
 	"github.com/vsco/dcdr/cli/api/stores"
+	"github.com/vsco/dcdr/cli/printer"
+	"github.com/vsco/dcdr/config"
 )
 
 type ConsulKVIFace interface {
@@ -12,35 +15,39 @@ type ConsulKVIFace interface {
 	Delete(key string, w *api.WriteOptions) (*api.WriteMeta, error)
 }
 
-type ConsulStore struct {
-	kv ConsulKVIFace
-	qo *api.QueryOptions
-	wo *api.WriteOptions
+type Store struct {
+	kv  ConsulKVIFace
+	qo  *api.QueryOptions
+	wo  *api.WriteOptions
+	cb  func(kvb stores.KVBytes)
+	cfg *config.Config
 }
 
-func NewDefault() (stores.StoreIFace, error) {
+func NewDefault(cfg *config.Config) (stores.IFace, error) {
 	client, err := api.NewClient(api.DefaultConfig())
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &ConsulStore{
-		kv: client.KV(),
-		qo: nil,
-		wo: nil,
+	return &Store{
+		cfg: cfg,
+		kv:  client.KV(),
+		qo:  nil,
+		wo:  nil,
 	}, nil
 }
 
-func New(cn ConsulKVIFace) stores.StoreIFace {
-	return &ConsulStore{
-		kv: cn,
-		qo: nil,
-		wo: nil,
+func New(cfg *config.Config, cn ConsulKVIFace) stores.IFace {
+	return &Store{
+		cfg: cfg,
+		kv:  cn,
+		qo:  nil,
+		wo:  nil,
 	}
 }
 
-func (cs *ConsulStore) Get(key string) (*stores.KVByte, error) {
+func (cs *Store) Get(key string) (*stores.KVByte, error) {
 	kv, _, err := cs.kv.Get(key, cs.qo)
 
 	k := &stores.KVByte{}
@@ -55,7 +62,7 @@ func (cs *ConsulStore) Get(key string) (*stores.KVByte, error) {
 	return k, nil
 }
 
-func (cs *ConsulStore) Set(key string, bts []byte) error {
+func (cs *Store) Set(key string, bts []byte) error {
 	p := &api.KVPair{
 		Key:   key,
 		Value: bts,
@@ -66,13 +73,13 @@ func (cs *ConsulStore) Set(key string, bts []byte) error {
 	return err
 }
 
-func (cs *ConsulStore) Delete(key string) error {
+func (cs *Store) Delete(key string) error {
 	_, err := cs.kv.Delete(key, cs.wo)
 
 	return err
 }
 
-func (cs *ConsulStore) List(prefix string) (stores.KVBytes, error) {
+func (cs *Store) List(prefix string) (stores.KVBytes, error) {
 	kvs, _, err := cs.kv.List(prefix, cs.qo)
 
 	kvb := make(stores.KVBytes, len(kvs))
@@ -90,6 +97,48 @@ func (cs *ConsulStore) List(prefix string) (stores.KVBytes, error) {
 
 	return kvb, err
 }
+
+func (cs *Store) Register(cb func(kvb stores.KVBytes)) {
+	cs.cb = cb
+}
+
+func (cs *Store) Updated(kvs interface{}) {
+	kvp := kvs.(api.KVPairs)
+	kvb, err := KvPairsToKvBytes(kvp)
+
+	if err != nil {
+		printer.LogErrf("%v", err)
+		return
+	}
+
+	cs.cb(kvb)
+}
+
+func (cs *Store) Watch() error {
+	params := map[string]interface{}{
+		"type":   "keyprefix",
+		"prefix": cs.cfg.Namespace,
+	}
+
+	wp, err := watch.Parse(params)
+	defer wp.Stop()
+
+	if err != nil {
+		printer.LogErrf("%v", err)
+	}
+
+	wp.Handler = func(idx uint64, data interface{}) {
+		cs.Updated(data)
+	}
+
+	if err := wp.Run(""); err != nil {
+		printer.LogErrf("Error querying Consul agent: %s", err)
+	}
+
+	return nil
+}
+
+func (s *Store) Close() {}
 
 func KvPairsToKvBytes(kvp api.KVPairs) (stores.KVBytes, error) {
 	kvb := make(stores.KVBytes, len(kvp))
