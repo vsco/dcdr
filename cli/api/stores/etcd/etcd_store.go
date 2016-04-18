@@ -59,12 +59,7 @@ func (s *ETCDStore) Get(key string) (*stores.KVByte, error) {
 	resp, err := s.kv.Get(s.ctx, key, s.getOpts)
 
 	if err != nil {
-		switch err.(client.Error).Code {
-		case client.ErrorCodeKeyNotFound:
-			return nil, nil
-		default:
-			return nil, err
-		}
+		return nil, etcdError(err)
 	}
 
 	return toKVByte(resp.Node), nil
@@ -79,12 +74,7 @@ func (s *ETCDStore) Set(key string, bts []byte) error {
 func (s *ETCDStore) Delete(key string) error {
 	_, err := s.kv.Delete(s.ctx, key, s.deleteOpts)
 
-	switch err.(client.Error).Code {
-	case client.ErrorCodeKeyNotFound:
-		return nil
-	default:
-		return err
-	}
+	return etcdError(err)
 }
 
 func (s *ETCDStore) List(prefix string) (stores.KVBytes, error) {
@@ -97,12 +87,7 @@ func (s *ETCDStore) List(prefix string) (stores.KVBytes, error) {
 	resp, err := s.kv.Get(s.ctx, prefix, opts)
 
 	if err != nil {
-		switch err.(client.Error).Code {
-		case client.ErrorCodeKeyNotFound:
-			return nil, nil
-		default:
-			return nil, err
-		}
+		return nil, etcdError(err)
 	}
 
 	kvbs := FlattenToKVBytes(resp.Node, make(stores.KVBytes, 0))
@@ -128,5 +113,18 @@ func toKVByte(n *client.Node) *stores.KVByte {
 		// hash entry when exploded to JSON.
 		Key:   strings.TrimPrefix(n.Key, "/"),
 		Bytes: []byte(n.Value),
+	}
+}
+
+func etcdError(err error) error {
+	switch err.(type) {
+	case client.Error:
+		if err.(client.Error).Code == client.ErrorCodeKeyNotFound {
+			return nil
+		}
+
+		return err
+	default:
+		return err
 	}
 }
