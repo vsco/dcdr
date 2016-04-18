@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/coreos/etcd/client"
-	"github.com/fsouza/go-dockerclient/external/golang.org/x/net/context"
 	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/config"
+	"golang.org/x/net/context"
 )
 
 type ETCDStore struct {
