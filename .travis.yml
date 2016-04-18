@@ -1,0 +1,24 @@
+sudo: required
+language: go
+go: 1.6
+
+services:
+  - docker
+
+env:
+  global:
+  - GOPATH=$HOME/go
+
+install:
+  - script/bootstrap
+script:
+  - script/test
+  - script/build-image
+
+notifications:
+  email: false
+  slack: false
+
+branches:
+  only:
+  - master

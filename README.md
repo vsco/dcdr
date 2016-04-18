@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/vsco/dcdr.svg?token=BU7xWxZdgzTAdauMqukE&branch=master)](https://travis-ci.com/vsco/dcdr)
+
 # dcdr (decider)
 Distributed Feature Flags
 
@@ -105,8 +107,6 @@ script/bootstrap
 script/install
 ```
 
-Once installed on a machine running a `consul agent`, Decider is ready to connect to a default Consul host and port (localhost:8500) and begin writing to the K/V store. If you have a custom configuration for your agent, Decider will use the same [environment variables](https://github.com/hashicorp/consul/blob/master/api/api.go#L126) used to configure the Consul CLI.
-
 ## Getting Started
 
 ### CLI
@@ -195,7 +195,29 @@ You can override this location by setting the `DCDR_CONFIG_DIR` environment vari
 ![](./resources/watch.png)
 
 ## Tying the room together
-If you need instructions for getting Consul installed, check their [Getting Started](https://www.consul.io/intro/getting-started/install.html) page.
+
+### TL;DR Using Docker Compose
+
+Decider has many moving parts that require orchestration in order to do a proper demostration of how they all work together. So thanks to [Docker Compose](https://docs.docker.com/compose/) we can bundle this up quite easily. This example uses a Consul backend and starts a `dcdr watch` and `dcdr server` for you.
+
+#### Building & running the images
+
+```bash
+./script/compose
+```
+
+This starts a Consul agent for the backend, a Decider server, and a Watcher. 
+
+![](./resources/compose.png)
+
+With these services running you can now interact with the `dcdr` CLI via `docker-compose exec` from another terminal window.
+
+![](./resources/compose-commands.png)
+
+Now you can update features, CURL the results from the server, and see the changes update in realtime.
+
+### From Scratch
+This example uses the Consul backend. If you need instructions for getting Consul installed, check their [Getting Started](https://www.consul.io/intro/getting-started/install.html) page.
 
 Let's start a development `consul agent` with an empty feature set and see how this all works together. For simplicity we can use the default Decider configuration without a git repository or stats.
 

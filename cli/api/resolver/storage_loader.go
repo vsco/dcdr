@@ -30,7 +30,7 @@ func LoadStore(cfg *config.Config) stores.StoreIFace {
 		c, err := consul_store.NewDefault()
 
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalf("could not load consul: %v", err)
 		}
 
 		return c

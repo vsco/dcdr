@@ -39,7 +39,7 @@ func GitExec() string {
 	output, err := exec.Command("which", "git").Output()
 
 	if err != nil {
-		printer.SayErr("%v", err)
+		printer.SayErr("git not found: %v", err)
 		os.Exit(1)
 	}
 
