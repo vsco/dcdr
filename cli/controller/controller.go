@@ -249,7 +249,6 @@ func (cc *Controller) Serve(ctx climax.Context) int {
 
 	if err != nil {
 		printer.LogErrf("%v", err)
-		return 1
 	}
 
 	s := server.New(cc.Config, c)

@@ -1,12 +1,22 @@
-hash: 7d869f369929098d0d66b0509a43eedfb547cfc27ebdd9ba85948bc3b020241e
-updated: 2016-03-21T15:13:32.40769375-07:00
+hash: 98ef408ea194196c686c41ffa1d10de6d5411516bfcd2b0686fd9a9f3586d418
+updated: 2016-04-17T17:32:51.145675823-07:00
 imports:
+- name: github.com/coreos/etcd
+  version: 9504df2917efb3f43883a9e9326719acb9a36278
+  subpackages:
+  - client
+  - pkg/pathutil
+  - pkg/types
 - name: github.com/fatih/color
   version: 533cd7fd8a85905f67a1753afb4deddc85ea174f
+- name: github.com/fsouza/go-dockerclient
+  version: 9b6c9720043b74304a6dd07a2a901d16e7bf3d3d
+  subpackages:
+  - external/golang.org/x/net/context
 - name: github.com/gorilla/context
   version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
 - name: github.com/gorilla/handlers
-  version: ee54c7b44cab12289237fb8631314790076e728b
+  version: 66e6c6f01d8da976ee113437745ca029c2b585a6
 - name: github.com/gorilla/mux
   version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/hashicorp/consul
@@ -45,10 +55,18 @@ imports:
   version: 6fe211e493929a8aac0469b93f28b1d0688a9a3a
 - name: github.com/tucnak/climax
   version: 4c021a579ddac03b8a085bebcb87d66c072341ef
+- name: github.com/ugorji/go
+  version: a396ed22fc049df733440d90efe17475e3929ccb
+  subpackages:
+  - codec
 - name: github.com/vsco/http-test
-  version: a980d7f6637bab571bcda35f37b2028e2a888b5a
+  version: 829b868c0fb51729b96533b26153ca380a3f4860
 - name: github.com/zenazn/goji
   version: 1925ec6302925f4760d7a11cc17036f44ec98d5b
+- name: golang.org/x/net
+  version: fb93926129b8ec0056f2f458b1f519654814edf0
+  subpackages:
+  - context
 - name: golang.org/x/sys
   version: 20457ee8ea8546920d3f4e19e405da45250dc5a5
   subpackages:

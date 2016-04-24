@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e
+export GO15VENDOREXPERIMENT=1
 
 ./script/bootstrap
+./script/test
 go install

@@ -1,0 +1,4 @@
+FROM base/archlinux
+ADD ./bin/dcdr /usr/bin/dcdr
+ENTRYPOINT ["/usr/bin/dcdr"]
+

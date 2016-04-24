@@ -211,8 +211,7 @@ func TestUpdateFeatures(t *testing.T) {
 
 	cfg := config.DefaultConfig()
 	cfg.Git.RepoPath = "/tmp"
-	c, err := New(cfg)
-	assert.NoError(t, err)
+	c, _ := New(cfg)
 	c.UpdateFeatures(json)
 
 	scoped := c.WithScopes("ab")
