@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/vsco/dcdr.svg?token=BU7xWxZdgzTAdauMqukE&branch=master)](https://travis-ci.com/vsco/dcdr)
+[![Build Status](https://travis-ci.org/vsco/dcdr.svg?branch=master)](https://travis-ci.org/vsco/dcdr)
 
 # dcdr (decider)
 Distributed Feature Flags
