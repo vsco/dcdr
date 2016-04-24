@@ -5,7 +5,7 @@ Distributed Feature Flags
 
 ## Pre-Release
 
-This is pre-release software. The Consul backend support has been used in production at VSCO for a year but the Ectd backend should be considered experimental at the moment.
+This is pre-release software. The Consul backend support has been used in production at VSCO for a year but the Etcd backend should be considered experimental at the moment.
 
 ## Overview
 
