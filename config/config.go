@@ -91,6 +91,11 @@ type Etcd struct {
 	Endpoints []string
 }
 
+// Redis config struct for the redis store.
+type Redis struct {
+	Address string
+}
+
 // Watcher config struct for `dcdr watch`
 type Watcher struct {
 	OutputPath string
@@ -116,6 +121,7 @@ type Config struct {
 	Storage   string
 	Consul    Consul
 	Etcd      Etcd
+	Redis     Redis
 	Watcher   Watcher
 	Git       Git
 	Stats     Stats

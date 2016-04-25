@@ -4,30 +4,16 @@ import (
 	"log"
 
 	"github.com/vsco/dcdr/cli/api/stores"
-	consul_store "github.com/vsco/dcdr/cli/api/stores/consul"
-	etcd_store "github.com/vsco/dcdr/cli/api/stores/etcd"
-	"github.com/vsco/dcdr/cli/api/watchers"
-	consul_watcher "github.com/vsco/dcdr/cli/api/watchers/consul"
-	etcd_watcher "github.com/vsco/dcdr/cli/api/watchers/etcd"
+	"github.com/vsco/dcdr/cli/api/stores/consul"
+	"github.com/vsco/dcdr/cli/api/stores/etcd"
+	"github.com/vsco/dcdr/cli/api/stores/redis"
 	"github.com/vsco/dcdr/config"
 )
 
-func LoadWatcher(cfg *config.Config) watchers.KVWatcherIFace {
+func LoadStore(cfg *config.Config) stores.IFace {
 	switch cfg.Storage {
 	case "consul":
-		return consul_watcher.New(cfg)
-	case "etcd":
-		return etcd_watcher.New(cfg)
-	default:
-		log.Fatalf("invalid storage type %s", cfg.Storage)
-		return nil
-	}
-}
-
-func LoadStore(cfg *config.Config) stores.StoreIFace {
-	switch cfg.Storage {
-	case "consul":
-		c, err := consul_store.NewDefault()
+		c, err := consul.NewDefault(cfg)
 
 		if err != nil {
 			log.Fatalf("could not load consul: %v", err)
@@ -35,7 +21,15 @@ func LoadStore(cfg *config.Config) stores.StoreIFace {
 
 		return c
 	case "etcd":
-		return etcd_store.New(cfg)
+		return etcd.New(cfg)
+	case "redis":
+		r, err := redis.New(cfg)
+
+		if err != nil {
+			log.Fatalf("could not load redis: %v", err)
+		}
+
+		return r
 	default:
 		log.Fatalf("invalid storage type %s", cfg.Storage)
 		return nil

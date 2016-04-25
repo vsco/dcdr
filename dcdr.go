@@ -30,9 +30,7 @@ func main() {
 		}
 	}
 
-	w := resolver.LoadWatcher(cfg)
-
-	kv := api.New(store, rp, w, cfg, gs)
+	kv := api.New(store, rp, cfg, gs)
 	ctrl := controller.New(cfg, kv)
 
 	dcdr := cli.New(ctrl)

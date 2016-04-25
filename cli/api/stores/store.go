@@ -13,9 +13,13 @@ func (kv *KVByte) String() string {
 
 type KVBytes []*KVByte
 
-type StoreIFace interface {
+type IFace interface {
 	List(prefix string) (KVBytes, error)
 	Get(key string) (*KVByte, error)
 	Delete(key string) error
 	Set(key string, bts []byte) error
+	Register(func(kvb KVBytes))
+	Watch() error
+	Updated(kvs interface{})
+	Close()
 }

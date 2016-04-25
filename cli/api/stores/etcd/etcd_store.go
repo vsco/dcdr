@@ -8,21 +8,27 @@ import (
 
 	"github.com/coreos/etcd/client"
 	"github.com/vsco/dcdr/cli/api/stores"
+	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/config"
 	"golang.org/x/net/context"
 )
 
-type ETCDStore struct {
+type Store struct {
 	kv         client.KeysAPI
 	ctx        context.Context
 	getOpts    *client.GetOptions
 	setOpts    *client.SetOptions
 	deleteOpts *client.DeleteOptions
+	cb         func(kvb stores.KVBytes)
+	config     *config.Config
 }
 
-var DefaultEndpoints = []string{"http://127.0.0.1:2379"}
+var (
+	DefaultEndpoints = []string{"http://127.0.0.1:2379"}
+	ReconnectTime    = 2 * time.Second
+)
 
-func DefaultETCDlStore(cfg *config.Config) (client.KeysAPI, error) {
+func DefaultStore(cfg *config.Config) (client.KeysAPI, error) {
 	endpoints := DefaultEndpoints
 
 	if len(cfg.Etcd.Endpoints) > 0 {
@@ -44,18 +50,19 @@ func DefaultETCDlStore(cfg *config.Config) (client.KeysAPI, error) {
 	return client.NewKeysAPI(c), nil
 }
 
-func New(cfg *config.Config) stores.StoreIFace {
-	kv, _ := DefaultETCDlStore(cfg)
+func New(cfg *config.Config) stores.IFace {
+	kv, _ := DefaultStore(cfg)
 
-	es := &ETCDStore{
-		kv:  kv,
-		ctx: context.Background(),
+	es := &Store{
+		config: cfg,
+		kv:     kv,
+		ctx:    context.Background(),
 	}
 
 	return es
 }
 
-func (s *ETCDStore) Get(key string) (*stores.KVByte, error) {
+func (s *Store) Get(key string) (*stores.KVByte, error) {
 	resp, err := s.kv.Get(s.ctx, key, s.getOpts)
 
 	if err != nil {
@@ -65,19 +72,19 @@ func (s *ETCDStore) Get(key string) (*stores.KVByte, error) {
 	return toKVByte(resp.Node), nil
 }
 
-func (s *ETCDStore) Set(key string, bts []byte) error {
+func (s *Store) Set(key string, bts []byte) error {
 	_, err := s.kv.Set(s.ctx, key, string(bts), s.setOpts)
 
 	return err
 }
 
-func (s *ETCDStore) Delete(key string) error {
+func (s *Store) Delete(key string) error {
 	_, err := s.kv.Delete(s.ctx, key, s.deleteOpts)
 
 	return etcdError(err)
 }
 
-func (s *ETCDStore) List(prefix string) (stores.KVBytes, error) {
+func (s *Store) List(prefix string) (stores.KVBytes, error) {
 	opts := &client.GetOptions{
 		Recursive: true,
 		Sort:      true,
@@ -94,6 +101,67 @@ func (s *ETCDStore) List(prefix string) (stores.KVBytes, error) {
 
 	return kvbs, nil
 }
+
+func (s *Store) Register(cb func(kvb stores.KVBytes)) {
+	s.cb = cb
+}
+
+func (s *Store) Updated(kvs interface{}) {
+	kvb := FlattenToKVBytes(kvs.(*client.Node), make(stores.KVBytes, 0))
+
+	s.cb(kvb)
+}
+
+func (s *Store) Watch() error {
+	watcherOpts := client.WatcherOptions{AfterIndex: 0, Recursive: true}
+	w := s.kv.Watcher(s.config.Namespace, &watcherOpts)
+
+	s.Init()
+
+	for {
+		r, err := w.Next(context.Background())
+		if err != nil {
+			printer.LogErrf("Error occurred: %e", err)
+			time.Sleep(ReconnectTime)
+			continue
+		}
+
+		switch r.Action {
+		case "set", "update", "create":
+			s.Updated(r.Node)
+		case "delete":
+			resp, err := s.kv.Get(context.Background(), s.config.Namespace, nil)
+			if err != nil {
+				printer.LogErrf("Error occurred: %e", err)
+			}
+
+			s.Updated(resp.Node)
+		}
+
+	}
+}
+
+// Init etcd watches do not fire an initial event. This method triggers
+// a write to the file systems of the entire keyspace.
+func (s *Store) Init() {
+	opts := &client.GetOptions{
+		Recursive: true,
+		Sort:      true,
+		Quorum:    true,
+	}
+
+	resp, err := s.kv.Get(context.Background(), s.config.Namespace, opts)
+
+	if etcdError(err) != nil {
+		printer.LogErrf("Error occurred: %e", err)
+	}
+
+	if resp != nil {
+		s.Updated(resp.Node)
+	}
+}
+
+func (s *Store) Close() {}
 
 func FlattenToKVBytes(n *client.Node, nodes stores.KVBytes) stores.KVBytes {
 	if n.Dir {

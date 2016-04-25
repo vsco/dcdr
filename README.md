@@ -9,7 +9,7 @@ This is pre-release software. The Consul backend support has been used in produc
 
 ## Overview
 
-Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system with adaptable backends. It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Decider is built to be adaptable to any backing datastore. At the moment only [Consul](https://www.consul.io/intro/getting-started/kv.html) and [Etcd](https://coreos.com/etcd/) are supported but [ZooKeeper](https://zookeeper.apache.org/), and [Redis](http://redis.io/) adapters are in the works.
+Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system with adaptable backends. It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Decider is built to be adaptable to any backing datastore. At the moment only [Consul](https://www.consul.io/intro/getting-started/kv.html), [Etcd](https://coreos.com/etcd/), and [Redis](http://redis.io/) are supported but a [ZooKeeper](https://zookeeper.apache.org/) is planned.
 
 Decider has four major components.
 
@@ -206,7 +206,7 @@ Decider has many moving parts that require orchestration in order to do a proper
 ./script/compose
 ```
 
-This starts a Consul agent for the backend, a Decider server, and a Watcher. 
+This starts a Consul agent for the backend, a Decider server, and a Watcher.
 
 ![](./resources/compose.png)
 
@@ -304,10 +304,7 @@ Included in this package is a Go client. By default this client uses the same [`
 import "github.com/vsco/dcdr/client"
 
 // Initialize a client with the default configuration
-client := client.NewDefault()
-
-// Begin watching the decider.json file
-err := client.Watch()
+client, err := client.NewDefault()
 
 if err != nil {
 	panic(err)
@@ -328,8 +325,7 @@ dcdr set -n example-feature -v false
 ```
 
 ```Go
-// Using the fluent API for brevity
-client, err := client.NewDefault().Watch()
+client, err := client.NewDefault()
 
 if err != nil {
 	panic(err)
@@ -407,7 +403,7 @@ dcdr set -n new-feature-rollout -v 0.5
 ```
 
 ```Go
-client, err := client.NewDefault().Watch()
+client, err := client.NewDefault()
 
 if err != nil {
 	panic(err)
@@ -541,11 +537,15 @@ To create a new repository from scratch. Configure the `config.hcl` file with yo
 Username = "twoism"
 Namespace = "dcdr"
 
-Storage = "consul" // or etcd
+Storage = "consul" // etcd, redis
 
 Consul {
   Address = "127.0.0.1:8500"
 }
+
+//Redis {
+//  Address = ":6379"
+//}
 
 //Etcd {
 //  Endpoints = ["http://127.0.0.1:2379"]

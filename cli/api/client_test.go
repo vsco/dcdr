@@ -13,7 +13,7 @@ import (
 func TestClientSet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 
-	c := New(stores.NewMockStore(ft, nil), &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(stores.NewMockStore(ft, nil), &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	err := c.Set(ft)
 
@@ -24,7 +24,7 @@ func TestClientSetExisting(t *testing.T) {
 	update := models.NewFeature("test", nil, "c", "u", "s", "n")
 	orig := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 
-	c := New(stores.NewMockStore(orig, nil), &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(stores.NewMockStore(orig, nil), &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	err := c.Set(update)
 
@@ -34,7 +34,7 @@ func TestClientSetExisting(t *testing.T) {
 func TestList(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	cs := stores.NewMockStore(ft, nil)
-	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(cs, &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	fts, err := c.List("test", "")
 
@@ -45,7 +45,7 @@ func TestList(t *testing.T) {
 func TestGet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	cs := stores.NewMockStore(ft, nil)
-	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(cs, &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	var f *models.Feature
 	err := c.Get("test", &f)
@@ -56,7 +56,7 @@ func TestGet(t *testing.T) {
 
 func TestNilGet(t *testing.T) {
 	cs := stores.NewMockStore(nil, nil)
-	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(cs, &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	var f *models.Feature
 	err := c.Get("test", &f)
@@ -68,7 +68,7 @@ func TestNilGet(t *testing.T) {
 func TestSet(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	cs := stores.NewMockStore(ft, nil)
-	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(cs, &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	err := c.Set(ft)
 
@@ -78,7 +78,7 @@ func TestSet(t *testing.T) {
 func TestSetErrorOnNilValue(t *testing.T) {
 	ft := models.NewFeature("test", nil, "c", "u", "s", "n")
 	cs := stores.NewMockStore(nil, nil)
-	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(cs, &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	err := c.Set(ft)
 
@@ -90,7 +90,7 @@ func TestTypeChangeErrorSet(t *testing.T) {
 	bad := models.NewFeature("test", false, "c", "u", "s", "n")
 
 	cs := stores.NewMockStore(orig, nil)
-	c := New(cs, nil, nil, config.DefaultConfig(), nil)
+	c := New(cs, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(bad)
 	assert.Equal(t, ErrTypeChange, err)
@@ -100,7 +100,7 @@ func TestSetWithError(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	e := errors.New("")
 	cs := stores.NewMockStore(ft, e)
-	c := New(cs, nil, nil, config.DefaultConfig(), nil)
+	c := New(cs, nil, config.DefaultConfig(), nil)
 
 	err := c.Set(ft)
 
@@ -110,7 +110,7 @@ func TestSetWithError(t *testing.T) {
 func TestDelete(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	cs := stores.NewMockStore(ft, nil)
-	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(cs, &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	err := c.Delete(ft.Key, "")
 
@@ -121,7 +121,7 @@ func TestDeleteWithError(t *testing.T) {
 	ft := models.NewFeature("test", 0.5, "c", "u", "s", "n")
 	e := errors.New("")
 	cs := stores.NewMockStore(ft, e)
-	c := New(cs, &stores.MockRepo{}, nil, config.DefaultConfig(), nil)
+	c := New(cs, &stores.MockRepo{}, config.DefaultConfig(), nil)
 
 	err := c.Delete(ft.Key, "")
 

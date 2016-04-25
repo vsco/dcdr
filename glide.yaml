@@ -17,12 +17,12 @@ import:
     ref: ef757b820a7d6760a89641ac29541967eb6d9f05
   - package: github.com/tucnak/climax
     ref: 4c021a579ddac03b8a085bebcb87d66c072341ef
-  - package: github.com/zenazn/goji
-    ref: 1925ec6302925f4760d7a11cc17036f44ec98d5b
   - package: gopkg.in/fsnotify.v1
     ref: 875cf421b32f8f1b31bd43776297876d01542279
+  - package: github.com/garyburd/redigo/redis
 
     # Testing
   - package: github.com/stretchr/testify
     ref: 6fe211e493929a8aac0469b93f28b1d0688a9a3a
   - package: github.com/vsco/http-test
+    ref: 3e41d620190387f858d0105313cd352883b72627
