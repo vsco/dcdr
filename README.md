@@ -5,7 +5,7 @@ Distributed Feature Flags
 
 ## Pre-Release
 
-This is pre-release software. The Consul backend support has been used in production at VSCO for a year but the Ectd backend should be considered experimental at the moment.
+This is pre-release software. The Consul backend support has been used in production at VSCO for a year but the Etcd backend should be considered experimental at the moment.
 
 ## Overview
 
@@ -198,7 +198,7 @@ You can override this location by setting the `DCDR_CONFIG_DIR` environment vari
 
 ### TL;DR Using Docker Compose
 
-Decider has many moving parts that require orchestration in order to do a proper demostration of how they all work together. So thanks to [Docker Compose](https://docs.docker.com/compose/) we can bundle this up quite easily. This example uses a Consul backend and starts a `dcdr watch` and `dcdr server` for you.
+Decider has many moving parts that require orchestration in order to do a proper demonstration of how they all work together. So thanks to [Docker Compose](https://docs.docker.com/compose/) we can bundle this up quite easily. This example uses a Consul backend and starts a `dcdr watch` and `dcdr server` for you.
 
 #### Building & running the images
 
