@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd $(dirname $0)/..
+
+FEATURE=test-feature
+SCOPE=a/b/c
+
+docker-compose exec dcdr_watch dcdr info
+docker-compose exec dcdr_watch dcdr set -n $FEATURE -v 0.5 -s $SCOPE -c "CI $FEATURE"
+docker-compose exec dcdr_watch dcdr list -s $SCOPE
+
+curl -vf -H "x-dcdr-scopes:$SCOPE" localhost:8000/dcdr.json
+
+docker-compose exec dcdr_watch dcdr delete -n -s $SCOPE
+docker-compose exec dcdr_watch dcdr list
