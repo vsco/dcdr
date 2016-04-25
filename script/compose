@@ -4,4 +4,7 @@ set -e
 
 cd $(dirname $0)/..
 docker-compose build
-docker-compose up
+docker-compose up -d
+
+# let consul come up
+sleep 5
