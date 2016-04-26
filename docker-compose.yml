@@ -4,7 +4,7 @@ services:
     environment:
       - "CONSUL_HTTP_ADDR=consul:8500"
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.archlinux
       context: .
     command: watch
     links:
@@ -18,7 +18,7 @@ services:
     environment:
       - "CONSUL_HTTP_ADDR=consul:8500"
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.archlinux
       context: .
     command: server
     ports:
