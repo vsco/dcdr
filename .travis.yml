@@ -19,6 +19,7 @@ install:
   - script/bootstrap
 script:
   - script/test
+  - script/build
   - script/compose
   - script/compose-test
 
