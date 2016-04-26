@@ -68,7 +68,8 @@ func (w *Watcher) Watch() {
 		for {
 			select {
 			case event := <-w.watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write {
+				if event.Op&fsnotify.Write == fsnotify.Write ||
+					event.Op&fsnotify.Create == fsnotify.Create {
 					w.UpdateBytes()
 				}
 			case err := <-w.watcher.Errors:

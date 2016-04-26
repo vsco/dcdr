@@ -4,14 +4,15 @@ set -e
 
 cd $(dirname $0)/..
 
-FEATURE=test-feature
-SCOPE=a/b/c
+FEATURE="test-feature"
+SCOPE="a/b/c"
 
 docker-compose run dcdr_watch info
 docker-compose run dcdr_watch set -n $FEATURE -v 0.5 -s $SCOPE -c "CI $FEATURE"
 docker-compose run dcdr_watch list -s $SCOPE
+docker-compose exec dcdr_server cat /etc/dcdr/decider.json
 
-sleep 0.5
+sleep 1
 
 curl -vf -H "x-dcdr-scopes:$SCOPE" localhost:8000/dcdr.json
 
