@@ -17,7 +17,8 @@ type FeatureMap struct {
 
 // Info contains the metadata for the current `FeatureMap`.
 type Info struct {
-	CurrentSHA string `json:"current_sha,omitempty"`
+	CurrentSHA       string `json:"current_sha,omitempty"`
+	LastModifiedDate int64  `json:"last_modfied_date,omitempty"`
 }
 
 // FeatureScopes the map of percentile and boolean K/Vs.
@@ -26,7 +27,7 @@ type FeatureScopes map[string]interface{}
 // Root wrapper struct for `Info` and `Features`.
 type Root struct {
 	sync.RWMutex
-	Info          Info          `json:"info"`
+	Info          *Info         `json:"info"`
 	FeatureScopes FeatureScopes `json:"features"`
 }
 
@@ -34,7 +35,7 @@ type Root struct {
 func EmptyFeatureMap() (fm *FeatureMap) {
 	fm = &FeatureMap{
 		Dcdr: Root{
-			Info: Info{
+			Info: &Info{
 				CurrentSHA: "",
 			},
 			FeatureScopes: FeatureScopes{

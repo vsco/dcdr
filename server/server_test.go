@@ -6,6 +6,8 @@ import (
 
 	"bytes"
 
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/config"
@@ -83,8 +85,10 @@ func TestGetScopes(t *testing.T) {
 
 func TestHTTPCaching(t *testing.T) {
 	srv := mockServer()
+	ts := time.Now().Unix()
 	fm := models.EmptyFeatureMap()
 	fm.Dcdr.Info.CurrentSHA = "current-sha"
+	fm.Dcdr.Info.LastModifiedDate = ts
 	srv.Client.SetFeatureMap(fm)
 
 	resp := builder.WithMux(srv).
@@ -94,6 +98,7 @@ func TestHTTPCaching(t *testing.T) {
 	http_assert.Response(t, resp.Response).
 		HasStatusCode(http.StatusNotModified).
 		ContainsHeaderValue(middleware.EtagHeader, fm.Dcdr.CurrentSHA()).
+		ContainsHeaderValue(middleware.LastModifiedHeader, time.Unix(ts, 0).Format(time.RFC1123)).
 		ContainsHeaderValue(middleware.CacheControlHeader, middleware.CacheControl).
 		ContainsHeaderValue(middleware.PragmaHeader, middleware.Pragma).
 		ContainsHeaderValue(middleware.ExpiresHeader, middleware.Expires)

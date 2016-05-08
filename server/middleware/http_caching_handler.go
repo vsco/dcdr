@@ -3,6 +3,8 @@ package middleware
 import (
 	"net/http"
 
+	"time"
+
 	"github.com/vsco/dcdr/client"
 )
 
@@ -11,6 +13,8 @@ const (
 	IfNoneMatchHeader = "If-None-Match"
 	// EtagHeader header used to pass the CurrentSHA in responses
 	EtagHeader = "Etag"
+	// LastModified date when the feature set was last updated
+	LastModifiedHeader = "Last-Modified"
 	// CacheControlHeader sets the caches control header for the response
 	CacheControlHeader = "Cache-Control"
 	// CacheControl ensure no client-side or proxy caching
@@ -49,13 +53,18 @@ func SetCacheHeaders(w http.ResponseWriter, r *http.Request) {
 func HTTPCachingHandler(dcdr client.IFace) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			if sha := dcdr.CurrentSHA(); sha != "" {
+			if sha := dcdr.Info().CurrentSHA; sha != "" {
 				w.Header().Set(EtagHeader, sha)
+			}
+
+			if date := dcdr.Info().LastModifiedDate; date != 0 {
+				lmd := time.Unix(date, 0).Format(time.RFC1123)
+				w.Header().Set(LastModifiedHeader, lmd)
 			}
 
 			SetCacheHeaders(w, r)
 
-			if NotModified(dcdr.CurrentSHA(), r) {
+			if NotModified(dcdr.Info().CurrentSHA, r) {
 				w.WriteHeader(http.StatusNotModified)
 				return
 			}
