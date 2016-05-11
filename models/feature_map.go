@@ -123,5 +123,9 @@ func rev(a []string) {
 
 // CurrentSHA accessor for the underlying `CurrentSHA` found in `Info`.
 func (d *Root) CurrentSHA() string {
+	if d.Info == nil {
+		return ""
+	}
+
 	return d.Info.CurrentSHA
 }
