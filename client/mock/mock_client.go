@@ -8,7 +8,11 @@ import (
 
 // New creates a `Client` with an empty `FeatureMap` and `Config`.
 func New() (d *Client) {
-	c, _ := client.New(&config.Config{})
+	c, _ := client.New(&config.Config{
+		Watcher: config.Watcher{
+			OutputPath: "",
+		},
+	})
 
 	d = &Client{
 		Client:     *c,
