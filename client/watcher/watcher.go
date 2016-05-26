@@ -7,8 +7,8 @@ import (
 
 	"sync"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/vsco/dcdr/cli/printer"
-	"gopkg.in/fsnotify.v1"
 )
 
 // IFace interface for the the file system watcher.

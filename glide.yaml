@@ -17,8 +17,8 @@ import:
     ref: ef757b820a7d6760a89641ac29541967eb6d9f05
   - package: github.com/tucnak/climax
     ref: 4c021a579ddac03b8a085bebcb87d66c072341ef
-  - package: gopkg.in/fsnotify.v1
-    ref: 875cf421b32f8f1b31bd43776297876d01542279
+  - package: github.com/fsnotify/fsnotify
+    ref: v1.3.0
   - package: github.com/garyburd/redigo/redis
 
     # Testing
