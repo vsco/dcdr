@@ -1,8 +1,8 @@
-hash: 1cb67f723a6f35d458015a010dd5460166e963cdbf5ae187544957fe2e7fa486
-updated: 2016-05-26T11:20:54.112301094-07:00
+hash: 3e59e6b149ca0d5855035ce099459a689bc16560a7b98265a24837e0554326f5
+updated: 2016-05-28T15:03:07.005078926-07:00
 imports:
 - name: github.com/coreos/etcd
-  version: 6acb3d67fbe131b3b2d5d010e00ec80182be4628
+  version: a86ae1d969129540adf6a923767021507920a0ba
   subpackages:
   - client
   - pkg/pathutil
@@ -65,7 +65,7 @@ imports:
 - name: github.com/vsco/http-test
   version: 3e41d620190387f858d0105313cd352883b72627
 - name: golang.org/x/net
-  version: dfd9ed699ea197b58a32e0d1dcfa2be66f127ec4
+  version: 30db96677b74e24b967e23f911eb3364fc61a011
   subpackages:
   - context
 - name: golang.org/x/sys
