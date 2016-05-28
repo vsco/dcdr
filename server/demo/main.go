@@ -10,11 +10,11 @@ import (
 
 	"github.com/vsco/dcdr/client"
 	"github.com/vsco/dcdr/server"
+	"github.com/vsco/dcdr/server/handlers"
 )
 
 const AuthorizationHeader = "Authorization"
 const CountryCodeHeader = "X-Country"
-const DcdrScopesHeader = "x-dcdr-scopes"
 
 // MockAuth example authentication middleware.
 // Checks for any value in the http Authorization header.
@@ -33,16 +33,14 @@ func MockAuth(c client.IFace) func(http.Handler) http.Handler {
 	}
 }
 
+// ScopedCountryCode appends the country-codes/xx scope as the X-Country header
 func ScopedCountryCode(c client.IFace) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			cc := strings.ToLower(r.Header.Get(CountryCodeHeader))
 
 			if cc != "" {
-				// Check for existing scopes and append 'country-code/xx'
-				scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
-				scopes = append(scopes, fmt.Sprintf("country-codes/%s", cc))
-				r.Header.Set(DcdrScopesHeader, strings.Join(scopes, ","))
+				handlers.AppendScope(r, fmt.Sprintf("country-codes/%s", cc))
 			}
 
 			h.ServeHTTP(w, r)

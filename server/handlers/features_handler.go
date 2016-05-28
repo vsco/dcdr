@@ -58,6 +58,19 @@ func GetScopes(r *http.Request) []string {
 	return deduped
 }
 
+// AppendScope adds a scope to the `x-dcdr-scopes` header
+func AppendScope(r *http.Request, scope string) {
+	scopes := GetScopes(r)
+	scopes = append(scopes, scope)
+
+	SetScopes(r, scopes)
+}
+
+// SetScopes joins the values from scopes and sets the scopes header
+func SetScopes(r *http.Request, scopes []string) {
+	r.Header.Set(DcdrScopesHeader, strings.Join(scopes, ","))
+}
+
 // ScopeMapFromRequest helper method for returning a FeatureMap scoped to
 // the values found in DcdrScopesHeader.
 func ScopeMapFromRequest(c client.IFace, r *http.Request) *models.FeatureMap {
