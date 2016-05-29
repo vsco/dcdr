@@ -41,7 +41,12 @@ func contains(s []string, str string) bool {
 //
 // x-dcdr-scopes: "a/b/c, d" => []string{"a/b/c", "d"}
 func GetScopes(r *http.Request) []string {
-	scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+	hdr := r.Header.Get(DcdrScopesHeader)
+	scopes := make([]string, 0)
+
+	if hdr != "" {
+		scopes = strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+	}
 
 	if len(scopes) > MaxScopeLimit {
 		scopes = scopes[:MaxScopeLimit]
