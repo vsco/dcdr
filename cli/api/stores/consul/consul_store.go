@@ -24,7 +24,12 @@ type Store struct {
 }
 
 func NewDefault(cfg *config.Config) (stores.IFace, error) {
-	client, err := api.NewClient(api.DefaultConfig())
+	apiConfig := api.DefaultConfig()
+	if cfg.Consul.Address != "" {
+		printer.Logf("Setting consul address to %s in config", cfg.Consul.Address)
+		apiConfig.Address = cfg.Consul.Address
+	}
+	client, err := api.NewClient(apiConfig)
 
 	if err != nil {
 		return nil, err
@@ -131,7 +136,7 @@ func (cs *Store) Watch() error {
 		cs.Updated(data)
 	}
 
-	if err := wp.Run(""); err != nil {
+	if err := wp.Run(cs.cfg.Consul.Address); err != nil {
 		printer.LogErrf("Error querying Consul agent: %s", err)
 	}
 
