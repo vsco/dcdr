@@ -41,16 +41,20 @@ func (d *Client) DisableBoolFeature(feature string) {
 	d.MergeScopes()
 }
 
+// SetPercentileFeature set a percentile feature to an arbitrary value
+func (d *Client) SetPercentileFeature(feature string, val float64) {
+	d.Client.FeatureMap().Dcdr.Defaults()[feature] = val
+	d.MergeScopes()
+}
+
 // EnablePercentileFeature set a percentile feature to true
 func (d *Client) EnablePercentileFeature(feature string) {
-	d.Client.FeatureMap().Dcdr.Defaults()[feature] = 1.0
-	d.MergeScopes()
+	d.SetPercentileFeature(feature, 1.0)
 }
 
 // DisablePercentileFeature set a percentile feature to false
 func (d *Client) DisablePercentileFeature(feature string) {
-	d.Client.FeatureMap().Dcdr.Defaults()[feature] = 0.0
-	d.MergeScopes()
+	d.SetPercentileFeature(feature, 0.0)
 }
 
 // Watch noop for tests.
