@@ -21,7 +21,7 @@ if [ "$FMT_ERRS" -gt "0" ]; then
 fi
 echo "ok  gofmt"
 
-VET_ERRS=$(go tool vet -tests $pkgs 2>&1 | tee /dev/tty | wc -l)
+VET_ERRS=$(go tool vet -all -shadow $pkgs 2>&1 | tee /dev/tty | wc -l)
 if [ "$VET_ERRS" -gt "0" ]; then
    echo "$VET_ERRS Vet error(s) found above."
   exit 1
