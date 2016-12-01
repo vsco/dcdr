@@ -57,6 +57,11 @@ func (d *Client) DisablePercentileFeature(feature string) {
 	d.SetPercentileFeature(feature, 0.0)
 }
 
+// Features `features` accessor
+func (c *Client) Features() models.FeatureScopes {
+	return c.features
+}
+
 // Watch noop for tests.
 func (d *Client) Watch() *Client {
 	return d
