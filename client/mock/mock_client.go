@@ -27,6 +27,7 @@ func New() (d *Client) {
 type Client struct {
 	client.Client
 	featureMap *models.FeatureMap
+	features   models.FeatureScopes
 }
 
 // EnableBoolFeature set a boolean feature to true
@@ -58,8 +59,8 @@ func (d *Client) DisablePercentileFeature(feature string) {
 }
 
 // Features `features` accessor
-func (c *Client) Features() models.FeatureScopes {
-	return c.features
+func (d *Client) Features() models.FeatureScopes {
+	return d.features
 }
 
 // Watch noop for tests.
