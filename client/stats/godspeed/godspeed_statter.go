@@ -18,8 +18,8 @@ func New(gs *godspeed.Godspeed, tags []string) (g *Godspeed) {
 }
 
 // Incr increments a key.
-func (g *Godspeed) Incr(key string) {
-	g.gs.Incr(key, g.tags)
+func (g *Godspeed) Incr(key string, sampleRate float64) {
+	g.gs.Send(key, "c", sampleRate, g.tags)
 }
 
 // Tags accessor for `tags`.
