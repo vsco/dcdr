@@ -15,7 +15,7 @@ type MockStatter struct {
 	Count map[string]int
 }
 
-func (ms *MockStatter) Incr(key string) {
+func (ms *MockStatter) Incr(key string, sampleRate float64) {
 	ms.Count[key]++
 }
 

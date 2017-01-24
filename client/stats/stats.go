@@ -1,7 +1,7 @@
 package stats
 
 type IFace interface {
-	Incr(feature string)
+	Incr(feature string, sampleRate float64)
 	Tags() []string
 }
 
