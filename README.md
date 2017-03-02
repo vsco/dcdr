@@ -35,9 +35,9 @@ Your code would look something like this.
 
 ```Go
 if dcdr.IsAvailable("disable-load-heavy-api-endpoint") {
-	// All good, go about your day
-} else {
 	// DB is having a bad day, please check back later
+} else {
+	// All good, go about your day
 }
 ```
 
