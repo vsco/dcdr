@@ -9,11 +9,17 @@ env:
   global:
   - GOPATH=$HOME/go
 
+before_install:
+  - if test -n "$DOCKER_REGISTRY" ; then docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" "$DOCKER_REGISTRY" ; fi
 install:
   - script/bootstrap
 script:
   - script/test
   - script/build-image
+after_success:
+  - '([ "${TRAVIS_PULL_REQUEST}" != "false" ] || script/docker-tag-and-push "${DOCKER_REPO:-dcdr}" ${TRAVIS_BRANCH})'
+  - '([ "${TRAVIS_PULL_REQUEST}"  = "false" ] || script/docker-tag-and-push "${DOCKER_REPO:-dcdr}" ${TRAVIS_PULL_REQUEST})'
+  - 'script/docker-tag-and-push "${DOCKER_REPO:-dcdr}" ${TRAVIS_COMMIT}'
 
 notifications:
   email: false
