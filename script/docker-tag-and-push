@@ -1,0 +1,38 @@
+#!/bin/bash
+# Usage: script/docker-tag-and-push SERVICE TAG
+# Example: script/docker-tag-and-push dcdr 12345
+
+echo_err() {
+  echo $@ >> /dev/stderr
+}
+
+usage() {
+  echo_err "usage: $0 SERVICE TAG"
+  exit 1
+}
+
+run_or_sudo() {
+  $@ || sudo $@
+}
+
+tag_and_push() {
+  set +x
+  local service="$1"
+  local commitish="$2"
+
+  [ -z "${service}" ] && {
+    echo_err "fatal: no service present."
+    usage
+  }
+  [ -z "${commitish}" ] && {
+    echo_err "fatal: no commit present, failing to tag."
+    usage
+  }
+  set -x
+  run_or_sudo docker tag "${service}" ${DOCKER_REGISTRY}/${service}:${commitish}
+  run_or_sudo docker push ${DOCKER_REGISTRY}/${service}:${commitish}
+}
+
+if test -n "$DOCKER_REGISTRY" ; then
+  tag_and_push $1 $2
+fi
