@@ -10,6 +10,13 @@ env:
   - GOPATH=$HOME/go
 
 before_install:
+  # If you want your Travis CI build to push images to a Docker repository,
+  # define these for environment variables in your Travis CI settings for the
+  # repository:
+  # - DOCKER_REGISTRY  private registry to push to
+  # - DOCKER_USERNAME  username at the registry
+  # - DOCKER_PASSWORD  the registry password for DOCKER_USERNAME
+  # - DOCKER_REPO      repo to push to
   - if test -n "$DOCKER_REGISTRY" ; then docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" "$DOCKER_REGISTRY" ; fi
 install:
   - script/bootstrap
