@@ -1,6 +1,7 @@
 package watcher
 
 import (
+	"errors"
 	"os"
 
 	"io/ioutil"
