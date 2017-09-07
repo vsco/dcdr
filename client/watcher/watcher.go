@@ -68,8 +68,11 @@ func (w *Watcher) Watch() {
 		for {
 			select {
 			case event := <-w.watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					w.UpdateBytes()
+				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&Create == f.Create {
+					err = w.UpdateBytes()
+					if err != nil {
+						printer.LogErrf("[dcdr] watch error: %v", err)
+					}
 				}
 			case err := <-w.watcher.Errors:
 				printer.LogErrf("[dcdr] watch error: %v", err)
@@ -94,6 +97,10 @@ func (w *Watcher) UpdateBytes() error {
 
 	if err != nil {
 		return err
+	}
+
+	if len(bts) == 0 {
+		return errors.New("Empty file read.")
 	}
 
 	w.writeCallback(bts)

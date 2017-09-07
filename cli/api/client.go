@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 
 	"github.com/PagerDuty/godspeed"
+	"github.com/vsco/dcdr/cli/api/ioutil2"
 	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/cli/repo"
@@ -335,7 +336,7 @@ func (c *Client) WriteOutputFile(kvb stores.KVBytes) {
 		os.Exit(1)
 	}
 
-	err = ioutil.WriteFile(c.config.Watcher.OutputPath, bts, 0644)
+	err = ioutil2.WriteFileAtomic(c.config.Watcher.OutputPath, bts, 0644)
 
 	if err != nil {
 		printer.LogErrf("%v", err)
