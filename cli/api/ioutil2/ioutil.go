@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 // Package ioutil2 provides extra functionality along similar lines to io/ioutil.
+// Imported from https://github.com/youtube/vitess/blob/master/go/ioutil2/ioutil.go
 package ioutil2
 
 import (
