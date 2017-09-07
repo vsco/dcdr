@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -29,7 +30,7 @@ func TestNewWatcher(t *testing.T) {
 	assert.NoError(t, err)
 
 	doneChan := make(chan bool)
-	once := sync.Once
+	var once sync.Once
 	closeChan := func() {
 		once.Do(func() { close(doneChan) })
 	}
