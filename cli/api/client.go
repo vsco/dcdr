@@ -9,6 +9,8 @@ import (
 
 	"encoding/json"
 
+	"time"
+
 	"github.com/PagerDuty/godspeed"
 	"github.com/vsco/dcdr/cli/api/ioutil2"
 	"github.com/vsco/dcdr/cli/api/stores"
@@ -292,7 +294,8 @@ func (c *Client) UpdateCurrentSHA() (string, error) {
 	key := fmt.Sprintf("%s/%s", c.Namespace(), InfoNameSpace)
 
 	info := &models.Info{
-		CurrentSHA: sha,
+		CurrentSHA:       sha,
+		LastModifiedDate: time.Now().UTC().Unix(),
 	}
 
 	bts, err := json.Marshal(info)
@@ -384,7 +387,7 @@ func (c *Client) KVsToFeatureMap(kvb stores.KVBytes) (*models.FeatureMap, error)
 				return fm, err
 			}
 
-			fm.Dcdr.Info = info
+			fm.Dcdr.Info = &info
 		} else {
 			var ft models.Feature
 			err := json.Unmarshal(v.Bytes, &ft)

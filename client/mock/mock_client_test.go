@@ -14,6 +14,8 @@ func TestMockClient(t *testing.T) {
 	d.DisableBoolFeature("bool")
 	assert.False(t, d.IsAvailable("bool"))
 
+	d.SetPercentileFeature("float", 0.2)
+	assert.Equal(t, 2.0, d.ScaleValue("float", 0, 10))
 	d.EnablePercentileFeature("float")
 	assert.True(t, d.IsAvailableForID("float", 2))
 	d.DisablePercentileFeature("float")

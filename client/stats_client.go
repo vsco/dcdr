@@ -49,7 +49,7 @@ func NewStatsDefault(stats stats.IFace) (sc *StatsClient, err error) {
 // IsAvailable delegates `IsAvailable` and increments the provided `feature` status.
 func (sc *StatsClient) IsAvailable(feature string) bool {
 	enabled := sc.Client.IsAvailable(feature)
-	defer sc.Incr(feature, enabled)
+	defer sc.Incr(feature, enabled, 1)
 
 	return enabled
 }
@@ -57,7 +57,7 @@ func (sc *StatsClient) IsAvailable(feature string) bool {
 // IsAvailableForID delegates `IsAvailableForID` and increments the provided `feature` status.
 func (sc *StatsClient) IsAvailableForID(feature string, id uint64) bool {
 	enabled := sc.Client.IsAvailableForID(feature, id)
-	defer sc.Incr(feature, enabled)
+	defer sc.Incr(feature, enabled, 1)
 
 	return enabled
 }
@@ -88,9 +88,9 @@ func (sc *StatsClient) Scopes() []string {
 }
 
 // Incr increments the formatted `statKey`.
-func (sc *StatsClient) Incr(feature string, enabled bool) {
+func (sc *StatsClient) Incr(feature string, enabled bool, sampleRate float64) {
 	key := sc.statKey(feature, enabled)
-	sc.stats.Incr(key)
+	sc.stats.Incr(key, sampleRate)
 }
 
 func (sc *StatsClient) statKey(feature string, enabled bool) string {

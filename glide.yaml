@@ -6,23 +6,15 @@ import:
   - package: github.com/hashicorp/consul
     subpackages:
       - api
-    ref: 0e41fa5340de77a78234d543e6d01314a177d21f
   - package: github.com/hashicorp/hcl
-    ref: 578dd9746824a54637686b51a41bad457a56bcef
   - package: github.com/rodaine/table
-    ref: c35ded4ccfec23e952469a4de8edc168e61c8d58
   - package: github.com/fatih/color
-    ref: 533cd7fd8a85905f67a1753afb4deddc85ea174f
   - package: github.com/PagerDuty/godspeed
-    ref: ef757b820a7d6760a89641ac29541967eb6d9f05
   - package: github.com/tucnak/climax
-    ref: 4c021a579ddac03b8a085bebcb87d66c072341ef
-  - package: gopkg.in/fsnotify.v1
-    ref: 875cf421b32f8f1b31bd43776297876d01542279
+  - package: github.com/fsnotify/fsnotify
+    ref: v1.3.0
   - package: github.com/garyburd/redigo/redis
 
     # Testing
   - package: github.com/stretchr/testify
-    ref: 6fe211e493929a8aac0469b93f28b1d0688a9a3a
   - package: github.com/vsco/http-test
-    ref: 3e41d620190387f858d0105313cd352883b72627

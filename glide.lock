@@ -1,25 +1,27 @@
-hash: 588ad6415e66bbe89c010c93718f99ea2f3023cabc943c99eda4d4633a9b503c
-updated: 2016-04-24T17:12:08.380898118-07:00
+hash: 3e59e6b149ca0d5855035ce099459a689bc16560a7b98265a24837e0554326f5
+updated: 2016-05-28T15:03:07.005078926-07:00
 imports:
 - name: github.com/coreos/etcd
-  version: f8673b5f60477fa2123a1195267938b21c102fb0
+  version: a86ae1d969129540adf6a923767021507920a0ba
   subpackages:
   - client
   - pkg/pathutil
   - pkg/types
 - name: github.com/fatih/color
   version: 533cd7fd8a85905f67a1753afb4deddc85ea174f
+- name: github.com/fsnotify/fsnotify
+  version: 30411dbcefb7a1da7e84f75530ad3abe4011b4f8
 - name: github.com/garyburd/redigo
-  version: 8873b2f1995f59d4bcdd2b0dc9858e2cb9bf0c13
+  version: b8dc90050f24c1a73a52f107f3f575be67b21b7c
   subpackages:
   - redis
   - internal
 - name: github.com/gorilla/context
-  version: a8d44e7d8e4d532b6a27a02dd82abb31cc1b01bd
+  version: aed02d124ae4a0e94fea4541c8effd05bf0c8296
 - name: github.com/gorilla/handlers
   version: 66e6c6f01d8da976ee113437745ca029c2b585a6
 - name: github.com/gorilla/mux
-  version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
+  version: bd09be08ed4377796d312df0a45314e11b8f5dc1
 - name: github.com/hashicorp/consul
   version: 0e41fa5340de77a78234d543e6d01314a177d21f
   subpackages:
@@ -63,13 +65,11 @@ imports:
 - name: github.com/vsco/http-test
   version: 3e41d620190387f858d0105313cd352883b72627
 - name: golang.org/x/net
-  version: b797637b7aeeed133049c7281bfa31dcc9ca42d6
+  version: 30db96677b74e24b967e23f911eb3364fc61a011
   subpackages:
   - context
 - name: golang.org/x/sys
   version: 20457ee8ea8546920d3f4e19e405da45250dc5a5
   subpackages:
   - unix
-- name: gopkg.in/fsnotify.v1
-  version: 875cf421b32f8f1b31bd43776297876d01542279
 devImports: []

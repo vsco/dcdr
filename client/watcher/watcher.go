@@ -4,8 +4,10 @@ import (
 	"errors"
 	"os"
 
+	"sync"
+
+	"github.com/fsnotify/fsnotify"
 	"github.com/vsco/dcdr/cli/printer"
-	"gopkg.in/fsnotify.v1"
 )
 
 // IFace interface for the the file system watcher.
@@ -23,6 +25,7 @@ type Watcher struct {
 	path          string
 	writeCallback func(bts []byte)
 	watcher       *fsnotify.Watcher
+	mu            sync.Mutex
 }
 
 // New initializes a Watcher and verifies that `path` exists.
@@ -55,6 +58,8 @@ func (w *Watcher) Init() error {
 		return err
 	}
 
+	w.mu.Lock()
+	defer w.mu.Unlock()
 	w.watcher = watcher
 
 	return nil
@@ -65,6 +70,7 @@ func (w *Watcher) Watch() {
 	done := make(chan bool)
 	go func() {
 		for {
+			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
@@ -76,12 +82,17 @@ func (w *Watcher) Watch() {
 			case err := <-w.watcher.Errors:
 				printer.LogErrf("[dcdr] watch error: %v", err)
 			}
+			w.mu.Unlock()
 		}
 	}()
 
-	defer w.watcher.Close()
+	defer w.Close()
 
 	<-done
+}
+
+func (w *Watcher) Close() {
+	w.watcher.Close()
 }
 
 // Register assigns the WRITE event callback.

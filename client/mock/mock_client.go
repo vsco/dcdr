@@ -8,7 +8,11 @@ import (
 
 // New creates a `Client` with an empty `FeatureMap` and `Config`.
 func New() (d *Client) {
-	c, _ := client.New(&config.Config{})
+	c, _ := client.New(&config.Config{
+		Watcher: config.Watcher{
+			OutputPath: "",
+		},
+	})
 
 	d = &Client{
 		Client:     *c,
@@ -23,6 +27,7 @@ func New() (d *Client) {
 type Client struct {
 	client.Client
 	featureMap *models.FeatureMap
+	features   models.FeatureScopes
 }
 
 // EnableBoolFeature set a boolean feature to true
@@ -37,16 +42,25 @@ func (d *Client) DisableBoolFeature(feature string) {
 	d.MergeScopes()
 }
 
+// SetPercentileFeature set a percentile feature to an arbitrary value
+func (d *Client) SetPercentileFeature(feature string, val float64) {
+	d.Client.FeatureMap().Dcdr.Defaults()[feature] = val
+	d.MergeScopes()
+}
+
 // EnablePercentileFeature set a percentile feature to true
 func (d *Client) EnablePercentileFeature(feature string) {
-	d.Client.FeatureMap().Dcdr.Defaults()[feature] = 1.0
-	d.MergeScopes()
+	d.SetPercentileFeature(feature, 1.0)
 }
 
 // DisablePercentileFeature set a percentile feature to false
 func (d *Client) DisablePercentileFeature(feature string) {
-	d.Client.FeatureMap().Dcdr.Defaults()[feature] = 0.0
-	d.MergeScopes()
+	d.SetPercentileFeature(feature, 0.0)
+}
+
+// Features `features` accessor
+func (d *Client) Features() models.FeatureScopes {
+	return d.features
 }
 
 // Watch noop for tests.

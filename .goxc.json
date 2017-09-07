@@ -3,7 +3,7 @@
 		"default",
 		"publish-github"
 	],
-	"PackageVersion": "0.2.3",
+	"PackageVersion": "0.2.5",
 	"TaskSettings": {
 		"publish-github": {
 			"owner": "vsco",

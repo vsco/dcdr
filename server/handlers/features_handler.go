@@ -41,7 +41,12 @@ func contains(s []string, str string) bool {
 //
 // x-dcdr-scopes: "a/b/c, d" => []string{"a/b/c", "d"}
 func GetScopes(r *http.Request) []string {
-	scopes := strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+	hdr := r.Header.Get(DcdrScopesHeader)
+	scopes := make([]string, 0)
+
+	if hdr != "" {
+		scopes = strings.Split(r.Header.Get(DcdrScopesHeader), ",")
+	}
 
 	if len(scopes) > MaxScopeLimit {
 		scopes = scopes[:MaxScopeLimit]
@@ -56,6 +61,19 @@ func GetScopes(r *http.Request) []string {
 	}
 
 	return deduped
+}
+
+// AppendScope adds a scope to the `x-dcdr-scopes` header
+func AppendScope(r *http.Request, scope string) {
+	scopes := GetScopes(r)
+	scopes = append(scopes, scope)
+
+	SetScopes(r, scopes)
+}
+
+// SetScopes joins the values from scopes and sets the scopes header
+func SetScopes(r *http.Request, scopes []string) {
+	r.Header.Set(DcdrScopesHeader, strings.Join(scopes, ","))
 }
 
 // ScopeMapFromRequest helper method for returning a FeatureMap scoped to

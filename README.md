@@ -5,11 +5,11 @@ Distributed Feature Flags
 
 ## Pre-Release
 
-This is pre-release software. The Consul backend support has been used in production at VSCO for a year but the Etcd backend should be considered experimental at the moment.
+This is pre-release software. The Consul backend support has been used in production at VSCO for a year, but the Etcd backend should be considered experimental.
 
 ## Overview
 
-Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system with adaptable backends. It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Decider is built to be adaptable to any backing datastore. At the moment only [Consul](https://www.consul.io/intro/getting-started/kv.html), [Etcd](https://coreos.com/etcd/), and [Redis](http://redis.io/) are supported but a [ZooKeeper](https://zookeeper.apache.org/) is planned.
+Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system with adaptable backends. It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Decider is built to be adaptable to any backing datastore. At the moment, [Consul](https://www.consul.io/intro/getting-started/kv.html), [Etcd](https://coreos.com/etcd/), and [Redis](http://redis.io/) are supported. [ZooKeeper](https://zookeeper.apache.org/) support is planned.
 
 Decider has four major components.
 
@@ -18,11 +18,11 @@ Decider has four major components.
 * [`Watcher`](#starting-the-watcher) observes change in the datastore and writes them to disk
 * [`CLI`](#cli) for managing features, watches, and starting the server
 
-Each of these components are comprised of lower level libraries that you can use to suit your systems specific needs.
+Each of these components are comprised of lower level libraries that you can use to suit your system's specific needs.
 
 ### About Feature Flags
 
-Feature flags have many use cases and a wide spectrum of implementations. With Decider the two supported types of flags are `boolean` and `percentile`. For our purposes at [VSCO](http://vsco.co) these have been enough to handle most all of our needs.
+Feature flags have many use cases and there are many implementations. With Decider, the three supported types of flags are `boolean`, `percentile`, and `scalar`. For our purposes at [VSCO](http://vsco.co), these have been enough to handle our needs.
 
 #### Boolean Flags
 An example use case for a `boolean` flag would be an API kill switch that could alleviate load for a backing database.
@@ -35,9 +35,9 @@ Your code would look something like this.
 
 ```Go
 if dcdr.IsAvailable("disable-load-heavy-api-endpoint") {
-	// All good, go about your day
-} else {
 	// DB is having a bad day, please check back later
+} else {
+	// All good, go about your day
 }
 ```
 
@@ -59,9 +59,9 @@ if dcdr.IsAvailableForID("rollout-new-fancy-db-dual-write", user.Id) {
 ```
 
 #### Scalars
-These type of features have an added bonus as you may use their `float64` values as scalars in certain cases.
+Scalars have an added bonus: you may use their `float64` values as scalars in certain cases.
 
-Here we'll use the float value to scale the wait time for DB inserts between 0-1000ms.
+Here, we'll use the float value to scale the wait time for DB inserts between 0-1000ms.
 
 ```
  daemon-db-insert-wait-ms => 0.1
@@ -79,7 +79,7 @@ time.Sleep(waitMS * time.Millisecond)
 
 Feature flags and remote configuration are hard problems to solve in the general sense. Most organizations will have many corner cases unique to their own infrastructure and policies that are cumbersome to solve in an abstract way. Decider is an extracted set of flexible libraries that we at [VSCO](http://vsco.co) have developed over the past year that have worked well for us in solving these issues.
 
-This package does not set out to solve problems such as authentication or ACLs for your features but It does aim to provide enough of the tooling and libraries so that you can do so yourself.
+This package does not set out to provide features like authentication or ACLs, but it does aim to provide enough of the tooling and libraries so that you can do so yourself.
 
 ### Scopes
 In order to allow for expanding use cases and to avoid naming collisions, Decider provides arbitrary scoping of feature flags. An example use case would be providing separate features sets according to country code or mobile platform. Additionally, multiple Decider instances can be run within a cluster with separate namespaces and key sets by configuring [`config.hcl`](#configuration).
@@ -227,7 +227,7 @@ consul agent -bind "127.0.0.1" -dev
 
 This will start a local Consul agent ready to accept connections on `http://127.0.0.1:8500`. Decider should now be able to connect to this instance and set features.
 
-####Set some features
+#### Set some features
 
 ```
 # check that we can talk to the local agent
@@ -258,7 +258,8 @@ Here we have set the feature `example-feature` into two separate scopes. In the 
 [dcdr] 2016/03/09 17:56:17.250948 watching namespace: dcdr
 [dcdr] 2016/03/09 17:56:17.365362 wrote changes to /etc/dcdr/decider.json
 ```
-The watcher is now observing your <Namespace> and writing all changes to the [`Server:OutputPath`](#configuration) ( default `/etc/dcdr/decider.json`).
+
+The watcher is now observing your &laquo;Namespace&raquo; and writing all changes to the [`Server:OutputPath`](#configuration) default `/etc/dcdr/decider.json`.
 
 ### Decider Server
 The easiest way to view your feature flags is with `dcdr server`. This is a bare bones implementation of how to access features over HTTP. There is no authentication, so unless your use case is for internal access only you should include the `server` package into a new project and assemble your own. The server is built with [gorilla/mux](https://github.com/gorilla/mux) router and is extensible by adding additional middleware. Read more on custom servers [here](#building-a-custom-server).

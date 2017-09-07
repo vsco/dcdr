@@ -3,4 +3,4 @@ set -e
 
 cd $(dirname $0)/..
 ./script/build
-docker build -f Dockerfile.archlinux -t dcdr .
+docker build -f Dockerfile.archlinux -t "${DOCKER_REPO:-dcdr}" .

@@ -5,7 +5,7 @@ import (
 	"github.com/vsco/dcdr/cli/controller"
 )
 
-const Version = "0.2.3"
+const Version = "0.2.5"
 
 // CLI main CLI runner
 type CLI struct {

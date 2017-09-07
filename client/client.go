@@ -24,7 +24,7 @@ type IFace interface {
 	SetFeatureMap(fm *models.FeatureMap) *Client
 	ScopedMap() *models.FeatureMap
 	Scopes() []string
-	CurrentSHA() string
+	Info() *models.Info
 	WithScopes(scopes ...string) *Client
 }
 
@@ -108,7 +108,7 @@ func (c *Client) Scopes() []string {
 // assigned unless its `CurrentSHA` is different from the one
 // currently found in `CurrentSHA()`.
 func (c *Client) SetFeatureMap(fm *models.FeatureMap) *Client {
-	if c.config.GitEnabled() && c.CurrentSHA() == fm.Dcdr.CurrentSHA() {
+	if c.config.GitEnabled() && c.Info().CurrentSHA == fm.Dcdr.CurrentSHA() {
 		return c
 	}
 
@@ -143,9 +143,9 @@ func (c *Client) Features() models.FeatureScopes {
 	return c.features
 }
 
-// CurrentSHA accessor for the underlying `CurrentSHA` from `FeatureMap`
-func (c *Client) CurrentSHA() string {
-	return c.FeatureMap().Dcdr.CurrentSHA()
+// Info accessor for the underlying `Info` from `FeatureMap`
+func (c *Client) Info() *models.Info {
+	return c.FeatureMap().Dcdr.Info
 }
 
 // FeatureExists checks the existence of a key

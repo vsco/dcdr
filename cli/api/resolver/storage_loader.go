@@ -12,14 +12,6 @@ import (
 
 func LoadStore(cfg *config.Config) stores.IFace {
 	switch cfg.Storage {
-	case "consul":
-		c, err := consul.NewDefault(cfg)
-
-		if err != nil {
-			log.Fatalf("could not load consul: %v", err)
-		}
-
-		return c
 	case "etcd":
 		return etcd.New(cfg)
 	case "redis":
@@ -31,7 +23,12 @@ func LoadStore(cfg *config.Config) stores.IFace {
 
 		return r
 	default:
-		log.Fatalf("invalid storage type %s", cfg.Storage)
-		return nil
+		c, err := consul.NewDefault(cfg)
+
+		if err != nil {
+			log.Fatalf("could not load consul: %v", err)
+		}
+
+		return c
 	}
 }
