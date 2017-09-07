@@ -69,8 +69,8 @@ func (w *Watcher) Watch() {
 		for {
 			select {
 			case event := <-w.watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&Create == f.Create {
-					err = w.UpdateBytes()
+				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
+					err := w.UpdateBytes()
 					if err != nil {
 						printer.LogErrf("[dcdr] watch error: %v", err)
 					}
