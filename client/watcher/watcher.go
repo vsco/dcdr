@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 
+	"io/ioutil"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
