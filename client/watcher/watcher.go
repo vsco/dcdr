@@ -4,8 +4,6 @@ import (
 	"errors"
 	"os"
 
-	"io/ioutil"
-
 	"github.com/vsco/dcdr/cli/printer"
 	"gopkg.in/fsnotify.v1"
 )
