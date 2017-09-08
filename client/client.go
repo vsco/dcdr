@@ -187,7 +187,7 @@ func (c *Client) UpdateFeatures(bts []byte) {
 	fm, err := models.NewFeatureMap(bts)
 
 	if err != nil {
-		printer.SayErr("parse error: %v", err)
+		printer.SayErr("parse error: %v, feature payload: %s", err, bts)
 		return
 	}
 

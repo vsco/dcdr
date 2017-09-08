@@ -164,7 +164,7 @@ func TestCrc32(t *testing.T) {
 }
 
 func TestUpdateFeatures(t *testing.T) {
-	json := []byte(`{
+	raw := []byte(`{
 	  "dcdr": {
 		"info": {
 		  "current_sha": "abcde"
@@ -212,7 +212,7 @@ func TestUpdateFeatures(t *testing.T) {
 	cfg := config.DefaultConfig()
 	cfg.Git.RepoPath = "/tmp"
 	c, _ := New(cfg)
-	c.UpdateFeatures(json)
+	c.UpdateFeatures(raw)
 
 	scoped := c.WithScopes("ab")
 
@@ -225,6 +225,20 @@ func TestUpdateFeatures(t *testing.T) {
 	assert.Equal(t, float64(0.3), scoped.Features()["float"])
 	assert.True(t, scoped.FeatureExists("new_ab_feature"))
 	assert.Equal(t, true, scoped.Features()["default_bool"])
+}
+
+func TestClient_UpdateFeatures_Failure(t *testing.T) {
+	badUpdate := []byte(`{
+	  "dcdr": {
+		"info": {
+		  "current_sha": "abcde"
+		},`)
+
+	cfg := config.DefaultConfig()
+	cfg.Git.RepoPath = "/tmp"
+	c, _ := New(cfg)
+	c.UpdateFeatures(badUpdate)
+	assert.EqualValues(t, models.EmptyFeatureMap(), c.FeatureMap(), "Assert bad payload returns empty feature map")
 }
 
 func TestWatch(t *testing.T) {
