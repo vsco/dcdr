@@ -77,7 +77,7 @@ func (w *Watcher) Watch() {
 				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 					err := w.UpdateBytes()
 					if err != nil {
-						printer.LogErrf("[dcdr] watch error: %v", err)
+						printer.LogErrf("[dcdr] UpdateBytes error: %v", err)
 					}
 				}
 			case err := <-w.watcher.Errors:
