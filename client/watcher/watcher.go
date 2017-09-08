@@ -1,10 +1,10 @@
 package watcher
 
 import (
+	"errors"
 	"os"
 
 	"io/ioutil"
-
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -74,8 +74,11 @@ func (w *Watcher) Watch() {
 			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					w.UpdateBytes()
+				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
+					err := w.UpdateBytes()
+					if err != nil {
+						printer.LogErrf("[dcdr] watch error: %v", err)
+					}
 				}
 			case err := <-w.watcher.Errors:
 				printer.LogErrf("[dcdr] watch error: %v", err)
@@ -105,6 +108,10 @@ func (w *Watcher) UpdateBytes() error {
 
 	if err != nil {
 		return err
+	}
+
+	if len(bts) == 0 {
+		return errors.New("Empty file read.")
 	}
 
 	w.writeCallback(bts)

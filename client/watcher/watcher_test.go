@@ -1,16 +1,12 @@
 package watcher
 
 import (
-	"testing"
-
-	"io/ioutil"
-	"sync"
-
-	"time"
-
 	"fmt"
-
+	"io/ioutil"
 	"os"
+	"sync"
+	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -33,14 +29,16 @@ func TestNewWatcher(t *testing.T) {
 	err = w.Init()
 	assert.NoError(t, err)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	doneChan := make(chan bool)
+	var once sync.Once
+	closeChan := func() {
+		once.Do(func() { close(doneChan) })
+	}
 
 	w.Register(func(bts []byte) {
 		// check updated bytes on write
 		assert.Equal(t, fmt.Sprintf("%s", updatedBytes), fmt.Sprintf("%s", bts))
-
-		wg.Done()
+		closeChan()
 	})
 
 	go w.Watch()
@@ -51,7 +49,7 @@ func TestNewWatcher(t *testing.T) {
 	err = writeFile(updatedBytes)
 	assert.NoError(t, err)
 
-	wg.Wait()
+	<-doneChan
 
 	err = os.Remove(WatchPath)
 	assert.NoError(t, err)
