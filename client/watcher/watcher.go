@@ -6,10 +6,10 @@ import (
 
 	"io/ioutil"
 	"sync"
+	"syscall"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/vsco/dcdr/cli/printer"
-	"golang.org/x/sys/unix"
 )
 
 // IFace interface for the the file system watcher.
@@ -76,7 +76,6 @@ func (w *Watcher) Watch() {
 			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
-				printer.Logf("event log: %s", event.String())
 				if event.Op&fsnotify.Write == fsnotify.Write ||
 					event.Op&fsnotify.Create == fsnotify.Create ||
 					event.Op&fsnotify.Chmod == fsnotify.Chmod {
@@ -87,7 +86,7 @@ func (w *Watcher) Watch() {
 
 					// Rewatch the path
 					err = w.watcher.Remove(w.path)
-					if err != nil && err != unix.EINVAL {
+					if err != nil && err != syscall.EINVAL {
 						printer.LogErrf("fsnotify Remove error: %v", err)
 					}
 					err = w.watcher.Add(w.path)
