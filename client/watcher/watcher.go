@@ -85,10 +85,6 @@ func (w *Watcher) Watch() {
 					}
 
 					// Rewatch the path
-					err = w.watcher.Remove(w.path)
-					if err != nil && err != syscall.EINVAL {
-						printer.LogErrf("fsnotify Remove error: %v", err)
-					}
 					err = w.watcher.Add(w.path)
 					if err != nil {
 						printer.LogErrf("fsnotify Add error: %v", err)
