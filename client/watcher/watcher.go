@@ -38,6 +38,8 @@ func New(path string) (w *Watcher) {
 		return nil
 	}
 
+	printer.Logf("watching path: %s", path)
+
 	w = &Watcher{
 		path: path,
 	}
@@ -74,7 +76,7 @@ func (w *Watcher) Watch() {
 			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
-				printer.Info("[dcdr] event log: %s", event.String())
+				printer.Logf("event log: %s", event.String())
 				if event.Op&fsnotify.Write == fsnotify.Write ||
 					event.Op&fsnotify.Create == fsnotify.Create ||
 					event.Op&fsnotify.Chmod == fsnotify.Chmod {
