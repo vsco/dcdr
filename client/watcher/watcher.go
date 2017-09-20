@@ -74,12 +74,9 @@ func (w *Watcher) Watch() {
 			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
-				println("test:", event.Op)
-				println("op:", event.String())
 				if event.Op&fsnotify.Write == fsnotify.Write ||
 					event.Op&fsnotify.Create == fsnotify.Create ||
 					event.Op&fsnotify.Chmod == fsnotify.Chmod {
-					println("update bytes")
 					err := w.UpdateBytes()
 					if err != nil {
 						printer.LogErrf("[dcdr] UpdateBytes error: %v", err)
