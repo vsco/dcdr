@@ -74,6 +74,7 @@ func (w *Watcher) Watch() {
 			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
+				printer.LogErrf("[dcdr] event log: %s", event.String())
 				if event.Op&fsnotify.Write == fsnotify.Write ||
 					event.Op&fsnotify.Create == fsnotify.Create ||
 					event.Op&fsnotify.Chmod == fsnotify.Chmod {
