@@ -9,6 +9,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/vsco/dcdr/cli/printer"
+	"golang.org/x/sys/unix"
 )
 
 // IFace interface for the the file system watcher.
@@ -86,7 +87,7 @@ func (w *Watcher) Watch() {
 
 					// Rewatch the path
 					err = w.watcher.Remove(w.path)
-					if err != nil {
+					if err != nil && err != unix.EINVAL {
 						printer.LogErrf("fsnotify Remove error: %v", err)
 					}
 					err = w.watcher.Add(w.path)
