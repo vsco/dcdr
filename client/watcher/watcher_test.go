@@ -13,7 +13,7 @@ import (
 )
 
 const WatchPath = "./test-watcher"
-const AtomicWatchPath = "./test-watcher"
+const AtomicWatchPath = "./test-watcher-atomic"
 
 var origBytes = []byte("orig")
 var updatedBytes = []byte("updated")
@@ -26,11 +26,13 @@ func writeFileAtomic(bts []byte) error {
 	return ioutil2.WriteFileAtomic(AtomicWatchPath, bts, 0664)
 }
 
-func TestNewWatcher(t *testing.T) {
-	err := writeFile(origBytes)
+type writeFunc func([]byte) error
+
+func Check(path string, writeF writeFunc, t *testing.T) {
+	err := writeF(origBytes)
 	assert.NoError(t, err)
 
-	w := New(WatchPath)
+	w := New(path)
 
 	err = w.Init()
 	assert.NoError(t, err)
@@ -52,46 +54,19 @@ func TestNewWatcher(t *testing.T) {
 	// let the file watcher catch up
 	time.Sleep(10 * time.Millisecond)
 
-	err = writeFile(updatedBytes)
+	err = writeF(updatedBytes)
 	assert.NoError(t, err)
 
 	<-doneChan
 
-	err = os.Remove(WatchPath)
+	err = os.Remove(path)
 	assert.NoError(t, err)
 }
 
+func TestNewWatcher(t *testing.T) {
+	Check(WatchPath, writeFile, t)
+}
+
 func TestNewWatcherAtomicWrites(t *testing.T) {
-	err := writeFileAtomic(origBytes)
-	assert.NoError(t, err)
-
-	w := New(AtomicWatchPath)
-
-	err = w.Init()
-	assert.NoError(t, err)
-
-	doneChan := make(chan bool)
-	var once sync.Once
-	closeChan := func() {
-		once.Do(func() { close(doneChan) })
-	}
-
-	w.Register(func(bts []byte) {
-		// check updated bytes on write
-		assert.Equal(t, fmt.Sprintf("%s", updatedBytes), fmt.Sprintf("%s", bts))
-		closeChan()
-	})
-
-	go w.Watch()
-
-	// let the file watcher catch up
-	time.Sleep(10 * time.Millisecond)
-
-	err = writeFile(updatedBytes)
-	assert.NoError(t, err)
-
-	<-doneChan
-
-	err = os.Remove(WatchPath)
-	assert.NoError(t, err)
+	Check(AtomicWatchPath, writeFileAtomic, t)
 }
