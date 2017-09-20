@@ -28,4 +28,4 @@ if [ "$VET_ERRS" -gt "0" ]; then
 fi
 echo "ok go vet"
 
-go test -race -cover $TARGET
+go test -timeout=30s -race -cover $TARGET

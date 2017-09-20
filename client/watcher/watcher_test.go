@@ -9,9 +9,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vsco/dcdr/cli/api/ioutil2"
 )
 
 const WatchPath = "./test-watcher"
+const AtomicWatchPath = "./test-watcher-atomic"
 
 var origBytes = []byte("orig")
 var updatedBytes = []byte("updated")
@@ -20,11 +22,17 @@ func writeFile(bts []byte) error {
 	return ioutil.WriteFile(WatchPath, bts, 0664)
 }
 
-func TestNewWatcher(t *testing.T) {
-	err := writeFile(origBytes)
+func writeFileAtomic(bts []byte) error {
+	return ioutil2.WriteFileAtomic(AtomicWatchPath, bts, 0664)
+}
+
+type writeFunc func([]byte) error
+
+func Check(path string, writeF writeFunc, t *testing.T) {
+	err := writeF(origBytes)
 	assert.NoError(t, err)
 
-	w := New(WatchPath)
+	w := New(path)
 
 	err = w.Init()
 	assert.NoError(t, err)
@@ -46,11 +54,19 @@ func TestNewWatcher(t *testing.T) {
 	// let the file watcher catch up
 	time.Sleep(10 * time.Millisecond)
 
-	err = writeFile(updatedBytes)
+	err = writeF(updatedBytes)
 	assert.NoError(t, err)
 
 	<-doneChan
 
-	err = os.Remove(WatchPath)
+	err = os.Remove(path)
 	assert.NoError(t, err)
+}
+
+func TestNewWatcher(t *testing.T) {
+	Check(WatchPath, writeFile, t)
+}
+
+func TestNewWatcherAtomicWrites(t *testing.T) {
+	Check(AtomicWatchPath, writeFileAtomic, t)
 }
