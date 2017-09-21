@@ -6,7 +6,6 @@ import (
 
 	"io/ioutil"
 	"sync"
-	"syscall"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/vsco/dcdr/cli/printer"
