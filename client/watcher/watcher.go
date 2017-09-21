@@ -38,6 +38,8 @@ func New(path string) (w *Watcher) {
 		return nil
 	}
 
+	printer.Logf("watching path`: %s", path)
+
 	w = &Watcher{
 		path: path,
 	}
@@ -66,7 +68,6 @@ func (w *Watcher) Init() error {
 	return nil
 }
 
-// Watch observes WRITE events, forwarding them to `Updated`
 func (w *Watcher) Watch() {
 	done := make(chan bool)
 	go func() {
@@ -79,11 +80,17 @@ func (w *Watcher) Watch() {
 					event.Op&fsnotify.Chmod == fsnotify.Chmod {
 					err := w.UpdateBytes()
 					if err != nil {
-						printer.LogErrf("[dcdr] UpdateBytes error: %v", err)
+						printer.LogErrf("UpdateBytes error: %v", err)
+					}
+
+					// Rewatch the path
+					err = w.watcher.Add(w.path)
+					if err != nil {
+						printer.LogErrf("fsnotify Add error: %v", err)
 					}
 				}
 			case err := <-w.watcher.Errors:
-				printer.LogErrf("[dcdr] watch error: %v", err)
+				printer.LogErrf("watch error: %v", err)
 			}
 			w.mu.Unlock()
 		}
