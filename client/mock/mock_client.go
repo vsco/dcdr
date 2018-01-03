@@ -26,7 +26,7 @@ func New() (d *Client) {
 // Client mock `Client` for testing.
 type Client struct {
 	client.Client
-	featureMap *models.FeatureMap	
+	featureMap *models.FeatureMap
 }
 
 // EnableBoolFeature set a boolean feature to true
