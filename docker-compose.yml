@@ -3,6 +3,10 @@ services:
   dcdr_watch:
     environment:
       - "CONSUL_HTTP_ADDR=consul:8500"
+      - GIT_AUTHOR_NAME=User1
+      - GIT_AUTHOR_EMAIL=user@example.com
+      - GIT_COMMITTER_NAME=User1
+      - GIT_COMMITTER_EMAIL=user@example.com
     build:
       dockerfile: Dockerfile
       context: .
@@ -10,29 +14,34 @@ services:
     links:
       - consul:consul
     volumes:
-      - "/etc/dcdr:/etc/dcdr"
+      - "./compose_config:/etc/dcdr"
     image: dcdr
   dcdr_server:
     environment:
       - "CONSUL_HTTP_ADDR=consul:8500"
+      - GIT_AUTHOR_NAME=User1
+      - GIT_AUTHOR_EMAIL=user@example.com
+      - GIT_COMMITTER_NAME=User1
+      - GIT_COMMITTER_EMAIL=user@example.com
+
     build:
       dockerfile: Dockerfile
       context: .
     command: server
     ports:
-      - "9000:9000"
+      - "8000"
     links:
       - consul:consul
     depends_on:
       - consul
     volumes:
-      - "/etc/dcdr:/etc/dcdr"
+      - "./compose_config:/etc/dcdr"
     image: dcdr
   consul:
     image: progrium/consul:latest
     ports:
-      - "9400:8400"
-      - "9500:8500"
-      - "9600:53/udp"
+      - "8400"
+      - "8500"
+      - "53/udp"
     hostname: node1
     command: -server -bootstrap

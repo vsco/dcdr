@@ -3,5 +3,20 @@
 set -e
 
 cd $(dirname $0)/..
+
+rm -Rf compose_config/git-backup compose_config/audit
+
+mkdir compose_config/git-backup
+cd compose_config/git-backup
+git init --bare
+
+TEMP_WORK_DIR=`mktemp -d`
+git --work-tree=${TEMP_WORK_DIR} checkout --orphan master
+touch ${TEMP_WORK_DIR}/decider.json
+git --work-tree=${TEMP_WORK_DIR} add ${TEMP_WORK_DIR}/decider.json
+git --work-tree=${TEMP_WORK_DIR} commit -a --allow-empty -m "empty repo"
+
+cd -
+
 docker-compose build
-docker-compose up
+docker-compose up -d
