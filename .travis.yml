@@ -17,7 +17,7 @@ before_install:
   # - DOCKER_USERNAME  username at the registry
   # - DOCKER_PASSWORD  the registry password for DOCKER_USERNAME
   # - DOCKER_REPO      repo to push to
-  - if test -n "$DOCKER_REGISTRY" ; then docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" "$DOCKER_REGISTRY" ; fi
+  - if [[ -n "$DOCKER_PASSWORD" && -n "$DOCKER_USERNAME" && -n "$DOCKER_REGISTRY" ]] ; then  echo "$DOCKER_PASSWORD" | docker login -u="$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY" ; fi
 install:
   - script/bootstrap
 script:
