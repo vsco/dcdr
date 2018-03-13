@@ -9,8 +9,6 @@ services:
     command: watch
     links:
       - consul:consul
-    volumes:
-      - "/etc/dcdr:/etc/dcdr"
     image: dcdr
   dcdr_server:
     environment:
@@ -25,8 +23,6 @@ services:
       - consul:consul
     depends_on:
       - consul
-    volumes:
-      - "/etc/dcdr:/etc/dcdr"
     image: dcdr
   consul:
     image: progrium/consul:latest
