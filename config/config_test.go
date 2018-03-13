@@ -4,6 +4,8 @@ import (
 	"os/user"
 	"testing"
 
+	"io/ioutil"
+
 	"os"
 
 	"fmt"
@@ -41,7 +43,12 @@ func TestDefaultConfig(t *testing.T) {
 }
 
 func TestEnvOverride(t *testing.T) {
-	os.Setenv(envConfigDirOverride, "/tmp/dcdr")
+	dir, err := ioutil.TempDir("", "example")
+	assert.NoError(t, err)
+
+	defer os.RemoveAll(dir)
+
+	os.Setenv(envConfigDirOverride, dir)
 	cfg := LoadConfig()
 
 	assert.Equal(t, Path(), fmt.Sprintf("%s/%s", os.Getenv(envConfigDirOverride), configFileName))
