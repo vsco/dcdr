@@ -127,3 +127,23 @@ func TestDeleteWithError(t *testing.T) {
 
 	assert.Equal(t, e, err)
 }
+func TestKVsToFeatureMapInfoExistByNameSpace(t *testing.T) {
+
+	kvb := stores.KVBytes{
+		&stores.KVByte{
+			Key:   "diffrent_namespace/info",
+			Bytes: []byte(`{ "current_sha": "abcdef", "last_modfied_date": 123456 }`),
+		},
+	}
+
+	cs := stores.NewMockStore(nil, nil)
+	config := config.DefaultConfig()
+	config.Namespace = "diffrent_namespace"
+	c := New(cs, &stores.MockRepo{}, config, nil)
+
+	fm, err := c.KVsToFeatureMap(kvb)
+	assert.Nil(t, err)
+	assert.NotNil(t, fm)
+	assert.Equal(t, fm.Dcdr.Info.CurrentSHA, "abcdef")
+	assert.Equal(t, fm.Dcdr.Info.LastModifiedDate, int64(123456))
+}
