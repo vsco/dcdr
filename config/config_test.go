@@ -13,6 +13,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TempDir(t *testing.T) string {
+	dir, err := ioutil.TempDir(os.TempDir(), "dcdr")
+	if err != nil {
+		t.Fatalf("ioutil.TempDir error: %s", err.Error())
+	}
+	return dir
+}
+
 func TestDefaultConfig(t *testing.T) {
 	ConfigDir = "/tmp/does/not/exist"
 	cfg := LoadConfig()
@@ -43,9 +51,7 @@ func TestDefaultConfig(t *testing.T) {
 }
 
 func TestEnvOverride(t *testing.T) {
-	dir, err := ioutil.TempDir("", "example")
-	assert.NoError(t, err)
-
+	dir := TempDir(t)
 	defer os.RemoveAll(dir)
 
 	os.Setenv(envConfigDirOverride, dir)

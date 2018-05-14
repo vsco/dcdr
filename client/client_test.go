@@ -24,6 +24,14 @@ func NewTestClient() (c *Client) {
 	return
 }
 
+func TempDir(t *testing.T) string {
+	dir, err := ioutil.TempDir(os.TempDir(), "dcdr")
+	if err != nil {
+		t.Fatalf("ioutil.TempDir error: %s", err.Error())
+	}
+	return dir
+}
+
 var JSONBytes = []byte(`{
   "dcdr": {
     "features": {
@@ -210,10 +218,8 @@ func TestUpdateFeatures(t *testing.T) {
 	}`)
 
 	cfg := config.DefaultConfig()
-	dir, err := ioutil.TempDir("", "example")
-	if err != nil {
-		log.Fatal(err)
-	}
+	dir := TempDir(t)
+	defer os.RemoveAll(dir)
 	cfg.Git.RepoPath = dir
 	c, _ := New(cfg)
 	c.UpdateFeatures(raw)
@@ -239,10 +245,8 @@ func TestClient_UpdateFeatures_Failure(t *testing.T) {
 		},`)
 
 	cfg := config.DefaultConfig()
-	dir, err := ioutil.TempDir("", "example")
-	if err != nil {
-		log.Fatal(err)
-	}
+	dir := TempDir(t)
+	defer os.RemoveAll(dir)
 	cfg.Git.RepoPath = dir
 	c, _ := New(cfg)
 	c.UpdateFeatures(badUpdate)
@@ -250,7 +254,7 @@ func TestClient_UpdateFeatures_Failure(t *testing.T) {
 }
 
 func TestWatch(t *testing.T) {
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := ioutil.TempFile(os.TempDir(), "dcdr.json")
 	p := tmpfile.Name()
 	fm, err := models.NewFeatureMap(JSONBytes)
 	assert.NoError(t, err)
