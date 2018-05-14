@@ -24,6 +24,14 @@ func NewTestClient() (c *Client) {
 	return
 }
 
+func TempDir(t *testing.T) string {
+	dir, err := ioutil.TempDir(os.TempDir(), "dcdr")
+	if err != nil {
+		t.Fatalf("ioutil.TempDir error: %s", err.Error())
+	}
+	return dir
+}
+
 var JSONBytes = []byte(`{
   "dcdr": {
     "features": {
@@ -210,7 +218,9 @@ func TestUpdateFeatures(t *testing.T) {
 	}`)
 
 	cfg := config.DefaultConfig()
-	cfg.Git.RepoPath = "/tmp"
+	dir := TempDir(t)
+	defer os.RemoveAll(dir)
+	cfg.Git.RepoPath = dir
 	c, _ := New(cfg)
 	c.UpdateFeatures(raw)
 
@@ -235,14 +245,17 @@ func TestClient_UpdateFeatures_Failure(t *testing.T) {
 		},`)
 
 	cfg := config.DefaultConfig()
-	cfg.Git.RepoPath = "/tmp"
+	dir := TempDir(t)
+	defer os.RemoveAll(dir)
+	cfg.Git.RepoPath = dir
 	c, _ := New(cfg)
 	c.UpdateFeatures(badUpdate)
 	assert.EqualValues(t, models.EmptyFeatureMap(), c.FeatureMap(), "Assert bad payload returns empty feature map")
 }
 
 func TestWatch(t *testing.T) {
-	p := "/tmp/decider.json"
+	tmpfile, err := ioutil.TempFile(os.TempDir(), "dcdr.json")
+	p := tmpfile.Name()
 	fm, err := models.NewFeatureMap(JSONBytes)
 	assert.NoError(t, err)
 	err = ioutil.WriteFile(p, JSONBytes, 0644)
