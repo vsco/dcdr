@@ -71,9 +71,16 @@ func (w *Watcher) Init() error {
 func (w *Watcher) Watch() {
 	done := make(chan bool)
 	go func() {
+		ticker := time.NewTicker(time.Second * 10)
 		for {
 			w.mu.Lock()
 			select {
+			case <- ticker.C:
+				// Rewatch the path
+				err := w.watcher.Add(w.path)
+				if err != nil {
+					printer.LogErrf("fsnotify Add error: %v", err)
+				}
 			case event := <-w.watcher.Events:
 				printer.LogErrf("received fsnotify event: %v %v", event.Op, event.Name)
 				if event.Op&fsnotify.Write == fsnotify.Write ||
@@ -89,8 +96,6 @@ func (w *Watcher) Watch() {
 					if err != nil {
 						printer.LogErrf("fsnotify Add error: %v", err)
 					}
-				} else {
-					printer.LogErrf("unhandled fsnotify event: %v", event.Op)
 				}
 			case err := <-w.watcher.Errors:
 				printer.LogErrf("watch error: %v", err)
