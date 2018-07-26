@@ -3,7 +3,6 @@ package watcher
 import (
 	"errors"
 	"os"
-	"time"
 	"io/ioutil"
 	"sync"
 
@@ -71,19 +70,13 @@ func (w *Watcher) Init() error {
 func (w *Watcher) Watch() {
 	done := make(chan bool)
 	go func() {
-		ticker := time.NewTicker(time.Second * 10)
 		for {
 			w.mu.Lock()
-			select {
-			case <- ticker.C:
-				// Rewatch the path
-				err := w.watcher.Add(w.path)
-				if err != nil {
-					printer.LogErrf("fsnotify Add error: %v", err)
-				}
+			select {			
 			case event := <-w.watcher.Events:
 				printer.LogErrf("received fsnotify event: %v %v", event.Op, event.Name)
 				if event.Op&fsnotify.Write == fsnotify.Write ||
+					event.Op&fsnotify.Remove == fsnotify.Remove ||
 					event.Op&fsnotify.Create == fsnotify.Create ||
 					event.Op&fsnotify.Chmod == fsnotify.Chmod {
 					err := w.UpdateBytes()
