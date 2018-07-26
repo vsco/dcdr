@@ -33,20 +33,18 @@ type Watcher struct {
 
 // New initializes a Watcher and verifies that `path` exists.
 func New(filepath string) (w *Watcher) {
-	filepath = strings.TrimSpace(filepath)
-	watched := filepath
+	filepath = path.Clean(filepath)
 
 	_, err := os.Stat(filepath)
 	if err != nil {
 		printer.LogErrf("could not start watcher: %v", err)
 		return nil
 	}
-
+	
+	//watch the parent dir
+	watched := Dir(filepath)
+	
 	// watch the parent directory if it exists
-	if dir, _ := path.Split(filepath); dir != "" {
-		watched = dir
-	}
-
 	printer.Logf("watching path`: %s", filepath)
 
 	w = &Watcher{
@@ -90,7 +88,7 @@ func (w *Watcher) Watch() {
 					return
 				}
 
-				correctFile := event.Name != "" && strings.Contains(w.path, event.Name)
+				correctFile := event.Name != "" && strings.Contains(w.path, path.Clean(event.Name))
 				isWriteEvent := (event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)
 
 				if correctFile && isWriteEvent {
