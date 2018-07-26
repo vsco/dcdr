@@ -33,7 +33,7 @@ type Watcher struct {
 // New initializes a Watcher and verifies that `path` exists.
 func New(path string) (w *Watcher) {
 	path = strings.TrimSpace(path)
-	watched = path
+	watched := path
 	
 	_, err := os.Stat(watched)
 	if err != nil {
