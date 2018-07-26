@@ -4,8 +4,9 @@ import (
 	"errors"
 	"os"
 	"io/ioutil"
+	"strings"
 	"sync"
-
+	"path"
 	"github.com/fsnotify/fsnotify"
 	"github.com/vsco/dcdr/cli/printer"
 )
@@ -23,6 +24,7 @@ type IFace interface {
 // registration of a callback for WRITE events.
 type Watcher struct {
 	path          string
+	watchedPath   string
 	writeCallback func(bts []byte)
 	watcher       *fsnotify.Watcher
 	mu            sync.Mutex
@@ -30,17 +32,25 @@ type Watcher struct {
 
 // New initializes a Watcher and verifies that `path` exists.
 func New(path string) (w *Watcher) {
-	_, err := os.Stat(path)
-
+	path = strings.TrimSpace(path)
+	watched = path
+	
+	_, err := os.Stat(watched)
 	if err != nil {
 		printer.LogErrf("could not start watcher: %v", err)
 		return nil
 	}
-
-	printer.Logf("watching path`: %s", path)
+	
+	// watch the parent directory if it exists
+	if dir, filename := path.Split(watched); dir != "" {
+		watched = dir
+	}
+	
+	printer.Logf("watching path`: %s", watched)
 
 	w = &Watcher{
-		path: path,
+		path: 	     path,
+		watchedPath: watched,
 	}
 
 	return
@@ -53,13 +63,11 @@ func (w *Watcher) Init() error {
 	if err != nil {
 		return err
 	}
-
-	err = watcher.Add(w.path)
-
-	if err != nil {
+	
+	if err = watcher.Add(w.watchedPath); err != nil {
 		return err
 	}
-
+	
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.watcher = watcher
@@ -74,9 +82,12 @@ func (w *Watcher) Watch() {
 			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
-				printer.LogErrf("received fsnotify event: %v %v", event.Op, event.Name)
-				if event.Op&fsnotify.Write == fsnotify.Write ||
-					event.Op&fsnotify.Remove == fsnotify.Remove ||
+				printer.LogErrf("[dcdr] received fsnotify event: %v %v", event.Op, event.Name)
+				name := strings.TrimSpace(event.Name)
+				if name != w.path {
+					continue
+				}
+				if event.Op&fsnotify.Write == fsnotify.Write ||					
 					event.Op&fsnotify.Create == fsnotify.Create ||
 					event.Op&fsnotify.Chmod == fsnotify.Chmod {
 					err := w.UpdateBytes()
@@ -85,7 +96,7 @@ func (w *Watcher) Watch() {
 					}
 
 					// Rewatch the path
-					err = w.watcher.Add(w.path)
+					err = w.watcher.Add(w.watchedPath)
 					if err != nil {
 						printer.LogErrf("fsnotify Add error: %v", err)
 					}
