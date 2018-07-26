@@ -31,25 +31,25 @@ type Watcher struct {
 }
 
 // New initializes a Watcher and verifies that `path` exists.
-func New(path string) (w *Watcher) {
-	path = strings.TrimSpace(path)
-	watched := path
+func New(filepath string) (w *Watcher) {
+	filepath = strings.TrimSpace(filepath)
+	watched := filepath
 	
-	_, err := os.Stat(watched)
+	_, err := os.Stat(filepath)
 	if err != nil {
 		printer.LogErrf("could not start watcher: %v", err)
 		return nil
 	}
 	
 	// watch the parent directory if it exists
-	if dir, filename := path.Split(watched); dir != "" {
+	if dir, _ := path.Split(filepath); dir != "" {
 		watched = dir
 	}
 	
 	printer.Logf("watching path`: %s", watched)
 
 	w = &Watcher{
-		path: 	     path,
+		path: 	     filepath,
 		watchedPath: watched,
 	}
 
