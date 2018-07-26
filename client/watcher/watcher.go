@@ -3,7 +3,7 @@ package watcher
 import (
 	"errors"
 	"os"
-
+	"time"
 	"io/ioutil"
 	"sync"
 
