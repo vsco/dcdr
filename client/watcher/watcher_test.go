@@ -59,6 +59,7 @@ func Check(path string, writeF writeFunc, t *testing.T) {
 
 	<-doneChan
 
+	w.Close()
 	err = os.Remove(path)
 	assert.NoError(t, err)
 }

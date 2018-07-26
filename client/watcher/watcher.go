@@ -47,7 +47,7 @@ func New(filepath string) (w *Watcher) {
 		watched = dir
 	}
 
-	printer.Logf("watching path`: %s", watched)
+	printer.Logf("watching path`: %s", filepath)
 
 	w = &Watcher{
 		path:        filepath,
@@ -79,34 +79,40 @@ func (w *Watcher) Init() error {
 func (w *Watcher) Watch() {
 	done := make(chan bool)
 	go func() {
+		defer close(done)
+
 		for {
 			w.mu.Lock()
 			select {
-			case event := <-w.watcher.Events:
-				printer.LogErrf("[dcdr] received fsnotify event: %v %v", event.Op, event.Name)
-				name := strings.TrimSpace(event.Name)
-				if name != w.path {
-					continue
+			case event, ok := <-w.watcher.Events:
+				if !ok {
+					w.mu.Unlock()
+					return
 				}
-				if event.Op&fsnotify.Write == fsnotify.Write ||
-					event.Op&fsnotify.Create == fsnotify.Create ||
-					event.Op&fsnotify.Chmod == fsnotify.Chmod {
+
+				correctFile := event.Name != "" && strings.Contains(w.path, event.Name)
+				isWriteEvent := (event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)
+
+				if correctFile && isWriteEvent {
 					err := w.UpdateBytes()
 					if err != nil {
-						printer.LogErrf("UpdateBytes error: %v", err)
+						printer.Err("UpdateBytes error: %v", err)
 					}
 
 					// Rewatch the path
 					err = w.watcher.Add(w.watchedPath)
 					if err != nil {
-						printer.LogErrf("fsnotify Add error: %v", err)
+						printer.Err("fsnotify Add error: %v", err)
 					}
 				}
-			case err := <-w.watcher.Errors:
-				printer.LogErrf("watch error: %v", err)
+			case err, ok := <-w.watcher.Errors:
+				if ok {
+					printer.Err("watch error: %v", err)
+				}
 			}
 			w.mu.Unlock()
 		}
+
 	}()
 
 	defer w.Close()
