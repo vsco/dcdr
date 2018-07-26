@@ -88,6 +88,8 @@ func (w *Watcher) Watch() {
 					if err != nil {
 						printer.LogErrf("fsnotify Add error: %v", err)
 					}
+				} else {
+					printer.LogErrf("unhandled fsnotify event: %v", event.Op)
 				}
 			case err := <-w.watcher.Errors:
 				printer.LogErrf("watch error: %v", err)
