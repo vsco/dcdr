@@ -31,7 +31,7 @@ type Watcher struct {
 	mu            sync.Mutex
 }
 
-// New initializes a Watcher and verifies that `path` exists.
+// New initializes a Watcher and verifies that `filepath` exists.
 func New(filepath string) (w *Watcher) {
 	filepath = path.Clean(filepath)
 
@@ -40,16 +40,11 @@ func New(filepath string) (w *Watcher) {
 		printer.LogErrf("could not start watcher: %v", err)
 		return nil
 	}
-	
-	//watch the parent dir
-	watched := Dir(filepath)
-	
-	// watch the parent directory if it exists
+		
 	printer.Logf("watching path`: %s", filepath)
 
 	w = &Watcher{
 		path:        filepath,
-		watchedPath: watched,
 	}
 
 	return
@@ -62,8 +57,8 @@ func (w *Watcher) Init() error {
 	if err != nil {
 		return err
 	}
-
-	if err = watcher.Add(w.watchedPath); err != nil {
+	//watch the parent dir
+	if err = watcher.Add(path.Dir(w.path)); err != nil {
 		return err
 	}
 
@@ -98,7 +93,7 @@ func (w *Watcher) Watch() {
 					}
 
 					// Rewatch the path
-					err = w.watcher.Add(w.watchedPath)
+					err = w.watcher.Add(path.Dir(w.path))
 					if err != nil {
 						printer.Err("fsnotify Add error: %v", err)
 					}
