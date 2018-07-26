@@ -72,7 +72,7 @@ func (w *Watcher) Watch() {
 	go func() {
 		for {
 			w.mu.Lock()
-			select {			
+			select {
 			case event := <-w.watcher.Events:
 				printer.LogErrf("received fsnotify event: %v %v", event.Op, event.Name)
 				if event.Op&fsnotify.Write == fsnotify.Write ||
