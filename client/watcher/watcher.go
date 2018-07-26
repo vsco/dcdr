@@ -2,11 +2,12 @@ package watcher
 
 import (
 	"errors"
-	"os"
 	"io/ioutil"
+	"os"
+	"path"
 	"strings"
 	"sync"
-	"path"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/vsco/dcdr/cli/printer"
 )
@@ -34,22 +35,22 @@ type Watcher struct {
 func New(filepath string) (w *Watcher) {
 	filepath = strings.TrimSpace(filepath)
 	watched := filepath
-	
+
 	_, err := os.Stat(filepath)
 	if err != nil {
 		printer.LogErrf("could not start watcher: %v", err)
 		return nil
 	}
-	
+
 	// watch the parent directory if it exists
 	if dir, _ := path.Split(filepath); dir != "" {
 		watched = dir
 	}
-	
+
 	printer.Logf("watching path`: %s", watched)
 
 	w = &Watcher{
-		path: 	     filepath,
+		path:        filepath,
 		watchedPath: watched,
 	}
 
@@ -87,7 +88,7 @@ func (w *Watcher) Watch() {
 				if name != w.path {
 					continue
 				}
-				if event.Op&fsnotify.Write == fsnotify.Write ||					
+				if event.Op&fsnotify.Write == fsnotify.Write ||
 					event.Op&fsnotify.Create == fsnotify.Create ||
 					event.Op&fsnotify.Chmod == fsnotify.Chmod {
 					err := w.UpdateBytes()
