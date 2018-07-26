@@ -63,11 +63,11 @@ func (w *Watcher) Init() error {
 	if err != nil {
 		return err
 	}
-	
+
 	if err = watcher.Add(w.watchedPath); err != nil {
 		return err
 	}
-	
+
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.watcher = watcher
