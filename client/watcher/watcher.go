@@ -40,11 +40,11 @@ func New(filepath string) (w *Watcher) {
 		printer.LogErrf("could not start watcher: %v", err)
 		return nil
 	}
-		
+
 	printer.Logf("watching path`: %s", filepath)
 
 	w = &Watcher{
-		path:        filepath,
+		path: filepath,
 	}
 
 	return
