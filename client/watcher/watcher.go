@@ -84,7 +84,7 @@ func (w *Watcher) Watch() {
 				}
 
 				correctFile := event.Name != "" && strings.Contains(w.path, path.Clean(event.Name))
-				isWriteEvent := (event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)
+				isWriteEvent := (event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create) (event.Op&fsnotify.Rename == fsnotify.Rename)
 
 				printer.Say("received fsnotify event: %v %v. Path: %v Correct file: &v, Write: %v", event.Op, event.Name, w.path, correctFile, isWriteEvent)
 
