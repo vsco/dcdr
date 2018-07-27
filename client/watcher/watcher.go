@@ -87,7 +87,7 @@ func (w *Watcher) Watch() {
 				isWriteEvent := (event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)
 
 				printer.Info("received fsnotify event: %v %v. Path: %v Correct file: &v, Write: %v", event.Op, event.Name, w.path, correctFile, isWriteEvent)
-				
+
 				if correctFile && isWriteEvent {
 					printer.Info("handling fsnotify event: %v %v", event.Op, event.Name)
 					err := w.UpdateBytes()
