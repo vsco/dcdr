@@ -84,7 +84,7 @@ func (w *Watcher) Watch() {
 				}
 
 				correctFile := event.Name != "" && strings.Contains(w.path, path.Clean(event.Name))
-				isWriteEvent := (event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)(event.Op&fsnotify.Rename == fsnotify.Rename)
+				isWriteEvent := (event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create) || (event.Op&fsnotify.Rename == fsnotify.Rename)
 
 				printer.Say("received fsnotify event: %v %v. Path: %v Correct file: %v, Write: %v", event.Op, event.Name, w.path, correctFile, isWriteEvent)
 
@@ -92,18 +92,18 @@ func (w *Watcher) Watch() {
 					printer.Say("handling fsnotify event: %v %v", event.Op, event.Name)
 					err := w.UpdateBytes()
 					if err != nil {
-						printer.Err("UpdateBytes error: %v", err)
+						printer.SayErr("UpdateBytes error: %v", err)
 					}
 
 					// Rewatch the path
 					err = w.watcher.Add(path.Dir(w.path))
 					if err != nil {
-						printer.Err("fsnotify Add error: %v", err)
+						printer.SayErr("fsnotify Add error: %v", err)
 					}
 				}
 			case err, ok := <-w.watcher.Errors:
 				if ok {
-					printer.Err("watch error: %v", err)
+					printer.SayErr("watch error: %v", err)
 				}
 			}
 			w.mu.Unlock()
