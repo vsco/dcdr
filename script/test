@@ -23,6 +23,7 @@ echo "ok  gofmt"
 
 VET_ERRS=$(go tool vet -all -shadow $pkgs 2>&1 | tee /dev/tty | wc -l)
 if [ "$VET_ERRS" -gt "0" ]; then
+   go tool vet -all -shadow $pkgs
    echo "$VET_ERRS Vet error(s) found above."
   exit 1
 fi
