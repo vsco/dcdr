@@ -1,5 +1,6 @@
 version: '2'
 services:
+
   dcdr_watch:
     environment:
       - "CONSUL_HTTP_ADDR=consul:8500"
@@ -10,6 +11,9 @@ services:
     links:
       - consul:consul
     image: dcdr
+    volumes:
+      - etc-dcdr:/etc/dcdr
+
   dcdr_server:
     environment:
       - "CONSUL_HTTP_ADDR=consul:8500"
@@ -23,7 +27,12 @@ services:
       - consul:consul
     depends_on:
       - consul
+      - dcdr_watch
     image: dcdr
+    # we need a watcher on our API server, this shares the volume to pretend that's happening
+    volumes:
+      - etc-dcdr:/etc/dcdr
+
   consul:
     image: progrium/consul:latest
     ports:
@@ -32,3 +41,6 @@ services:
       - "9600:53/udp"
     hostname: node1
     command: -server -bootstrap
+
+volumes:
+  etc-dcdr:
