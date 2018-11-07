@@ -198,7 +198,9 @@ You can override this location by setting the `DCDR_CONFIG_DIR` environment vari
 
 ### TL;DR Using Docker Compose
 
-Decider has many moving parts that require orchestration in order to do a proper demonstration of how they all work together. So thanks to [Docker Compose](https://docs.docker.com/compose/) we can bundle this up quite easily. This example uses a Consul backend and starts a `dcdr watch` and `dcdr server` for you.
+Decider has many moving parts that require orchestration in order to do a proper demonstration of how they all work together.
+So thanks to [Docker Compose](https://docs.docker.com/compose/) we can bundle this up quite easily. This example uses a
+Consul backend and starts a `dcdr watch` and `dcdr server` for you.
 
 #### Building & running the images
 
@@ -206,11 +208,42 @@ Decider has many moving parts that require orchestration in order to do a proper
 ./script/compose
 ```
 
-This starts a Consul agent for the backend, a Decider server, and a Watcher.
+This starts a Consul agent for the backend, a Decider server, and a Decider Watcher.
 
 ![](./resources/compose.png)
 
-With these services running you can now interact with the `dcdr` CLI via `docker-compose exec` from another terminal window.
+With these services running you can now interact with the `dcdr` CLI via
+`docker-compose exec` from another terminal window through the `dcdr_server`
+container.
+
+command to add/modify a feature flag:
+```bash
+$ docker-compose exec dcdr_server dcdr set -n feat-foo -v true
+[dcdr] set flag 'dcdr/features/default/feat-foo'
+```
+
+result logs from running docker-compose log:
+```bash
+dcdr_watch_1   | [dcdr] 2018/03/13 18:25:48 wrote changes to: /etc/dcdr/decider.json
+```
+
+command to fetch feature flags from Decider server API:
+```bash
+$ docker-compose exec dcdr_server curl 127.0.0.1:8000/dcdr.json
+{
+  "dcdr": {
+    "info": {},
+    "features": {
+      "feat-foo": true
+    }
+  }
+}
+```
+
+result logs from running docker-compose log:
+```bash
+dcdr_server_1  | 127.0.0.1 - - [13/Mar/2018:18:36:51 +0000] "GET /dcdr.json HTTP/1.1" 200 102 "" "curl/7.52.1"
+```
 
 ![](./resources/compose-commands.png)
 

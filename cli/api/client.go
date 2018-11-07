@@ -378,7 +378,7 @@ func (c *Client) KVsToFeatureMap(kvb stores.KVBytes) (*models.FeatureMap, error)
 		var key string
 		var value interface{}
 
-		if v.Key == config.DefaultInfoNamespace {
+		if v.Key == fmt.Sprintf("%s/%s", c.Namespace(), InfoNameSpace) {
 			var info models.Info
 			err := json.Unmarshal(v.Bytes, &info)
 
