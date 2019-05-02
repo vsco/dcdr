@@ -50,7 +50,7 @@ imports:
   repo: https://github.com/mattn/go-colorable
 - name: github.com/mattn/go-isatty
   version: 56b76bdf51f7708750eac80fa38b952bb9f32639
-- name: github.com/PagerDuty/godspeed
+- name: github.com/theckman/godspeed
   version: ef757b820a7d6760a89641ac29541967eb6d9f05
 - name: github.com/rodaine/table
   version: c35ded4ccfec23e952469a4de8edc168e61c8d58
