@@ -137,9 +137,9 @@ func TestKVsToFeatureMapInfoExistByNameSpace(t *testing.T) {
 	}
 
 	cs := stores.NewMockStore(nil, nil)
-	config := config.DefaultConfig()
-	config.Namespace = "diffrent_namespace"
-	c := New(cs, &stores.MockRepo{}, config, nil)
+	cfg := config.DefaultConfig()
+	cfg.Namespace = "diffrent_namespace"
+	c := New(cs, &stores.MockRepo{}, cfg, nil)
 
 	fm, err := c.KVsToFeatureMap(kvb)
 	assert.Nil(t, err)
