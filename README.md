@@ -59,7 +59,7 @@ if dcdr.IsAvailableForID("rollout-new-fancy-db-dual-write", user.Id) {
 ```
 
 #### Scalars
-Scalars have an added bonus: you may use their `float64` values as scalars in certain cases.
+Percentiles have an added bonus: you may use their `float64` values as scalars in certain cases.
 
 Here, we'll use the float value to scale the wait time for DB inserts between 0-1000ms.
 
