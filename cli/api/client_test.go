@@ -132,7 +132,7 @@ func TestKVsToFeatureMapInfoExistByNameSpace(t *testing.T) {
 	kvb := stores.KVBytes{
 		&stores.KVByte{
 			Key:   "diffrent_namespace/info",
-			Bytes: []byte(`{ "current_sha": "abcdef", "last_modfied_date": 123456 }`),
+			Bytes: []byte(`{ "current_sha": "abcdef", "last_modified_date": 123456 }`),
 		},
 	}
 
