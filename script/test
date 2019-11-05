@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-export GO15VENDOREXPERIMENT=1
-
 cd $(dirname "$0")/..
 
 script/require-glide
