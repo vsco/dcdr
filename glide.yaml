@@ -4,6 +4,7 @@ import:
     # Runtime dependencies
   - package: github.com/coreos/etcd/client
   - package: github.com/hashicorp/consul
+    ref: v1.4.5
     subpackages:
       - api
   - package: github.com/hashicorp/hcl
@@ -12,7 +13,7 @@ import:
   - package: github.com/PagerDuty/godspeed
   - package: github.com/tucnak/climax
   - package: github.com/fsnotify/fsnotify
-    ref: v1.3.0
+    ref: v1.4.7
   - package: github.com/garyburd/redigo/redis
 
     # Testing

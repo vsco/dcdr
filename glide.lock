@@ -1,75 +1,112 @@
-hash: 3e59e6b149ca0d5855035ce099459a689bc16560a7b98265a24837e0554326f5
-updated: 2016-05-28T15:03:07.005078926-07:00
+hash: 3313377f26cce465c88505f41705e9e1ffcea7cd9987f0d9abe105d84751ae7a
+updated: 2019-11-04T17:17:48.441902-08:00
 imports:
+- name: github.com/armon/go-metrics
+  version: ec5e00d3c878b2a97bbe0884ef45ffd1b4f669f5
 - name: github.com/coreos/etcd
-  version: a86ae1d969129540adf6a923767021507920a0ba
+  version: edd011c6d1f8b9c80d22a2c4c78b81fce3861437
   subpackages:
   - client
-  - pkg/pathutil
-  - pkg/types
-- name: github.com/fatih/color
-  version: 533cd7fd8a85905f67a1753afb4deddc85ea174f
-- name: github.com/fsnotify/fsnotify
-  version: 30411dbcefb7a1da7e84f75530ad3abe4011b4f8
-- name: github.com/garyburd/redigo
-  version: b8dc90050f24c1a73a52f107f3f575be67b21b7c
+- name: github.com/coreos/go-semver
+  version: e214231b295a8ea9479f11b70b35d5acf3556d9b
   subpackages:
-  - redis
+  - semver
+- name: github.com/fatih/color
+  version: 3f9d52f7176a6927daacff70a3e8d1dc2025c53e
+- name: github.com/fsnotify/fsnotify
+  version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
+- name: github.com/garyburd/redigo
+  version: 569eae59ada904ea8db7a225c2b47165af08735a
+  subpackages:
   - internal
-- name: github.com/gorilla/context
-  version: aed02d124ae4a0e94fea4541c8effd05bf0c8296
+  - redis
 - name: github.com/gorilla/handlers
-  version: 66e6c6f01d8da976ee113437745ca029c2b585a6
+  version: 8a3748addc242fc560bd6d4ff28b0374c010b1b4
 - name: github.com/gorilla/mux
-  version: bd09be08ed4377796d312df0a45314e11b8f5dc1
+  version: f395758b854c4efa789b8c1e9b73479704c548cb
 - name: github.com/hashicorp/consul
-  version: 0e41fa5340de77a78234d543e6d01314a177d21f
+  version: 501c22b5563935713596034d47a1cbdef1ec1904
   subpackages:
   - api
   - watch
 - name: github.com/hashicorp/go-cleanhttp
-  version: 875fb671b3ddc66f8e2f0acc33829c8cb989a38d
+  version: d3fcbee8e1810ecee4bdbf415f42f84cfd0e3361
+- name: github.com/hashicorp/go-immutable-radix
+  version: 0146a9aba1948ded4ed290cfd3fded2c15313f63
+- name: github.com/hashicorp/go-rootcerts
+  version: df8e78a645e18d56ed7bb9ae10ffb8174ab892e2
+- name: github.com/hashicorp/golang-lru
+  version: 7f827b33c0f158ec5dfbba01bb0b14a4541fd81d
+  subpackages:
+  - simplelru
 - name: github.com/hashicorp/hcl
-  version: 578dd9746824a54637686b51a41bad457a56bcef
+  version: 914dc3f8dd7c463188c73fc47e9ced82a6e421ca
   subpackages:
   - hcl/ast
   - hcl/parser
-  - hcl/token
-  - json/parser
   - hcl/scanner
   - hcl/strconv
+  - hcl/token
+  - json/parser
   - json/scanner
   - json/token
 - name: github.com/hashicorp/serf
-  version: e4ec8cc423bbe20d26584b96efbeb9102e16d05f
+  version: 8f005026db33f0f2fd6f66cf1f38ee4ae9e93a5a
   subpackages:
   - coordinate
-  - serf
+- name: github.com/json-iterator/go
+  version: dc11f49689fd1c9a6de20749def70bd889bf0d42
 - name: github.com/mattn/go-colorable
-  version: 9cbef7c35391cca05f15f8181dc0b18bc9736dbb
-  repo: https://github.com/mattn/go-colorable
+  version: 98ec13f34aabf44cc914c65a1cfb7b9bc815aef1
 - name: github.com/mattn/go-isatty
-  version: 56b76bdf51f7708750eac80fa38b952bb9f32639
+  version: 0e9ddb7c0c0aef74fa25eaba4141e6b5ab7aca2a
+- name: github.com/mitchellh/go-homedir
+  version: af06845cf3004701891bf4fdb884bfe4920b3727
+- name: github.com/mitchellh/mapstructure
+  version: 3536a929edddb9a5b34bd6861dc4a9647cb459fe
+- name: github.com/modern-go/concurrent
+  version: bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94
+- name: github.com/modern-go/reflect2
+  version: 94122c33edd36123c84d5368cfb2b69df93a0ec8
 - name: github.com/PagerDuty/godspeed
-  version: ef757b820a7d6760a89641ac29541967eb6d9f05
+  version: 122876cde329c8726140934c785a552fa779883e
 - name: github.com/rodaine/table
-  version: c35ded4ccfec23e952469a4de8edc168e61c8d58
+  version: 212a2ad1c462ed4d5b5511ea2b480a573281dbbd
 - name: github.com/stretchr/testify
-  version: 6fe211e493929a8aac0469b93f28b1d0688a9a3a
-- name: github.com/tucnak/climax
-  version: 4c021a579ddac03b8a085bebcb87d66c072341ef
-- name: github.com/ugorji/go
-  version: a396ed22fc049df733440d90efe17475e3929ccb
+  version: a88bf7aab8f390daf0a71952568272f6638b319e
   subpackages:
-  - codec
+  - assert
+- name: github.com/tucnak/climax
+  version: da4c02f3b1f8ee2c27bb2a8910fe692900d8fc26
 - name: github.com/vsco/http-test
   version: 3e41d620190387f858d0105313cd352883b72627
+  subpackages:
+  - assert
+  - builder
+  - response
+- name: go.etcd.io/etcd
+  version: edd011c6d1f8b9c80d22a2c4c78b81fce3861437
+  subpackages:
+  - pkg/pathutil
+  - pkg/srv
+  - pkg/types
+  - version
 - name: golang.org/x/net
-  version: 30db96677b74e24b967e23f911eb3364fc61a011
+  version: 0deb6923b6d97481cb43bc1043fe5b72a0143032
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 20457ee8ea8546920d3f4e19e405da45250dc5a5
+  version: e8c54fb511f6a2d695a4403ae0dab1c05aef011a
   subpackages:
   - unix
-devImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: d8f796af33cc11cb798c1aaeb27a4ebc5099927d
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: 5d4384ee4fb2527b0a1256a821ebfc92f91efefc
+  subpackages:
+  - difflib
+- name: gopkg.in/yaml.v2
+  version: f90ceb4f409096b60e2e9076b38b304b8246e5fa
