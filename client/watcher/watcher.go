@@ -153,4 +153,3 @@ func (w *Watcher) ReadFile() ([]byte, error) {
 
 	return bts, err
 }
-
