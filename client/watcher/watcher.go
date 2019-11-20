@@ -2,10 +2,10 @@ package watcher
 
 import (
 	"errors"
-	"os"
-
 	"io/ioutil"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/vsco/dcdr/cli/printer"
