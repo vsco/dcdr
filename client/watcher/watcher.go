@@ -25,6 +25,8 @@ const watchWaitTime = 5 * time.Second
 
 // Watcher is a wrapper for `fsnotify` that provides the
 // registration of a callback for WRITE events.
+// It uses a 5 second polling fallback to periodically reload dcdr file changes,
+// in the event that the watcher does not fire.
 type Watcher struct {
 	path          string
 	writeCallback func(bts []byte)
