@@ -20,6 +20,9 @@ type IFace interface {
 	ReadFile() ([]byte, error)
 }
 
+// watchWaitTime is the maximum time to wait before reloading changes
+const watchWaitTime = 5 * time.Second
+
 // Watcher is a wrapper for `fsnotify` that provides the
 // registration of a callback for WRITE events.
 type Watcher struct {
@@ -70,8 +73,14 @@ func (w *Watcher) Init() error {
 
 func (w *Watcher) Watch() {
 	done := make(chan bool)
+	
+	timer := time.NewTimer(watchWaitTime)
+	defer timer.Stop()
+	
 	go func() {
 		for {
+			timer.Reset(watchWaitTime)
+			
 			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
@@ -88,6 +97,16 @@ func (w *Watcher) Watch() {
 					if err != nil {
 						printer.LogErrf("fsnotify Add error: %v", err)
 					}
+				}
+			case <- timer.C:
+				err := w.UpdateBytes()
+				if err != nil {
+					printer.LogErrf("UpdateBytes error: %v", err)
+				}
+				// Rewatch the path
+				err = w.watcher.Add(w.path)
+				if err != nil {
+					printer.LogErrf("fsnotify Add error: %v", err)
 				}
 			case err := <-w.watcher.Errors:
 				printer.LogErrf("watch error: %v", err)
