@@ -73,14 +73,14 @@ func (w *Watcher) Init() error {
 
 func (w *Watcher) Watch() {
 	done := make(chan bool)
-	
+
 	timer := time.NewTimer(watchWaitTime)
 	defer timer.Stop()
-	
+
 	go func() {
 		for {
 			timer.Reset(watchWaitTime)
-			
+
 			w.mu.Lock()
 			select {
 			case event := <-w.watcher.Events:
@@ -98,7 +98,7 @@ func (w *Watcher) Watch() {
 						printer.LogErrf("fsnotify Add error: %v", err)
 					}
 				}
-			case <- timer.C:
+			case <-timer.C:
 				err := w.UpdateBytes()
 				if err != nil {
 					printer.LogErrf("UpdateBytes error: %v", err)
@@ -153,3 +153,4 @@ func (w *Watcher) ReadFile() ([]byte, error) {
 
 	return bts, err
 }
+
