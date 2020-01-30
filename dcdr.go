@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/PagerDuty/godspeed"
+	"github.com/theckman/godspeed"
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/cli/api"
 	"github.com/vsco/dcdr/cli/api/resolver"

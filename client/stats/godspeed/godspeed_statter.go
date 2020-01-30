@@ -1,6 +1,6 @@
 package stats
 
-import "github.com/PagerDuty/godspeed"
+import "github.com/theckman/godspeed"
 
 // Godspeed stats adapter for Godspeed.
 type Godspeed struct {

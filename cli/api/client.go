@@ -10,7 +10,7 @@ import (
 
 	"time"
 
-	"github.com/PagerDuty/godspeed"
+	"github.com/theckman/godspeed"
 	"github.com/vsco/dcdr/cli/api/ioutil2"
 	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/printer"

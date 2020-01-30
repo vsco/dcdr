@@ -9,7 +9,7 @@ import:
   - package: github.com/hashicorp/hcl
   - package: github.com/rodaine/table
   - package: github.com/fatih/color
-  - package: github.com/PagerDuty/godspeed
+  - package: github.com/theckman/godspeed
   - package: github.com/tucnak/climax
   - package: github.com/fsnotify/fsnotify
     ref: v1.3.0
