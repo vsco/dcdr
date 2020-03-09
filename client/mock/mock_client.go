@@ -29,16 +29,20 @@ type Client struct {
 	featureMap *models.FeatureMap
 }
 
+// SetBoolFeature set a boolean feature to the provided boolean value
+func (d *Client) SetBoolFeature(feature string, value bool) {
+	d.FeatureMap().Dcdr.Defaults()[feature] = value
+	d.MergeScopes()
+}
+
 // EnableBoolFeature set a boolean feature to true
 func (d *Client) EnableBoolFeature(feature string) {
-	d.FeatureMap().Dcdr.Defaults()[feature] = true
-	d.MergeScopes()
+	d.SetBoolFeature(feature, true)
 }
 
 // DisableBoolFeature set a boolean feature to false
 func (d *Client) DisableBoolFeature(feature string) {
-	d.Client.FeatureMap().Dcdr.Defaults()[feature] = false
-	d.MergeScopes()
+	d.SetBoolFeature(feature, false)
 }
 
 // SetPercentileFeature set a percentile feature to an arbitrary value
