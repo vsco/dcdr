@@ -13,6 +13,10 @@ on:
 # - DOCKER_PASSWORD  the registry password for DOCKER_USERNAME
 # - DOCKER_REPO      repo to push to
 
+env:
+  GOPATH: $HOME/go
+  IMAGE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
