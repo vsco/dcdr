@@ -1,0 +1,40 @@
+name: Main Workflow
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# If you want your CI build to push images to a Docker repository, define these
+# for "Secrets" in your CI settings for the repository:
+# - DOCKER_REGISTRY  private registry to push to
+# - DOCKER_USERNAME  username at the registry
+# - DOCKER_PASSWORD  the registry password for DOCKER_USERNAME
+# - DOCKER_REPO      repo to push to
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.8
+      - name: Install dependencies
+        run: script/bootstrap
+      - name: Run tests
+        run: script/test
+      - name: Build dcdr
+        run: script/build
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v1
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ env.DOCKER_REPO || 'dcdr' }}
+          dockerfile: Dockerfile.archlinux
+          tag_with_ref: true
+          tags: ${{ env.IMAGE_SHA }}
+          push: true
