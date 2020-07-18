@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 env:
-  GOPATH: $HOME/go
+  GOPATH: ${{ github.workspace }}
   IMAGE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   # If you want your CI build to push images to a Docker repository, define these
   # for "Secrets" in your CI settings for the repository:
