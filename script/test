@@ -1,27 +1,21 @@
 #!/bin/bash
 set -e
 
-export GO15VENDOREXPERIMENT=1
-
 cd $(dirname "$0")/..
 
-script/require-glide
-
-pkgs=$(glide novendor |  grep -v "^.$" | xargs -n1 dirname)
-
-TARGET="$(go list $(glide novendor))"
+TARGET=$(go list -f {{.Dir}} ./... | grep -v /vendor/ | awk 'NR!=1{print $1;}')
 if [ "$#" -gt "0" ]; then
   TARGET="$@"
 fi
 
-FMT_ERRS=$(gofmt -l $pkgs 2>&1 | tee /dev/tty | wc -l)
+FMT_ERRS=$(gofmt -l $TARGET 2>&1 | tee /dev/tty | wc -l)
 if [ "$FMT_ERRS" -gt "0" ]; then
   echo "$FMT_ERRS Lint error(s) found in above file(s)."
   exit 1
 fi
-echo "ok  gofmt"
+echo "ok gofmt"
 
-VET_ERRS=$(go tool vet -all -shadow $pkgs 2>&1 | tee /dev/tty | wc -l)
+VET_ERRS=$(go vet -all $TARGET 2>&1 | tee /dev/tty | wc -l)
 if [ "$VET_ERRS" -gt "0" ]; then
    echo "$VET_ERRS Vet error(s) found above."
   exit 1
