@@ -26,7 +26,7 @@ type Store struct {
 func NewDefault(cfg *config.Config) (stores.IFace, error) {
 	apiConfig := api.DefaultConfig()
 	if cfg.Consul.Address != "" {
-		printer.Logf("Setting consul address to %s in config", cfg.Consul.Address)
+		printer.Say("Setting consul address to %s in config", cfg.Consul.Address)
 		apiConfig.Address = cfg.Consul.Address
 	}
 	client, err := api.NewClient(apiConfig)
