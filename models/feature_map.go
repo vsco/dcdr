@@ -18,7 +18,7 @@ type FeatureMap struct {
 // Info contains the metadata for the current `FeatureMap`.
 type Info struct {
 	CurrentSHA       string `json:"current_sha,omitempty"`
-	LastModifiedDate int64  `json:"last_modfied_date,omitempty"`
+	LastModifiedDate int64  `json:"last_modified_date,omitempty"`
 }
 
 // FeatureScopes the map of percentile and boolean K/Vs.
