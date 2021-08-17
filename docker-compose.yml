@@ -10,6 +10,8 @@ services:
     links:
       - consul:consul
     image: dcdr
+    volumes:
+      - dcdr:/etc/dcdr
   dcdr_server:
     environment:
       - "CONSUL_HTTP_ADDR=consul:8500"
@@ -24,6 +26,8 @@ services:
     depends_on:
       - consul
     image: dcdr
+    volumes:
+      - dcdr:/etc/dcdr
   consul:
     image: progrium/consul:latest
     ports:
@@ -32,3 +36,6 @@ services:
       - "9600:53/udp"
     hostname: node1
     command: -server -bootstrap
+volumes:
+  dcdr:
+    external: false
