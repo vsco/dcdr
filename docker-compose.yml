@@ -29,13 +29,13 @@ services:
     volumes:
       - dcdr:/etc/dcdr
   consul:
-    image: progrium/consul:latest
+    image: consul:latest
     ports:
       - "9400:8400"
       - "9500:8500"
-      - "9600:53/udp"
-    hostname: node1
-    command: -server -bootstrap
+      - "9600:8600"
+      - "9600:8600/udp"
+    command: agent -server -bootstrap -client=0.0.0.0
 volumes:
   dcdr:
     external: false
