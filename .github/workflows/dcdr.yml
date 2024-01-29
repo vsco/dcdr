@@ -9,7 +9,7 @@ on:
       - 'master'
 
 jobs:
-  data-vector-search-api:
+  dcdr:
     uses: ./.github/workflows/pipeline.yml
     with:
       APP_NAME: 'dcdr'
