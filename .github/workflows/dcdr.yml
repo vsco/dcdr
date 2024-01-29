@@ -1,0 +1,18 @@
+name: DCDR
+
+on:
+  pull_request:
+    branches:
+      - 'master'
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  data-vector-search-api:
+    uses: ./.github/workflows/pipeline.yml
+    with:
+      APP_NAME: 'dcdr'
+      REGISTRY: 'docker.vsco.co'
+      IMAGE_NAME: 'dcdr'
+    secrets: inherit
