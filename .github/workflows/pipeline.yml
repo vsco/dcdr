@@ -1,0 +1,24 @@
+name: Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      REGISTRY:
+        required: true
+        type: string
+      IMAGE_NAME:
+        required: true
+        type: string
+      APP_NAME:
+        required: true
+        type: string
+
+jobs:
+  package:
+    uses: ./.github/workflows/package.yml
+    with:
+      REGISTRY: ${{ inputs.REGISTRY }}
+      IMAGE_NAME: ${{ inputs.IMAGE_NAME }}
+      APP_NAME: ${{ inputs.APP_NAME }}
+      STAGE: dev
+    secrets: inherit

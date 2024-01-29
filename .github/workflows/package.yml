@@ -1,0 +1,146 @@
+name: Package
+
+on:
+  workflow_call:
+    inputs:
+      REGISTRY:
+        required: true
+        type: string
+      IMAGE_NAME:
+        required: true
+        type: string
+      APP_NAME:
+        required: true
+        type: string
+      STAGE:
+        required: true
+        type: string
+
+permissions:
+  packages: write
+  contents: write
+  id-token: write
+
+jobs:
+  package:
+    name: Docker Package, CVE Scan and Push
+    runs-on: self-hosted
+    environment:
+      name: ${{ inputs.STAGE }}
+    concurrency:
+      group: ${{ inputs.STAGE }}-${{ inputs.APP_NAME }}
+      cancel-in-progress: true
+    steps:
+      - name: Enable Branch Features
+        env:
+          MAIN_BRANCH_FEATURES: ${{ github.ref_name == 'main' }}
+        run: |
+          if [[ ${MAIN_BRANCH_FEATURES} == true  ]]; then
+            echo "prerelease_enabled=false" >> $GITHUB_ENV
+          else
+            echo "prerelease_enabled=true" >> $GITHUB_ENV
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ inputs.REGISTRY }}
+          username: ${{ secrets.VSCO_DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.VSCO_DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Generate Version
+        id: version
+        uses: anothrNick/github-tag-action@master
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          WITH_V: 'false'
+          RELEASE_BRANCHES: 'main'
+          TAG_CONTEXT: 'repo'
+          DEFAULT_BUMP: 'patch'
+          DRY_RUN: 'true'
+          INITIAL_VERSION: '0.0.3'
+          PRERELEASE: ${{ env.prerelease_enabled }}
+          PRERELEASE_SUFFIX: 'rc'
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.REGISTRY }}/vsco/${{ inputs.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.new_tag }}
+            type=raw,value=latest
+
+      - name: Build & Publish Docker Image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64
+          context: .
+          file: ./Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ inputs.STAGE }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.STAGE }}
+
+      - name: Run Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ inputs.REGISTRY }}/vsco/${{ inputs.IMAGE_NAME }}:${{ steps.version.outputs.new_tag }}"
+          format: table
+          exit-code: "0"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+        env:
+          TRIVY_USERNAME: ${{ secrets.VSCO_DOCKER_REGISTRY_USERNAME }}
+          TRIVY_PASSWORD: ${{ secrets.VSCO_DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Create Tag
+        if: ${{ inputs.STAGE == 'dev' && inputs.APP_NAME == 'dcdr' }}
+        uses: anothrNick/github-tag-action@master
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          WITH_V: 'false'
+          RELEASE_BRANCHES: 'main'
+          TAG_CONTEXT: 'repo'
+          DEFAULT_BUMP: 'patch'
+          DRY_RUN: 'false'
+          INITIAL_VERSION: '0.0.3'
+          PRERELEASE: ${{ env.prerelease_enabled }}
+          PRERELEASE_SUFFIX: 'rc'
+
+      - name: Create Release
+        if: ${{ inputs.STAGE == 'dev' && inputs.APP_NAME == 'dcdr' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          tag_name: ${{ steps.version.outputs.new_tag }}
+          prerelease: ${{ env.prerelease_enabled }}
+
+      - name: Delete Old Releases and Tags
+        if: ${{ github.ref_name == 'master' && inputs.STAGE == 'dev' && inputs.APP_NAME == 'dcdr' }}
+        uses: Nats-ji/delete-old-releases@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          keep-count: 5
+          keep-old-minor-releases: false
+          include-prerelease: true
+          remove-tags: true
+          semver-loose: true
