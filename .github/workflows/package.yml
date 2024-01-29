@@ -62,13 +62,6 @@ jobs:
           username: ${{ secrets.VSCO_DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.VSCO_DOCKER_REGISTRY_PASSWORD }}
 
-      - name: Setup vsco-admin AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.aws_deploy_role_vsco_prod }}
-          role-session-name: vsco-prod
-          aws-region: us-west-2
-
       - name: Generate Version
         id: version
         uses: anothrNick/github-tag-action@master
