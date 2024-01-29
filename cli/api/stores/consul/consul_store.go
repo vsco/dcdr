@@ -2,7 +2,7 @@ package consul
 
 import (
 	"github.com/hashicorp/consul/api"
-	"github.com/hashicorp/consul/watch"
+	"github.com/hashicorp/consul/api/watch"
 	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/printer"
 	"github.com/vsco/dcdr/config"
