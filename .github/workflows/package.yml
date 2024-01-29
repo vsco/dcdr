@@ -93,7 +93,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64
           context: .
-          file: ./Dockerfile.archlinux
+          file: ./Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ inputs.STAGE }}
