@@ -133,14 +133,3 @@ jobs:
           draft: false
           tag_name: ${{ steps.version.outputs.new_tag }}
           prerelease: ${{ env.prerelease_enabled }}
-
-      - name: Delete Old Releases and Tags
-        if: ${{ github.ref_name == 'master' && inputs.STAGE == 'dev' && inputs.APP_NAME == 'dcdr' }}
-        uses: Nats-ji/delete-old-releases@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          keep-count: 5
-          keep-old-minor-releases: false
-          include-prerelease: true
-          remove-tags: true
-          semver-loose: true
