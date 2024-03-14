@@ -5,7 +5,6 @@ import (
 
 	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/api/stores/consul"
-	"github.com/vsco/dcdr/cli/api/stores/etcd"
 	"github.com/vsco/dcdr/cli/api/stores/redis"
 	"github.com/vsco/dcdr/config"
 )
@@ -13,7 +12,8 @@ import (
 func LoadStore(cfg *config.Config) stores.IFace {
 	switch cfg.Storage {
 	case "etcd":
-		return etcd.New(cfg)
+		log.Fatal("etcd is no longer supported")
+		return nil
 	case "redis":
 		r, err := redis.New(cfg)
 
