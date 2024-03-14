@@ -1,11 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
-
-	"fmt"
 
 	"github.com/hashicorp/hcl"
 	"github.com/vsco/dcdr/cli/printer"
@@ -45,10 +44,6 @@ var ExampleConfig = []byte(`
 // Namespace = "dcdr"
 // Storage = "consul"
 
-// Etcd {
-//	 Endpoints = ["http://127.0.0.1:2379"]
-// }
-
 // Consul {
 //	 Address = "127.0.0.1:8500"
 // }
@@ -86,11 +81,6 @@ type Consul struct {
 	Address string
 }
 
-// Etcd config struct for the etcd store.
-type Etcd struct {
-	Endpoints []string
-}
-
 // Redis config struct for the redis store.
 type Redis struct {
 	Address string
@@ -120,7 +110,6 @@ type Config struct {
 	Namespace string
 	Storage   string
 	Consul    Consul
-	Etcd      Etcd
 	Redis     Redis
 	Watcher   Watcher
 	Git       Git

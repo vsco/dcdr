@@ -5,11 +5,13 @@ Distributed Feature Flags
 
 ## Pre-Release
 
-This is pre-release software. The Consul backend support has been used in production at VSCO for a year, but the Etcd backend should be considered experimental.
+This is pre-release software. The Consul backend support has been used in production at VSCO for a year.
+
+As of version 0.4.0-rc0, the etcd backend is no longer supported.
 
 ## Overview
 
-Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system with adaptable backends. It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Decider is built to be adaptable to any backing datastore. At the moment, [Consul](https://www.consul.io/intro/getting-started/kv.html), [Etcd](https://coreos.com/etcd/), and [Redis](http://redis.io/) are supported. [ZooKeeper](https://zookeeper.apache.org/) support is planned.
+Decider is a [feature flag](https://en.wikipedia.org/wiki/Feature_toggle) system with adaptable backends. It supports both `percentile` and `boolean` flags for controlled infrastructure rollouts and kill switches. Decider is built to be adaptable to any backing datastore. At the moment, [Consul](https://www.consul.io/intro/getting-started/kv.html) and [Redis](http://redis.io/) are supported.
 
 Decider has four major components.
 
@@ -571,7 +573,7 @@ To create a new repository from scratch. Configure the `config.hcl` file with yo
 Username = "twoism"
 Namespace = "dcdr"
 
-Storage = "consul" // etcd, redis
+Storage = "consul" // redis
 
 Consul {
   Address = "127.0.0.1:8500"
@@ -579,10 +581,6 @@ Consul {
 
 //Redis {
 //  Address = ":6379"
-//}
-
-//Etcd {
-//  Endpoints = ["http://127.0.0.1:2379"]
 //}
 
 Watcher {
