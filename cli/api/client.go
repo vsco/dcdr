@@ -1,16 +1,14 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
-
-	"encoding/json"
-
 	"time"
 
-	"github.com/theckman/godspeed"
+	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/vsco/dcdr/cli/api/ioutil2"
 	"github.com/vsco/dcdr/cli/api/stores"
 	"github.com/vsco/dcdr/cli/printer"
@@ -46,11 +44,11 @@ type ClientIFace interface {
 type Client struct {
 	Store  stores.IFace
 	Repo   repo.IFace
-	Stats  *godspeed.Godspeed
+	Stats  statsd.ClientInterface
 	config *config.Config
 }
 
-func New(st stores.IFace, rp repo.IFace, cfg *config.Config, stats *godspeed.Godspeed) (c *Client) {
+func New(st stores.IFace, rp repo.IFace, cfg *config.Config, stats statsd.ClientInterface) (c *Client) {
 	c = &Client{
 		Store:  st,
 		Repo:   rp,
@@ -143,15 +141,7 @@ func (c *Client) Set(ft *models.Feature) error {
 		return err
 	}
 
-	err = c.Store.Set(ft.ScopedKey(), bts)
-
-	if err != nil {
-		return err
-	}
-
-	err = c.SendStatEvent(ft, false)
-
-	return nil
+	return c.Store.Set(ft.ScopedKey(), bts)
 }
 
 func (c *Client) Get(key string, v interface{}) error {
@@ -196,15 +186,7 @@ func (c *Client) Delete(key string, scope string) error {
 		return KeyNotFoundError(key)
 	}
 
-	err = c.Store.Delete(key)
-
-	if err != nil {
-		return err
-	}
-
-	err = c.SendStatEvent(existing, true)
-
-	return err
+	return c.Store.Delete(key)
 }
 
 func (c *Client) Commit(ft *models.Feature, deleted bool) error {
@@ -346,28 +328,6 @@ func (c *Client) WriteOutputFile(kvb stores.KVBytes) {
 	}
 
 	printer.Logf("wrote changes to: %s", c.config.Watcher.OutputPath)
-}
-
-func (c *Client) SendStatEvent(f *models.Feature, delete bool) error {
-	if c.Stats == nil {
-		return nil
-	}
-
-	var text string
-	title := "Decider Change"
-
-	if delete {
-		text = fmt.Sprintf("deleted %s", f.ScopedKey())
-	} else {
-		text = fmt.Sprintf("set %s: %v", f.ScopedKey(), f.Value)
-	}
-
-	optionals := make(map[string]string)
-	optionals["alert_type"] = "info"
-	optionals["source_type_name"] = "dcdr"
-	tags := []string{"source_type:dcdr"}
-
-	return c.Stats.Event(title, text, optionals, tags)
 }
 
 // KVsToFeatures helper for unmarshalling `KVBytes` to a `FeatureMap`

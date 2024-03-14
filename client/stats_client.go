@@ -3,7 +3,7 @@ package client
 import (
 	"strings"
 
-	"github.com/vsco/dcdr/client/stats"
+	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/vsco/dcdr/config"
 	"github.com/vsco/dcdr/models"
 )
@@ -11,11 +11,11 @@ import (
 // StatsClient delegates `Client` methods with metrics.
 type StatsClient struct {
 	Client
-	stats stats.IFace
+	stats statsd.ClientInterface
 }
 
 // NewStatsClient creates a new client.
-func NewStatsClient(cfg *config.Config, stats stats.IFace) (sc *StatsClient, err error) {
+func NewStatsClient(cfg *config.Config, stats statsd.ClientInterface) (sc *StatsClient, err error) {
 	sc = &StatsClient{
 		stats: stats,
 	}
@@ -29,7 +29,7 @@ func NewStatsClient(cfg *config.Config, stats stats.IFace) (sc *StatsClient, err
 }
 
 // NewStatsClient creates a new client.
-func NewStatsDefault(stats stats.IFace) (sc *StatsClient, err error) {
+func NewStatsDefault(stats statsd.ClientInterface) (sc *StatsClient, err error) {
 	sc = &StatsClient{
 		stats: stats,
 	}
@@ -90,21 +90,21 @@ func (sc *StatsClient) Scopes() []string {
 // Incr increments the formatted `statKey`.
 func (sc *StatsClient) Incr(feature string, enabled bool, sampleRate float64) {
 	key := sc.statKey(feature, enabled)
-	sc.stats.Incr(key, sampleRate)
+	sc.stats.Incr(key, []string{}, sampleRate)
 }
 
 func (sc *StatsClient) statKey(feature string, enabled bool) string {
-	status := stats.Enabled
+	status := "enabled"
 
 	if enabled == false {
-		status = stats.Disabled
+		status = "disabled"
 	}
 
 	scopes := models.DefaultScope
 
 	if len(sc.Client.Scopes()) > 0 {
-		scopes = strings.Replace(strings.Join(sc.Client.Scopes(), stats.JoinWith), "/", stats.JoinWith, -1)
+		scopes = strings.Replace(strings.Join(sc.Client.Scopes(), "."), "/", ".", -1)
 	}
 
-	return strings.Join([]string{sc.config.Namespace, scopes, feature, status}, stats.JoinWith)
+	return strings.Join([]string{sc.config.Namespace, scopes, feature, status}, ".")
 }

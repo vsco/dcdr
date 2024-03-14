@@ -1,9 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/theckman/godspeed"
+	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/vsco/dcdr/cli"
 	"github.com/vsco/dcdr/cli/api"
 	"github.com/vsco/dcdr/cli/api/resolver"
@@ -19,18 +20,21 @@ func main() {
 
 	rp := repo.New(cfg)
 
-	var gs *godspeed.Godspeed
-	var err error
+	var stats statsd.ClientInterface
+
 	if cfg.StatsEnabled() {
-		gs, err = godspeed.New(cfg.Stats.Host, cfg.Stats.Port, false)
+		var err error
+		stats, err = statsd.New(fmt.Sprintf("%s:%d", cfg.Stats.Host, cfg.Stats.Port))
 
 		if err != nil {
 			printer.SayErr("%v", err)
 			os.Exit(1)
 		}
+	} else {
+		stats = &statsd.NoOpClient{}
 	}
 
-	kv := api.New(store, rp, cfg, gs)
+	kv := api.New(store, rp, cfg, stats)
 	ctrl := controller.New(cfg, kv)
 
 	dcdr := cli.New(ctrl)

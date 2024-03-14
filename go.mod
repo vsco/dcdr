@@ -3,6 +3,7 @@ module github.com/vsco/dcdr
 go 1.18
 
 require (
+	github.com/DataDog/datadog-go/v5 v5.5.0
 	github.com/coreos/etcd v3.0.0-beta.0.0.20160528191156-a86ae1d96912+incompatible
 	github.com/fatih/color v1.14.1
 	github.com/fsnotify/fsnotify v1.3.0
@@ -13,14 +14,13 @@ require (
 	github.com/hashicorp/hcl v0.0.0-20160119202737-578dd9746824
 	github.com/rodaine/table v0.0.0-20151010055857-c35ded4ccfec
 	github.com/stretchr/testify v1.8.3
-	github.com/theckman/godspeed v0.0.0-20160207214103-ef757b820a7d
 	github.com/tucnak/climax v0.0.0-20160110101300-4c021a579dda
 	github.com/vsco/http-test v0.0.0-20160424235822-3e41d6201903
 	golang.org/x/net v0.17.0
 )
 
 require (
-	github.com/PagerDuty/godspeed v0.0.0-20180224001232-122876cde329 // indirect
+	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/gorilla/context v0.0.0-20160525203319-aed02d124ae4 // indirect
