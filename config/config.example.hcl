@@ -3,10 +3,6 @@ Username = "dcdr admin"
 Namespace = "dcdr"
 Storage = "consul"
 
-//Etcd {
-//  Endpoints = ["http://127.0.0.1:2379"]
-//}
-
 Watcher {
   OutputPath = "/etc/dcdr/decider.json"
 }
