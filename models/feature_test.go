@@ -14,6 +14,21 @@ func TestGetFeatureTypeFromValue(t *testing.T) {
 		_, ft := ParseValueAndFeatureType(v)
 		assert.Equal(t, Percentile, ft, v)
 	}
+
+	booleans := []string{"true", "false"}
+
+	for _, v := range booleans {
+		_, ft := ParseValueAndFeatureType(v)
+		assert.Equal(t, Boolean, ft, v)
+	}
+
+	strings := []string{"debug", "info", "some-string"}
+
+	for _, v := range strings {
+		val, ft := ParseValueAndFeatureType(v)
+		assert.Equal(t, String, ft, v)
+		assert.Equal(t, v, val, v)
+	}
 }
 
 func TestMarshaling(t *testing.T) {
@@ -40,4 +55,8 @@ func TestTypes(t *testing.T) {
 	pf = NewFeature("key", true, "comment", "user", "scope", "n")
 	assert.Equal(t, Boolean, pf.FeatureType)
 	assert.Equal(t, true, pf.BoolValue())
+
+	pf = NewFeature("key", "debug", "comment", "user", "scope", "n")
+	assert.Equal(t, String, pf.FeatureType)
+	assert.Equal(t, "debug", pf.StringValue())
 }

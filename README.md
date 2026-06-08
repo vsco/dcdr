@@ -24,7 +24,7 @@ Each of these components are comprised of lower level libraries that you can use
 
 ### About Feature Flags
 
-Feature flags have many use cases and there are many implementations. With Decider, the three supported types of flags are `boolean`, `percentile`, and `scalar`. For our purposes at [VSCO](http://vsco.co), these have been enough to handle our needs.
+Feature flags have many use cases and there are many implementations. With Decider, the supported types of flags are `boolean`, `percentile`, `scalar`, and `string`. For our purposes at [VSCO](http://vsco.co), these have been enough to handle our needs.
 
 #### Boolean Flags
 An example use case for a `boolean` flag would be an API kill switch that could alleviate load for a backing database.
@@ -73,6 +73,18 @@ Here, we'll use the float value to scale the wait time for DB inserts between 0-
 // waitMS would be 1000*0.1 => 100
 waitMS := dcdr.ScaleValue("daemon-db-insert-wait-ms", 0, 1000)
 time.Sleep(waitMS * time.Millisecond)
+```
+
+#### String Flags
+A `string` flag holds a free-form text value. Any `-value` that is not a boolean or a number is stored as a string. A common use case is a runtime-tunable setting such as a minimum log level.
+
+```
+min-log-level => "debug"
+```
+
+```Go
+// Returns the configured value, or "" if the flag is absent or not a string.
+level := dcdr.GetString("min-log-level")
 ```
 
 [Read more](#using-the-go-client) on how to use the `Client`.
@@ -349,7 +361,7 @@ if err != nil {
 
 ### Checking feature flags
 
-The client has three main methods for interacting with flags `IsAvailable(feature string)`. `IsAvailableForID(feature string, id uint64)`, and `ScaleValue(feature string, min float64, max float64)`.
+The client has four main methods for interacting with flags `IsAvailable(feature string)`. `IsAvailableForID(feature string, id uint64)`, `ScaleValue(feature string, min float64, max float64)`, and `GetString(feature string)`.
 
 #### IsAvailable
 
@@ -469,6 +481,24 @@ for {
 	time.Sleep(insertWaitMs * time.Millisecond) // waits for 500ms
 
 	db.Insert("some-value")
+}
+```
+
+### GetString
+
+`GetString` returns the value of a `string` feature. It returns `""` when the feature is absent or is not a string-typed flag, so callers should fall back to a sane default for unknown values.
+
+```
+# set a string feature
+dcdr set -n min-log-level -v debug
+```
+
+```Go
+// min-log-level would be "debug"
+level := dcdr.GetString("min-log-level")
+
+if level == "" {
+	level = "info" // fall back to a default
 }
 ```
 

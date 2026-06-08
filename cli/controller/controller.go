@@ -23,7 +23,7 @@ import (
 const filePerms = 0775
 
 var (
-	errInvalidFeatureType = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
+	errInvalidFeatureType = errors.New("invalid -value format. use -value=[0.0-1.0], [true|false], or a string")
 	errInvalidRange       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
 	errNameRequired       = errors.New("-name is required")
 )

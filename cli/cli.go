@@ -78,7 +78,7 @@ func (c *CLI) Commands() []climax.Command {
 		{
 			Name:  "set",
 			Brief: "create or update a feature flag",
-			Usage: `set -name flag_name -value [0.0-1.0|true/false] -comment "flag description"`,
+			Usage: `set -name flag_name -value [0.0-1.0|true/false|string] -comment "flag description"`,
 			Help: `
 
 
@@ -117,7 +117,7 @@ func (c *CLI) Commands() []climax.Command {
 				{
 					Name:     "value",
 					Short:    "v",
-					Usage:    `--value=0.0-1.0 or true|false`,
+					Usage:    `--value=0.0-1.0, true|false, or a string`,
 					Help:     `the value of the flag`,
 					Variable: true,
 				},

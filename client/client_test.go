@@ -49,7 +49,8 @@ var JSONBytes = []byte(`{
         "float": 0,
         "bool_false": false,
         "bool": true,
-        "default_float": 0.5
+        "default_float": 0.5,
+        "str": "debug"
       }
     },
     "info": {
@@ -149,6 +150,15 @@ func TestIsAvailableForID(t *testing.T) {
 
 	assert.True(t, c.IsAvailableForID("default_float", 10))
 	assert.True(t, c.IsAvailableForID("default_float", 5))
+}
+
+func TestGetString(t *testing.T) {
+	m := MockFeatureMap()
+	c := NewTestClient().SetFeatureMap(m)
+
+	assert.Equal(t, "debug", c.GetString("str"))
+	assert.Equal(t, "", c.GetString("nope"))
+	assert.Equal(t, "", c.GetString("bool"))
 }
 
 func TestScaleValue(t *testing.T) {

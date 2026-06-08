@@ -21,6 +21,8 @@ const (
 	Percentile FeatureType = "percentile"
 	// Boolean boolean `FeatureType`
 	Boolean FeatureType = "boolean"
+	// String string `FeatureType`
+	String FeatureType = "string"
 	// Invalid invalid `FeatureType`
 	Invalid FeatureType = "invalid"
 	// FeatureScope scoping for feature keys
@@ -47,7 +49,10 @@ func ParseValueAndFeatureType(v string) (interface{}, FeatureType) {
 		return i, Percentile
 	}
 
-	return nil, Invalid
+	// Any value that is not a bool or a number is treated as a free-form
+	// string feature, so this function never returns Invalid. The Invalid
+	// constant is retained for callers that compare against it explicitly.
+	return v, String
 }
 
 // Feature KV model for feature flags
@@ -89,6 +94,8 @@ func NewFeature(name string, value interface{}, comment string, user string, sco
 		ft = Percentile
 	case bool:
 		ft = Boolean
+	case string:
+		ft = String
 	}
 
 	f = &Feature{
@@ -112,6 +119,11 @@ func (f *Feature) FloatValue() float64 {
 // BoolValue cast Value to bool
 func (f *Feature) BoolValue() bool {
 	return f.Value.(bool)
+}
+
+// StringValue cast Value to string
+func (f *Feature) StringValue() string {
+	return f.Value.(string)
 }
 
 // ToJSON marshal feature to json
