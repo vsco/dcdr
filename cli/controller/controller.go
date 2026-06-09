@@ -311,38 +311,34 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 // the type is inferred for boolean/percentile only, and a string value is
 // rejected so the caller is forced to pass -type=string explicitly.
 func parseValue(val string, typ string) (interface{}, models.FeatureType, error) {
+	var v interface{}
+	var ft models.FeatureType
+
 	if typ != "" {
-		ft, ok := models.ParseFeatureType(typ)
+		var ok bool
+		ft, ok = models.ParseFeatureType(typ)
 
 		if !ok {
 			return nil, models.Invalid, errInvalidType
 		}
 
-		v, err := models.ParseValueForType(val, ft)
-
-		if err != nil {
+		var err error
+		if v, err = models.ParseValueForType(val, ft); err != nil {
 			if ft == models.Boolean {
 				return nil, models.Invalid, errInvalidBool
 			}
 
 			return nil, models.Invalid, errInvalidPercentile
 		}
+	} else {
+		v, ft = models.ParseValueAndFeatureType(val)
 
-		if ft == models.Percentile {
-			if err := validatePercentile(v); err != nil {
-				return nil, models.Invalid, err
-			}
+		if ft == models.String {
+			return nil, models.Invalid, errTypeRequiredForString
 		}
-
-		return v, ft, nil
 	}
 
-	v, ft := models.ParseValueAndFeatureType(val)
-
-	if ft == models.String {
-		return nil, models.Invalid, errTypeRequiredForString
-	}
-
+	// shared validation for both the explicit and inferred paths
 	if ft == models.Percentile {
 		if err := validatePercentile(v); err != nil {
 			return nil, models.Invalid, err
