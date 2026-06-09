@@ -31,6 +31,49 @@ func TestGetFeatureTypeFromValue(t *testing.T) {
 	}
 }
 
+func TestParseFeatureType(t *testing.T) {
+	cases := map[string]FeatureType{
+		"boolean":    Boolean,
+		"percentile": Percentile,
+		"string":     String,
+	}
+
+	for in, want := range cases {
+		ft, ok := ParseFeatureType(in)
+		assert.True(t, ok, in)
+		assert.Equal(t, want, ft, in)
+	}
+
+	for _, in := range []string{"", "bool", "pct", "decimal", "nope"} {
+		ft, ok := ParseFeatureType(in)
+		assert.False(t, ok, in)
+		assert.Equal(t, Invalid, ft, in)
+	}
+}
+
+func TestParseValueForType(t *testing.T) {
+	v, err := ParseValueForType("true", Boolean)
+	assert.NoError(t, err)
+	assert.Equal(t, true, v)
+
+	_, err = ParseValueForType("notabool", Boolean)
+	assert.Error(t, err)
+
+	v, err = ParseValueForType("0.5", Percentile)
+	assert.NoError(t, err)
+	assert.Equal(t, 0.5, v)
+
+	_, err = ParseValueForType("notanumber", Percentile)
+	assert.Error(t, err)
+
+	// String stores the literal value verbatim, even bool/number-looking input.
+	for _, s := range []string{"debug", "true", "0.5"} {
+		v, err = ParseValueForType(s, String)
+		assert.NoError(t, err)
+		assert.Equal(t, s, v)
+	}
+}
+
 func TestMarshaling(t *testing.T) {
 	f := &Feature{
 		Key:         "test",

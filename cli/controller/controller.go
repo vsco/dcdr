@@ -23,9 +23,11 @@ import (
 const filePerms = 0775
 
 var (
-	errInvalidFeatureType = errors.New("invalid -value format. use -value=[0.0-1.0], [true|false], or a string")
-	errInvalidRange       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
-	errNameRequired       = errors.New("-name is required")
+	errInvalidType           = errors.New("invalid -type. use boolean, percentile, or string")
+	errTypeRequiredForString = errors.New("-type=string is required for non-numeric, non-boolean values")
+	errInvalidBool           = errors.New("invalid -value for boolean. use -value=[true|false]")
+	errInvalidRange          = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
+	errNameRequired          = errors.New("-name is required")
 )
 
 // Controller handler for CLI commands
@@ -277,6 +279,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) {
 	name, _ := ctx.Get("name")
 	val, _ := ctx.Get("value")
+	typ, _ := ctx.Get("type")
 	cmt, _ := ctx.Get("comment")
 	scp, _ := ctx.Get("scope")
 
@@ -288,16 +291,11 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 	var ft models.FeatureType
 
 	if val != "" {
-		v, ft = models.ParseValueAndFeatureType(val)
+		var err error
+		v, ft, err = parseValue(val, typ)
 
-		if ft == models.Invalid {
-			return nil, errInvalidFeatureType
-		}
-
-		if ft == models.Percentile {
-			if v.(float64) > 1.0 || v.(float64) < 0 {
-				return nil, errInvalidRange
-			}
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -305,4 +303,50 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 	f.FeatureType = ft
 
 	return f, nil
+}
+
+// parseValue resolves the value and feature type for a `set` command. When
+// `typ` is provided the value is parsed strictly for that type; when omitted
+// the type is inferred for boolean/percentile only, and a string value is
+// rejected so the caller is forced to pass -type=string explicitly.
+func parseValue(val string, typ string) (interface{}, models.FeatureType, error) {
+	if typ != "" {
+		ft, ok := models.ParseFeatureType(typ)
+
+		if !ok {
+			return nil, models.Invalid, errInvalidType
+		}
+
+		v, err := models.ParseValueForType(val, ft)
+
+		if err != nil {
+			if ft == models.Boolean {
+				return nil, models.Invalid, errInvalidBool
+			}
+
+			return nil, models.Invalid, errInvalidRange
+		}
+
+		if ft == models.Percentile {
+			if v.(float64) > 1.0 || v.(float64) < 0 {
+				return nil, models.Invalid, errInvalidRange
+			}
+		}
+
+		return v, ft, nil
+	}
+
+	v, ft := models.ParseValueAndFeatureType(val)
+
+	if ft == models.String {
+		return nil, models.Invalid, errTypeRequiredForString
+	}
+
+	if ft == models.Percentile {
+		if v.(float64) > 1.0 || v.(float64) < 0 {
+			return nil, models.Invalid, errInvalidRange
+		}
+	}
+
+	return v, ft, nil
 }

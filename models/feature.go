@@ -55,6 +55,38 @@ func ParseValueAndFeatureType(v string) (interface{}, FeatureType) {
 	return v, String
 }
 
+// ParseFeatureType resolves a user-supplied `--type` value to a FeatureType.
+// Only the canonical names are accepted. The second return value is false when
+// the type is unrecognized.
+func ParseFeatureType(s string) (FeatureType, bool) {
+	switch s {
+	case string(Boolean):
+		return Boolean, true
+	case string(Percentile):
+		return Percentile, true
+	case string(String):
+		return String, true
+	default:
+		return Invalid, false
+	}
+}
+
+// ParseValueForType parses `val` into the concrete value for an explicitly
+// provided `ft`. Unlike ParseValueAndFeatureType it does not infer the type,
+// so a String stores the literal value verbatim (e.g. "true" or "0.5").
+func ParseValueForType(val string, ft FeatureType) (interface{}, error) {
+	switch ft {
+	case Boolean:
+		return strconv.ParseBool(val)
+	case Percentile:
+		return strconv.ParseFloat(val, 64)
+	case String:
+		return val, nil
+	default:
+		return nil, fmt.Errorf("unsupported feature type %q", ft)
+	}
+}
+
 // Feature KV model for feature flags
 type Feature struct {
 	FeatureType FeatureType `json:"feature_type"`

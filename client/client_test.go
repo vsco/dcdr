@@ -161,6 +161,15 @@ func TestGetString(t *testing.T) {
 	assert.Equal(t, "", c.GetString("bool"))
 }
 
+// TestGetStringRoundTrip proves a string value survives the full client API
+// path: served JSON payload -> UpdateFeatures -> GetString.
+func TestGetStringRoundTrip(t *testing.T) {
+	c := NewTestClient()
+	c.UpdateFeatures(JSONBytes)
+
+	assert.Equal(t, "debug", c.GetString("str"))
+}
+
 func TestScaleValue(t *testing.T) {
 	m := MockFeatureMap()
 	c := NewTestClient().SetFeatureMap(m)

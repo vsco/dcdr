@@ -127,6 +127,26 @@ func TestDeleteWithError(t *testing.T) {
 
 	assert.Equal(t, e, err)
 }
+func TestKVsToFeatureMapStringValue(t *testing.T) {
+	kvb := stores.KVBytes{
+		&stores.KVByte{
+			Key:   "dcdr/features/default/min-log-level",
+			Bytes: []byte(`{ "feature_type": "string", "key": "min-log-level", "value": "debug" }`),
+		},
+	}
+
+	cs := stores.NewMockStore(nil, nil)
+	cfg := config.DefaultConfig()
+	c := New(cs, &stores.MockRepo{}, cfg, nil)
+
+	fm, err := c.KVsToFeatureMap(kvb)
+	assert.Nil(t, err)
+	assert.NotNil(t, fm)
+
+	// the served value map flattens to just the value, preserving the string
+	assert.Equal(t, "debug", fm.Dcdr.Defaults()["min-log-level"])
+}
+
 func TestKVsToFeatureMapInfoExistByNameSpace(t *testing.T) {
 
 	kvb := stores.KVBytes{

@@ -76,9 +76,12 @@ time.Sleep(waitMS * time.Millisecond)
 ```
 
 #### String Flags
-A `string` flag holds a free-form text value. Any `-value` that is not a boolean or a number is stored as a string. A common use case is a runtime-tunable setting such as a minimum log level.
+A `string` flag holds a free-form text value. Strings require an explicit `--type=string` (`-t string`) when setting them, while `boolean` and `percentile` are inferred from the value when `--type` is omitted. A common use case is a runtime-tunable setting such as a minimum log level.
 
 ```
+# --type=string is required for string values
+dcdr set -n min-log-level -v debug -t string
+
 min-log-level => "debug"
 ```
 
@@ -489,8 +492,8 @@ for {
 `GetString` returns the value of a `string` feature. It returns `""` when the feature is absent or is not a string-typed flag, so callers should fall back to a sane default for unknown values.
 
 ```
-# set a string feature
-dcdr set -n min-log-level -v debug
+# set a string feature (--type=string is required)
+dcdr set -n min-log-level -v debug -t string
 ```
 
 ```Go

@@ -125,3 +125,93 @@ func TestSet(t *testing.T) {
 
 	assert.Equal(t, Success, code)
 }
+
+func newParseController() *Controller {
+	return New(config.DefaultConfig(), NewMockClient(nil, nil, nil))
+}
+
+func parseCtx(vars map[string]string) climax.Context {
+	return climax.Context{Variable: vars}
+}
+
+func TestParseContextExplicitTypes(t *testing.T) {
+	ctl := newParseController()
+
+	f, err := ctl.ParseContext(parseCtx(map[string]string{
+		"name": "min-log-level", "value": "debug", "type": "string",
+	}))
+	assert.NoError(t, err)
+	assert.Equal(t, models.String, f.FeatureType)
+	assert.Equal(t, "debug", f.Value)
+
+	// string type stores bool/number-looking values verbatim
+	f, err = ctl.ParseContext(parseCtx(map[string]string{
+		"name": "literal", "value": "true", "type": "string",
+	}))
+	assert.NoError(t, err)
+	assert.Equal(t, models.String, f.FeatureType)
+	assert.Equal(t, "true", f.Value)
+
+	f, err = ctl.ParseContext(parseCtx(map[string]string{
+		"name": "flag", "value": "true", "type": "boolean",
+	}))
+	assert.NoError(t, err)
+	assert.Equal(t, models.Boolean, f.FeatureType)
+	assert.Equal(t, true, f.Value)
+
+	f, err = ctl.ParseContext(parseCtx(map[string]string{
+		"name": "flag", "value": "0.5", "type": "percentile",
+	}))
+	assert.NoError(t, err)
+	assert.Equal(t, models.Percentile, f.FeatureType)
+	assert.Equal(t, 0.5, f.Value)
+}
+
+func TestParseContextExplicitTypeErrors(t *testing.T) {
+	ctl := newParseController()
+
+	_, err := ctl.ParseContext(parseCtx(map[string]string{
+		"name": "flag", "value": "debug", "type": "nope",
+	}))
+	assert.Equal(t, errInvalidType, err)
+
+	_, err = ctl.ParseContext(parseCtx(map[string]string{
+		"name": "flag", "value": "notabool", "type": "boolean",
+	}))
+	assert.Equal(t, errInvalidBool, err)
+
+	_, err = ctl.ParseContext(parseCtx(map[string]string{
+		"name": "flag", "value": "notanumber", "type": "percentile",
+	}))
+	assert.Equal(t, errInvalidRange, err)
+
+	_, err = ctl.ParseContext(parseCtx(map[string]string{
+		"name": "flag", "value": "2.0", "type": "percentile",
+	}))
+	assert.Equal(t, errInvalidRange, err)
+}
+
+func TestParseContextInference(t *testing.T) {
+	ctl := newParseController()
+
+	// bool/percentile still work without -type
+	f, err := ctl.ParseContext(parseCtx(map[string]string{"name": "flag", "value": "false"}))
+	assert.NoError(t, err)
+	assert.Equal(t, models.Boolean, f.FeatureType)
+
+	f, err = ctl.ParseContext(parseCtx(map[string]string{"name": "flag", "value": "0.25"}))
+	assert.NoError(t, err)
+	assert.Equal(t, models.Percentile, f.FeatureType)
+
+	// a string value without -type is rejected
+	_, err = ctl.ParseContext(parseCtx(map[string]string{"name": "flag", "value": "debug"}))
+	assert.Equal(t, errTypeRequiredForString, err)
+
+	// a numeric typo infers to string and is likewise rejected
+	_, err = ctl.ParseContext(parseCtx(map[string]string{"name": "flag", "value": "0.5x"}))
+	assert.Equal(t, errTypeRequiredForString, err)
+
+	// out-of-range percentile without -type
+	_, err = ctl.ParseContext(parseCtx(map[string]string{"name": "flag", "value": "2.0"}))
+	assert.Equal(t, errInvalidRange, err)
+}
