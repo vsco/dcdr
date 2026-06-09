@@ -49,9 +49,7 @@ func ParseValueAndFeatureType(v string) (interface{}, FeatureType) {
 		return i, Percentile
 	}
 
-	// Any value that is not a bool or a number is treated as a free-form
-	// string feature, so this function never returns Invalid. The Invalid
-	// constant is retained for callers that compare against it explicitly.
+	// Default to a free-form string for any non-boolean, non-numeric value.
 	return v, String
 }
 
