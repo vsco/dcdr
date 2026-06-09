@@ -183,7 +183,7 @@ func TestParseContextExplicitTypeErrors(t *testing.T) {
 	_, err = ctl.ParseContext(parseCtx(map[string]string{
 		"name": "flag", "value": "notanumber", "type": "percentile",
 	}))
-	assert.Equal(t, errInvalidRange, err)
+	assert.Equal(t, errInvalidPercentile, err)
 
 	_, err = ctl.ParseContext(parseCtx(map[string]string{
 		"name": "flag", "value": "2.0", "type": "percentile",

@@ -26,6 +26,7 @@ var (
 	errInvalidType           = errors.New("invalid -type. use boolean, percentile, or string")
 	errTypeRequiredForString = errors.New("-type=string is required for non-numeric, non-boolean values")
 	errInvalidBool           = errors.New("invalid -value for boolean. use -value=[true|false]")
+	errInvalidPercentile     = errors.New("invalid -value for percentile. must be a number")
 	errInvalidRange          = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
 	errNameRequired          = errors.New("-name is required")
 )
@@ -324,12 +325,12 @@ func parseValue(val string, typ string) (interface{}, models.FeatureType, error)
 				return nil, models.Invalid, errInvalidBool
 			}
 
-			return nil, models.Invalid, errInvalidRange
+			return nil, models.Invalid, errInvalidPercentile
 		}
 
 		if ft == models.Percentile {
-			if v.(float64) > 1.0 || v.(float64) < 0 {
-				return nil, models.Invalid, errInvalidRange
+			if err := validatePercentile(v); err != nil {
+				return nil, models.Invalid, err
 			}
 		}
 
@@ -343,10 +344,19 @@ func parseValue(val string, typ string) (interface{}, models.FeatureType, error)
 	}
 
 	if ft == models.Percentile {
-		if v.(float64) > 1.0 || v.(float64) < 0 {
-			return nil, models.Invalid, errInvalidRange
+		if err := validatePercentile(v); err != nil {
+			return nil, models.Invalid, err
 		}
 	}
 
 	return v, ft, nil
+}
+
+// validatePercentile ensures a percentile value falls within the 0.0-1.0 range.
+func validatePercentile(v interface{}) error {
+	if f := v.(float64); f > 1.0 || f < 0 {
+		return errInvalidRange
+	}
+
+	return nil
 }
