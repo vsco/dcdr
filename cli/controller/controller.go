@@ -306,10 +306,10 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 	return f, nil
 }
 
-// parseValue resolves the value and feature type for a `set` command. When
-// `typ` is provided the value is parsed strictly for that type; when omitted
-// the type is inferred for boolean/percentile only, and a string value is
-// rejected so the caller is forced to pass -type=string explicitly.
+// parseValue resolves the value and feature type for a `set` command.
+//   - When -type is provided, the value is parsed strictly for that type.
+//   - When -type is omitted, the type is inferred: boolean and percentile are
+//     accepted, but an inferred string is rejected (see below).
 func parseValue(val string, typ string) (interface{}, models.FeatureType, error) {
 	var v interface{}
 	var ft models.FeatureType
@@ -324,15 +324,20 @@ func parseValue(val string, typ string) (interface{}, models.FeatureType, error)
 
 		var err error
 		if v, err = models.ParseValueForType(val, ft); err != nil {
-			if ft == models.Boolean {
+			switch ft {
+			case models.Boolean:
 				return nil, models.Invalid, errInvalidBool
+			case models.Percentile:
+				return nil, models.Invalid, errInvalidPercentile
+			default:
+				return nil, models.Invalid, err
 			}
-
-			return nil, models.Invalid, errInvalidPercentile
 		}
 	} else {
 		v, ft = models.ParseValueAndFeatureType(val)
 
+		// An inferred string is ambiguous (e.g. a typo'd bool/number), so
+		// require the caller to opt in explicitly with -type=string.
 		if ft == models.String {
 			return nil, models.Invalid, errTypeRequiredForString
 		}
