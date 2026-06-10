@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // Features a Feature result set
@@ -21,6 +22,8 @@ const (
 	Percentile FeatureType = "percentile"
 	// Boolean boolean `FeatureType`
 	Boolean FeatureType = "boolean"
+	// String string `FeatureType`
+	String FeatureType = "string"
 	// Invalid invalid `FeatureType`
 	Invalid FeatureType = "invalid"
 	// FeatureScope scoping for feature keys
@@ -47,7 +50,48 @@ func ParseValueAndFeatureType(v string) (interface{}, FeatureType) {
 		return i, Percentile
 	}
 
-	return nil, Invalid
+	// Default to a free-form string for any non-boolean, non-numeric value.
+	return v, String
+}
+
+// ParseFeatureType resolves a user-supplied `--type` value to a FeatureType.
+// Only the canonical names are accepted. The second return value is false when
+// the type is unrecognized.
+func ParseFeatureType(s string) (FeatureType, bool) {
+	switch s {
+	case string(Boolean):
+		return Boolean, true
+	case string(Percentile):
+		return Percentile, true
+	case string(String):
+		return String, true
+	default:
+		return Invalid, false
+	}
+}
+
+// ParseValueForType parses `val` into the concrete value for an explicitly
+// provided `ft`. Unlike ParseValueAndFeatureType it does not infer the type,
+// so a String stores the literal value (e.g. "true" or "0.5"). String values
+// are trimmed of surrounding whitespace, mirroring how strconv rejects padded
+// bool/percentile input, so the stored value is canonical for all consumers.
+func ParseValueForType(val string, ft FeatureType) (interface{}, error) {
+	switch ft {
+	case Boolean:
+		return strconv.ParseBool(val)
+	case Percentile:
+		return strconv.ParseFloat(val, 64)
+	case String:
+		v := strings.TrimSpace(val)
+
+		if v == "" {
+			return nil, fmt.Errorf("empty string value")
+		}
+
+		return v, nil
+	default:
+		return nil, fmt.Errorf("unsupported feature type %q", ft)
+	}
 }
 
 // Feature KV model for feature flags
@@ -89,6 +133,8 @@ func NewFeature(name string, value interface{}, comment string, user string, sco
 		ft = Percentile
 	case bool:
 		ft = Boolean
+	case string:
+		ft = String
 	}
 
 	f = &Feature{
@@ -112,6 +158,11 @@ func (f *Feature) FloatValue() float64 {
 // BoolValue cast Value to bool
 func (f *Feature) BoolValue() bool {
 	return f.Value.(bool)
+}
+
+// StringValue cast Value to string
+func (f *Feature) StringValue() string {
+	return f.Value.(string)
 }
 
 // ToJSON marshal feature to json

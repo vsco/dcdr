@@ -23,9 +23,13 @@ import (
 const filePerms = 0775
 
 var (
-	errInvalidFeatureType = errors.New("invalid -value format. use -value=[0.0-1.0] or [true|false]")
-	errInvalidRange       = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
-	errNameRequired       = errors.New("-name is required")
+	errInvalidType           = errors.New("invalid -type. use boolean, percentile, or string")
+	errTypeRequiredForString = errors.New("-type=string is required for non-numeric, non-boolean values")
+	errInvalidBool           = errors.New("invalid -value for boolean. use -value=[true|false]")
+	errInvalidPercentile     = errors.New("invalid -value for percentile. must be a number")
+	errEmptyString           = errors.New("invalid -value for string. must not be empty or whitespace-only")
+	errInvalidRange          = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
+	errNameRequired          = errors.New("-name is required")
 )
 
 // Controller handler for CLI commands
@@ -277,6 +281,7 @@ func (cc *Controller) Watch(ctx climax.Context) int {
 func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) {
 	name, _ := ctx.Get("name")
 	val, _ := ctx.Get("value")
+	typ, _ := ctx.Get("type")
 	cmt, _ := ctx.Get("comment")
 	scp, _ := ctx.Get("scope")
 
@@ -288,16 +293,11 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 	var ft models.FeatureType
 
 	if val != "" {
-		v, ft = models.ParseValueAndFeatureType(val)
+		var err error
+		v, ft, err = parseValue(val, typ)
 
-		if ft == models.Invalid {
-			return nil, errInvalidFeatureType
-		}
-
-		if ft == models.Percentile {
-			if v.(float64) > 1.0 || v.(float64) < 0 {
-				return nil, errInvalidRange
-			}
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -305,4 +305,62 @@ func (cc *Controller) ParseContext(ctx climax.Context) (*models.Feature, error) 
 	f.FeatureType = ft
 
 	return f, nil
+}
+
+// parseValue resolves the value and feature type for a `set` command.
+//   - When -type is provided, the value is parsed strictly for that type.
+//   - When -type is omitted, the type is inferred: boolean and percentile are
+//     accepted, but an inferred string is rejected (see below).
+func parseValue(val string, typ string) (interface{}, models.FeatureType, error) {
+	var v interface{}
+	var ft models.FeatureType
+
+	if typ != "" {
+		var ok bool
+		ft, ok = models.ParseFeatureType(typ)
+
+		if !ok {
+			return nil, models.Invalid, errInvalidType
+		}
+
+		var err error
+		if v, err = models.ParseValueForType(val, ft); err != nil {
+			switch ft {
+			case models.Boolean:
+				return nil, models.Invalid, errInvalidBool
+			case models.Percentile:
+				return nil, models.Invalid, errInvalidPercentile
+			case models.String:
+				return nil, models.Invalid, errEmptyString
+			default:
+				return nil, models.Invalid, err
+			}
+		}
+	} else {
+		v, ft = models.ParseValueAndFeatureType(val)
+
+		// An inferred string is ambiguous (e.g. a typo'd bool/number), so
+		// require the caller to opt in explicitly with -type=string.
+		if ft == models.String {
+			return nil, models.Invalid, errTypeRequiredForString
+		}
+	}
+
+	// shared validation for both the explicit and inferred paths
+	if ft == models.Percentile {
+		if err := validatePercentile(v); err != nil {
+			return nil, models.Invalid, err
+		}
+	}
+
+	return v, ft, nil
+}
+
+// validatePercentile ensures a percentile value falls within the 0.0-1.0 range.
+func validatePercentile(v interface{}) error {
+	if f := v.(float64); f > 1.0 || f < 0 {
+		return errInvalidRange
+	}
+
+	return nil
 }

@@ -78,7 +78,7 @@ func (c *CLI) Commands() []climax.Command {
 		{
 			Name:  "set",
 			Brief: "create or update a feature flag",
-			Usage: `set -name flag_name -value [0.0-1.0|true/false] -comment "flag description"`,
+			Usage: `set -name flag_name -value <value> [-type boolean|percentile|string] -comment "flag description"`,
 			Help: `
 
 
@@ -122,6 +122,13 @@ func (c *CLI) Commands() []climax.Command {
 					Variable: true,
 				},
 				{
+					Name:     "type",
+					Short:    "t",
+					Usage:    `--type=boolean|percentile|string`,
+					Help:     `flag type; required for string values, inferred for boolean/percentile when omitted`,
+					Variable: true,
+				},
+				{
 					Name:     "comment",
 					Short:    "c",
 					Usage:    `--comment="flag description"`,
@@ -145,6 +152,10 @@ func (c *CLI) Commands() []climax.Command {
 				{
 					Usecase:     `-n "flag_name" -v false -c "the flag desc"`,
 					Description: `sets a boolean flag to false`,
+				},
+				{
+					Usecase:     `-n "flag_name" -v debug -t string -c "the flag desc"`,
+					Description: `sets a string flag to "debug"`,
 				},
 			},
 

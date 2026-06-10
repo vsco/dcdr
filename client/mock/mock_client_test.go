@@ -20,4 +20,8 @@ func TestMockClient(t *testing.T) {
 	assert.True(t, d.IsAvailableForID("float", 2))
 	d.DisablePercentileFeature("float")
 	assert.False(t, d.IsAvailableForID("float", 8))
+
+	d.SetStringFeature("str", "debug")
+	assert.Equal(t, "debug", d.GetString("str"))
+	assert.Equal(t, "", d.GetString("missing"))
 }

@@ -16,6 +16,7 @@ import (
 type IFace interface {
 	IsAvailable(feature string) bool
 	IsAvailableForID(feature string, id uint64) bool
+	GetString(feature string) string
 	ScaleValue(feature string, min float64, max float64) float64
 	UpdateFeatures(bts []byte)
 	FeatureExists(feature string) bool
@@ -166,6 +167,16 @@ func (c *Client) IsAvailable(feature string) bool {
 	default:
 		return false
 	}
+}
+
+// GetString returns the string value of `feature`, or "" if it is absent or
+// not a string-typed feature.
+func (c *Client) GetString(feature string) string {
+	if val, ok := c.Features()[feature].(string); ok {
+		return val
+	}
+
+	return ""
 }
 
 // IsAvailableForID used to check features with float values between 0.0-1.0.

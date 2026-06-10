@@ -14,6 +14,75 @@ func TestGetFeatureTypeFromValue(t *testing.T) {
 		_, ft := ParseValueAndFeatureType(v)
 		assert.Equal(t, Percentile, ft, v)
 	}
+
+	booleans := []string{"true", "false"}
+
+	for _, v := range booleans {
+		_, ft := ParseValueAndFeatureType(v)
+		assert.Equal(t, Boolean, ft, v)
+	}
+
+	strings := []string{"debug", "info", "some-string"}
+
+	for _, v := range strings {
+		val, ft := ParseValueAndFeatureType(v)
+		assert.Equal(t, String, ft, v)
+		assert.Equal(t, v, val, v)
+	}
+}
+
+func TestParseFeatureType(t *testing.T) {
+	cases := map[string]FeatureType{
+		"boolean":    Boolean,
+		"percentile": Percentile,
+		"string":     String,
+	}
+
+	for in, want := range cases {
+		ft, ok := ParseFeatureType(in)
+		assert.True(t, ok, in)
+		assert.Equal(t, want, ft, in)
+	}
+
+	for _, in := range []string{"", "bool", "pct", "decimal", "nope"} {
+		ft, ok := ParseFeatureType(in)
+		assert.False(t, ok, in)
+		assert.Equal(t, Invalid, ft, in)
+	}
+}
+
+func TestParseValueForType(t *testing.T) {
+	v, err := ParseValueForType("true", Boolean)
+	assert.NoError(t, err)
+	assert.Equal(t, true, v)
+
+	_, err = ParseValueForType("notabool", Boolean)
+	assert.Error(t, err)
+
+	v, err = ParseValueForType("0.5", Percentile)
+	assert.NoError(t, err)
+	assert.Equal(t, 0.5, v)
+
+	_, err = ParseValueForType("notanumber", Percentile)
+	assert.Error(t, err)
+
+	// String stores the literal value, even bool/number-looking input.
+	for _, s := range []string{"debug", "true", "0.5"} {
+		v, err = ParseValueForType(s, String)
+		assert.NoError(t, err)
+		assert.Equal(t, s, v)
+	}
+
+	// String values are trimmed of surrounding whitespace.
+	v, err = ParseValueForType("  debug\t", String)
+	assert.NoError(t, err)
+	assert.Equal(t, "debug", v)
+
+	// Empty or whitespace-only strings are rejected.
+	for _, s := range []string{"", "   ", "\t\n"} {
+		_, err = ParseValueForType(s, String)
+		assert.Error(t, err, "%q", s)
+	}
 }
 
 func TestMarshaling(t *testing.T) {
@@ -40,4 +109,8 @@ func TestTypes(t *testing.T) {
 	pf = NewFeature("key", true, "comment", "user", "scope", "n")
 	assert.Equal(t, Boolean, pf.FeatureType)
 	assert.Equal(t, true, pf.BoolValue())
+
+	pf = NewFeature("key", "debug", "comment", "user", "scope", "n")
+	assert.Equal(t, String, pf.FeatureType)
+	assert.Equal(t, "debug", pf.StringValue())
 }

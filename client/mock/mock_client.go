@@ -51,6 +51,12 @@ func (d *Client) SetPercentileFeature(feature string, val float64) {
 	d.MergeScopes()
 }
 
+// SetStringFeature set a string feature to an arbitrary value
+func (d *Client) SetStringFeature(feature string, val string) {
+	d.Client.FeatureMap().Dcdr.Defaults()[feature] = val
+	d.MergeScopes()
+}
+
 // EnablePercentileFeature set a percentile feature to true
 func (d *Client) EnablePercentileFeature(feature string) {
 	d.SetPercentileFeature(feature, 1.0)
