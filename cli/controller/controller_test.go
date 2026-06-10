@@ -152,6 +152,13 @@ func TestParseContextExplicitTypes(t *testing.T) {
 	assert.Equal(t, models.String, f.FeatureType)
 	assert.Equal(t, "true", f.Value)
 
+	// surrounding whitespace is trimmed from string values
+	f, err = ctl.ParseContext(parseCtx(map[string]string{
+		"name": "padded", "value": " debug ", "type": "string",
+	}))
+	assert.NoError(t, err)
+	assert.Equal(t, "debug", f.Value)
+
 	f, err = ctl.ParseContext(parseCtx(map[string]string{
 		"name": "flag", "value": "true", "type": "boolean",
 	}))
@@ -189,6 +196,11 @@ func TestParseContextExplicitTypeErrors(t *testing.T) {
 		"name": "flag", "value": "2.0", "type": "percentile",
 	}))
 	assert.Equal(t, errInvalidRange, err)
+
+	_, err = ctl.ParseContext(parseCtx(map[string]string{
+		"name": "flag", "value": "   ", "type": "string",
+	}))
+	assert.Equal(t, errEmptyString, err)
 }
 
 func TestParseContextInference(t *testing.T) {

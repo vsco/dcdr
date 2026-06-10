@@ -27,6 +27,7 @@ var (
 	errTypeRequiredForString = errors.New("-type=string is required for non-numeric, non-boolean values")
 	errInvalidBool           = errors.New("invalid -value for boolean. use -value=[true|false]")
 	errInvalidPercentile     = errors.New("invalid -value for percentile. must be a number")
+	errEmptyString           = errors.New("invalid -value for string. must not be empty or whitespace-only")
 	errInvalidRange          = errors.New("invalid -value for percentile. use -value=[0.0-1.0]")
 	errNameRequired          = errors.New("-name is required")
 )
@@ -329,6 +330,8 @@ func parseValue(val string, typ string) (interface{}, models.FeatureType, error)
 				return nil, models.Invalid, errInvalidBool
 			case models.Percentile:
 				return nil, models.Invalid, errInvalidPercentile
+			case models.String:
+				return nil, models.Invalid, errEmptyString
 			default:
 				return nil, models.Invalid, err
 			}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // Features a Feature result set
@@ -71,7 +72,9 @@ func ParseFeatureType(s string) (FeatureType, bool) {
 
 // ParseValueForType parses `val` into the concrete value for an explicitly
 // provided `ft`. Unlike ParseValueAndFeatureType it does not infer the type,
-// so a String stores the literal value verbatim (e.g. "true" or "0.5").
+// so a String stores the literal value (e.g. "true" or "0.5"). String values
+// are trimmed of surrounding whitespace, mirroring how strconv rejects padded
+// bool/percentile input, so the stored value is canonical for all consumers.
 func ParseValueForType(val string, ft FeatureType) (interface{}, error) {
 	switch ft {
 	case Boolean:
@@ -79,7 +82,13 @@ func ParseValueForType(val string, ft FeatureType) (interface{}, error) {
 	case Percentile:
 		return strconv.ParseFloat(val, 64)
 	case String:
-		return val, nil
+		v := strings.TrimSpace(val)
+
+		if v == "" {
+			return nil, fmt.Errorf("empty string value")
+		}
+
+		return v, nil
 	default:
 		return nil, fmt.Errorf("unsupported feature type %q", ft)
 	}

@@ -66,11 +66,22 @@ func TestParseValueForType(t *testing.T) {
 	_, err = ParseValueForType("notanumber", Percentile)
 	assert.Error(t, err)
 
-	// String stores the literal value verbatim, even bool/number-looking input.
+	// String stores the literal value, even bool/number-looking input.
 	for _, s := range []string{"debug", "true", "0.5"} {
 		v, err = ParseValueForType(s, String)
 		assert.NoError(t, err)
 		assert.Equal(t, s, v)
+	}
+
+	// String values are trimmed of surrounding whitespace.
+	v, err = ParseValueForType("  debug\t", String)
+	assert.NoError(t, err)
+	assert.Equal(t, "debug", v)
+
+	// Empty or whitespace-only strings are rejected.
+	for _, s := range []string{"", "   ", "\t\n"} {
+		_, err = ParseValueForType(s, String)
+		assert.Error(t, err, "%q", s)
 	}
 }
 
