@@ -12,7 +12,7 @@ type CLI struct {
 	Ctrl *controller.Controller
 }
 
-// New init a new CLI
+// New initializes a new CLI
 func New(ctlr *controller.Controller) (c *CLI) {
 	c = &CLI{
 		Ctrl: ctlr,
@@ -254,7 +254,7 @@ func (c *CLI) Commands() []climax.Command {
 			Usage: `dcdr server`,
 			Help: `
 
-	Starts the dcdr http server on <Server:Host>/<Sever:Endpoint>.
+	Starts the dcdr http server on <Server:Host>/<Server:Endpoint>.
 	The default is 'http://localhost:8000/dcdr.json'. The root json node can also be
 	set by changing the <Server:JsonRoot> value.
 

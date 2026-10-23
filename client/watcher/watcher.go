@@ -11,7 +11,7 @@ import (
 	"github.com/vsco/dcdr/cli/printer"
 )
 
-// IFace interface for the the file system watcher.
+// IFace interface for the file system watcher.
 type IFace interface {
 	Init() error
 	Watch()
@@ -43,7 +43,7 @@ func New(path string) (w *Watcher) {
 		return nil
 	}
 
-	printer.Logf("watching path`: %s", path)
+	printer.Logf("watching path: %s", path)
 
 	w = &Watcher{
 		path: path,
